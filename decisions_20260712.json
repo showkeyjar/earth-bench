@@ -1,0 +1,393 @@
+{
+  "published_at": "2026-07-12T16:07:54.934034",
+  "engine": "CARM + Ollama/qwen3:14b",
+  "total_scenarios": 20,
+  "alert_count": 12,
+  "average_confidence": 0.7916,
+  "decisions": [
+    {
+      "case_id": "fire-l1-extreme-risk",
+      "category": "fire",
+      "difficulty": "L1",
+      "region": "Xiangshan-Beijing",
+      "ground_truth": true,
+      "observation_time": "2026-07-11T12:00:00+08:00",
+      "data_sources": "MODIS, Station, ECMWF",
+      "llm_decision": true,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "FWI": 1.0,
+        "humidity": 0.9,
+        "wind": 0.9,
+        "temp": 0.6,
+        "llm_source": "ollama_llm",
+        "llm_decision": true
+      },
+      "rationale": "LLM Decision (source=ollama_llm): True\nHeuristic Decision: YES, confidence=0.725\n多变量加权风险评分: 0.725, 证据权重: {\"FWI\": 1.0, \"humidity\": 0.9, \"wind\": 0.9, \"temp\": 0.6}",
+      "timestamp": "2026-07-12T08:01:06.781968+00:00"
+    },
+    {
+      "case_id": "fire-l1-low-risk",
+      "category": "fire",
+      "difficulty": "L1",
+      "region": "WestLake-Hangzhou",
+      "ground_truth": false,
+      "observation_time": "2026-07-11T12:00:00+08:00",
+      "data_sources": "Station, ECMWF",
+      "llm_decision": false,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "FWI": 0.33,
+        "humidity": 0.35,
+        "rainfall": -0.4,
+        "llm_source": "ollama_llm",
+        "llm_decision": false
+      },
+      "rationale": "LLM Decision (source=ollama_llm): False\nHeuristic Decision: NO, confidence=0.145\n多变量加权风险评分: 0.145, 证据权重: {\"FWI\": 0.33, \"humidity\": 0.35, \"rainfall\": -0.4}",
+      "timestamp": "2026-07-12T08:01:23.490174+00:00"
+    },
+    {
+      "case_id": "fire-l2-fwi-high-rain-suppress",
+      "category": "fire",
+      "difficulty": "L2",
+      "region": "ChangbaiMountain",
+      "ground_truth": false,
+      "observation_time": "2026-07-11T00:00:00+08:00",
+      "data_sources": "Station, ECMWF",
+      "llm_decision": true,
+      "confidence": 0.413,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "FWI": 0.98,
+        "humidity": 0.85,
+        "rainfall": -1.25,
+        "llm_unavailable": true
+      },
+      "rationale": "LLM unavailable, fallback to heuristic\nHeuristic Decision: YES, confidence=0.413\n多变量加权风险评分: 0.413, 证据权重: {\"FWI\": 0.98, \"humidity\": 0.85, \"rainfall\": -1.25}",
+      "timestamp": "2026-07-12T08:01:55.527564+00:00"
+    },
+    {
+      "case_id": "fire-l3-coastal-humid",
+      "category": "fire",
+      "difficulty": "L3",
+      "region": "Shenzhen-Coast",
+      "ground_truth": false,
+      "observation_time": "2026-07-11T12:00:00+08:00",
+      "data_sources": "MODIS, Station, ECMWF",
+      "llm_decision": false,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "FWI": 0.67,
+        "humidity": 0.45,
+        "temp": 0.467,
+        "llm_source": "ollama_llm",
+        "llm_decision": false
+      },
+      "rationale": "LLM Decision (source=ollama_llm): False\nHeuristic Decision: NO, confidence=0.371\n多变量加权风险评分: 0.371, 证据权重: {\"FWI\": 0.67, \"humidity\": 0.45, \"temp\": 0.467}",
+      "timestamp": "2026-07-12T08:02:25.291351+00:00"
+    },
+    {
+      "case_id": "fire-l4-trend-rising",
+      "category": "fire",
+      "difficulty": "L4",
+      "region": "GreaterKhingan",
+      "ground_truth": true,
+      "observation_time": "2026-07-11T12:00:00+08:00",
+      "data_sources": "Station, ECMWF",
+      "llm_decision": true,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "FWI": 0.735,
+        "humidity": 0.775,
+        "llm_source": "ollama_llm",
+        "llm_decision": true
+      },
+      "rationale": "LLM Decision (source=ollama_llm): True\nHeuristic Decision: YES, confidence=0.412\n多变量加权风险评分: 0.412, 证据权重: {\"FWI\": 0.735, \"humidity\": 0.775}",
+      "timestamp": "2026-07-12T08:02:43.488263+00:00"
+    },
+    {
+      "case_id": "flood-l1-extreme-rainfall",
+      "category": "flood",
+      "difficulty": "L1",
+      "region": "Wuhan-Yangtze",
+      "ground_truth": true,
+      "observation_time": "2026-07-11T12:00:00+08:00",
+      "data_sources": "Sensor, CMA, Hydro",
+      "llm_decision": true,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "llm_source": "ollama_llm",
+        "llm_decision": true
+      },
+      "rationale": "LLM Decision (source=ollama_llm): True\nHeuristic Decision: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
+      "timestamp": "2026-07-12T08:03:01.133884+00:00"
+    },
+    {
+      "case_id": "flood-l1-no-rain",
+      "category": "flood",
+      "difficulty": "L1",
+      "region": "Lhasa-Tibet",
+      "ground_truth": false,
+      "observation_time": "2026-07-11T12:00:00+08:00",
+      "data_sources": "Sensor, CMA, Hydro",
+      "llm_decision": false,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "llm_source": "ollama_llm",
+        "llm_decision": false
+      },
+      "rationale": "LLM Decision (source=ollama_llm): False\nHeuristic Decision: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
+      "timestamp": "2026-07-12T08:03:20.530779+00:00"
+    },
+    {
+      "case_id": "flood-l2-soil-saturated",
+      "category": "flood",
+      "difficulty": "L2",
+      "region": "Guangzhou-PearlR",
+      "ground_truth": true,
+      "observation_time": "2026-07-11T12:00:00+08:00",
+      "data_sources": "Sensor, CMA, Hydro",
+      "llm_decision": true,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "llm_source": "ollama_llm",
+        "llm_decision": true
+      },
+      "rationale": "LLM Decision (source=ollama_llm): True\nHeuristic Decision: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
+      "timestamp": "2026-07-12T08:03:37.378983+00:00"
+    },
+    {
+      "case_id": "flood-l3-good-drainage",
+      "category": "flood",
+      "difficulty": "L3",
+      "region": "Guilin-Guangxi",
+      "ground_truth": false,
+      "observation_time": "2026-07-11T12:00:00+08:00",
+      "data_sources": "Sensor, CMA, Hydro",
+      "llm_decision": false,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "llm_source": "ollama_llm",
+        "llm_decision": false
+      },
+      "rationale": "LLM Decision (source=ollama_llm): False\nHeuristic Decision: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
+      "timestamp": "2026-07-12T08:03:57.883233+00:00"
+    },
+    {
+      "case_id": "flood-l4-water-trend-rise",
+      "category": "flood",
+      "difficulty": "L4",
+      "region": "Nanjing-Yangtze",
+      "ground_truth": true,
+      "observation_time": "2026-07-11T12:00:00+08:00",
+      "data_sources": "Hydro",
+      "llm_decision": true,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "llm_source": "ollama_llm",
+        "llm_decision": true
+      },
+      "rationale": "LLM Decision (source=ollama_llm): True\nHeuristic Decision: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
+      "timestamp": "2026-07-12T08:04:23.776086+00:00"
+    },
+    {
+      "case_id": "drought-l1-severe-spi",
+      "category": "drought",
+      "difficulty": "L1",
+      "region": "Kunming-Yunnan",
+      "ground_truth": true,
+      "observation_time": "2026-07-05T00:00:00+08:00",
+      "data_sources": "MODIS, Station, CMA",
+      "llm_decision": true,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "humidity": 0.85,
+        "llm_source": "ollama_llm",
+        "llm_decision": true
+      },
+      "rationale": "LLM Decision (source=ollama_llm): True\nHeuristic Decision: NO, confidence=0.170\n多变量加权风险评分: 0.170, 证据权重: {\"humidity\": 0.85}",
+      "timestamp": "2026-07-12T08:04:36.615246+00:00"
+    },
+    {
+      "case_id": "drought-l1-normal",
+      "category": "drought",
+      "difficulty": "L1",
+      "region": "Hangzhou-Zhejiang",
+      "ground_truth": false,
+      "observation_time": "2026-07-05T00:00:00+08:00",
+      "data_sources": "MODIS, Station, CMA",
+      "llm_decision": false,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "humidity": 0.4,
+        "llm_source": "ollama_llm",
+        "llm_decision": false
+      },
+      "rationale": "LLM Decision (source=ollama_llm): False\nHeuristic Decision: NO, confidence=0.080\n多变量加权风险评分: 0.080, 证据权重: {\"humidity\": 0.4}",
+      "timestamp": "2026-07-12T08:04:55.430965+00:00"
+    },
+    {
+      "case_id": "drought-l2-borderline-spi",
+      "category": "drought",
+      "difficulty": "L2",
+      "region": "Harbin-Heilongjiang",
+      "ground_truth": false,
+      "observation_time": "2026-07-05T00:00:00+08:00",
+      "data_sources": "MODIS, CMA",
+      "llm_decision": false,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "llm_source": "ollama_llm",
+        "llm_decision": false
+      },
+      "rationale": "LLM Decision (source=ollama_llm): False\nHeuristic Decision: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
+      "timestamp": "2026-07-12T08:05:15.857252+00:00"
+    },
+    {
+      "case_id": "drought-l3-palmerspi-conflict",
+      "category": "drought",
+      "difficulty": "L3",
+      "region": "Urumqi-Xinjiang",
+      "ground_truth": true,
+      "observation_time": "2026-07-05T00:00:00+08:00",
+      "data_sources": "MODIS, Station, CMA",
+      "llm_decision": true,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "humidity": 0.8,
+        "llm_source": "ollama_llm",
+        "llm_decision": true
+      },
+      "rationale": "LLM Decision (source=ollama_llm): True\nHeuristic Decision: NO, confidence=0.160\n多变量加权风险评分: 0.160, 证据权重: {\"humidity\": 0.8}",
+      "timestamp": "2026-07-12T08:05:34.646150+00:00"
+    },
+    {
+      "case_id": "drought-l4-spir-declining",
+      "category": "drought",
+      "difficulty": "L4",
+      "region": "Taiyuan-Shanxi",
+      "ground_truth": true,
+      "observation_time": "2026-07-05T00:00:00+08:00",
+      "data_sources": "MODIS, CMA",
+      "llm_decision": true,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "llm_source": "ollama_llm",
+        "llm_decision": true
+      },
+      "rationale": "LLM Decision (source=ollama_llm): True\nHeuristic Decision: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
+      "timestamp": "2026-07-12T08:06:02.657562+00:00"
+    },
+    {
+      "case_id": "heat-l1-extreme-wetbulb",
+      "category": "heat",
+      "difficulty": "L1",
+      "region": "Chongqing-HotPotato",
+      "ground_truth": true,
+      "observation_time": "2026-07-10T12:00:00+08:00",
+      "data_sources": "Station, CMA",
+      "llm_decision": true,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "humidity": 0.25,
+        "wet_bulb_temp": 0.75,
+        "llm_source": "ollama_llm",
+        "llm_decision": true
+      },
+      "rationale": "LLM Decision (source=ollama_llm): True\nHeuristic Decision: NO, confidence=0.237\n多变量加权风险评分: 0.237, 证据权重: {\"humidity\": 0.25, \"wet_bulb_temp\": 0.75}",
+      "timestamp": "2026-07-12T08:06:16.166279+00:00"
+    },
+    {
+      "case_id": "heat-l1-cool-comfortable",
+      "category": "heat",
+      "difficulty": "L1",
+      "region": "Kunming-SpringCity",
+      "ground_truth": false,
+      "observation_time": "2026-07-11T12:00:00+08:00",
+      "data_sources": "Station, CMA",
+      "llm_decision": false,
+      "confidence": 0.12,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "humidity": 0.6,
+        "llm_unavailable": true
+      },
+      "rationale": "LLM unavailable, fallback to heuristic\nHeuristic Decision: NO, confidence=0.120\n多变量加权风险评分: 0.120, 证据权重: {\"humidity\": 0.6}",
+      "timestamp": "2026-07-12T08:06:48.208817+00:00"
+    },
+    {
+      "case_id": "heat-l2-hot-but-dry",
+      "category": "heat",
+      "difficulty": "L2",
+      "region": "Urumqi-Xinjiang",
+      "ground_truth": false,
+      "observation_time": "2026-07-11T12:00:00+08:00",
+      "data_sources": "Station, CMA",
+      "llm_decision": false,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "humidity": 0.85,
+        "wet_bulb_temp": 0,
+        "llm_source": "ollama_llm",
+        "llm_decision": false
+      },
+      "rationale": "LLM Decision (source=ollama_llm): False\nHeuristic Decision: NO, confidence=0.170\n多变量加权风险评分: 0.170, 证据权重: {\"humidity\": 0.85, \"wet_bulb_temp\": 0}",
+      "timestamp": "2026-07-12T08:07:05.351473+00:00"
+    },
+    {
+      "case_id": "heat-l3-borderline",
+      "category": "heat",
+      "difficulty": "L3",
+      "region": "Nanjing-OvenCity",
+      "ground_truth": true,
+      "observation_time": "2026-07-11T12:00:00+08:00",
+      "data_sources": "Station, CMA",
+      "llm_decision": true,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "humidity": 0.28,
+        "wet_bulb_temp": 0.562,
+        "llm_source": "ollama_llm",
+        "llm_decision": true
+      },
+      "rationale": "LLM Decision (source=ollama_llm): True\nHeuristic Decision: NO, confidence=0.197\n多变量加权风险评分: 0.197, 证据权重: {\"humidity\": 0.28, \"wet_bulb_temp\": 0.562}",
+      "timestamp": "2026-07-12T08:07:23.282331+00:00"
+    },
+    {
+      "case_id": "heat-l4-progressive-heat",
+      "category": "heat",
+      "difficulty": "L4",
+      "region": "Wuhan-Yangtze",
+      "ground_truth": true,
+      "observation_time": "2026-07-11T12:00:00+08:00",
+      "data_sources": "Station, CMA",
+      "llm_decision": true,
+      "confidence": 0.85,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "wet_bulb_temp": 0.479,
+        "llm_source": "ollama_llm",
+        "llm_decision": true
+      },
+      "rationale": "LLM Decision (source=ollama_llm): True\nHeuristic Decision: NO, confidence=0.120\n多变量加权风险评分: 0.120, 证据权重: {\"wet_bulb_temp\": 0.479}",
+      "timestamp": "2026-07-12T08:07:54.933567+00:00"
+    }
+  ]
+}
