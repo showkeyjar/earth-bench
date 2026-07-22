@@ -1,0 +1,933 @@
+[
+  {
+    "date": "2026-07-22",
+    "date_short": "07-22",
+    "total": 18,
+    "alerts": 11,
+    "hits": 18,
+    "misses": 0,
+    "accuracy": 1.0,
+    "is_today": true,
+    "details": [
+      {
+        "region": "北京·香山",
+        "category": "fire",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "杭州·西湖",
+        "category": "fire",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "深圳·海岸",
+        "category": "fire",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "大兴安岭",
+        "category": "fire",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "武汉·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "拉萨·西藏",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "广州·珠江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "桂林·广西",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "南京·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "昆明·云南",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "杭州·浙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "哈尔滨·黑龙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "太原·山西",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "重庆",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "南京",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "武汉·长江",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      }
+    ]
+  },
+  {
+    "date": "2026-07-21",
+    "date_short": "07-21",
+    "total": 16,
+    "alerts": 10,
+    "hits": 10,
+    "misses": 0,
+    "accuracy": 1.0,
+    "is_today": false,
+    "details": [
+      {
+        "region": "大兴安岭",
+        "category": "fire",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "拉萨·西藏",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "重庆",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "武汉·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "昆明·云南",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "太原·山西",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "北京·香山",
+        "category": "fire",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "广州·珠江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "武汉·长江",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "杭州·浙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "杭州·西湖",
+        "category": "fire",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "哈尔滨·黑龙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "深圳·海岸",
+        "category": "fire",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "南京",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      }
+    ]
+  },
+  {
+    "date": "2026-07-20",
+    "date_short": "07-20",
+    "total": 18,
+    "alerts": 12,
+    "hits": 11,
+    "misses": 1,
+    "accuracy": 0.917,
+    "is_today": false,
+    "details": [
+      {
+        "region": "深圳·海岸",
+        "category": "fire",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "杭州·浙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "桂林·广西",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "太原·山西",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "北京·香山",
+        "category": "fire",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "哈尔滨·黑龙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "拉萨·西藏",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "昆明·云南",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "武汉·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "南京·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "武汉·长江",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "广州·珠江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "南京",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "大兴安岭",
+        "category": "fire",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "重庆",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "杭州·西湖",
+        "category": "fire",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      }
+    ]
+  },
+  {
+    "date": "2026-07-19",
+    "date_short": "07-19",
+    "total": 18,
+    "alerts": 12,
+    "hits": 11,
+    "misses": 1,
+    "accuracy": 0.917,
+    "is_today": false,
+    "details": [
+      {
+        "region": "深圳·海岸",
+        "category": "fire",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "杭州·浙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "北京·香山",
+        "category": "fire",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "哈尔滨·黑龙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "重庆",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "南京",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "南京·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "昆明·云南",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": false
+      },
+      {
+        "region": "太原·山西",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "大兴安岭",
+        "category": "fire",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "武汉·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "广州·珠江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "拉萨·西藏",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "武汉·长江",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "桂林·广西",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "杭州·西湖",
+        "category": "fire",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      }
+    ]
+  },
+  {
+    "date": "2026-07-18",
+    "date_short": "07-18",
+    "total": 18,
+    "alerts": 10,
+    "hits": 10,
+    "misses": 0,
+    "accuracy": 1.0,
+    "is_today": false,
+    "details": [
+      {
+        "region": "南京",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "昆明·云南",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "太原·山西",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "哈尔滨·黑龙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "重庆",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "武汉·长江",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "桂林·广西",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "深圳·海岸",
+        "category": "fire",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "广州·珠江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "武汉·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "杭州·西湖",
+        "category": "fire",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "拉萨·西藏",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "杭州·浙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "南京·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "大兴安岭",
+        "category": "fire",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "北京·香山",
+        "category": "fire",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      }
+    ]
+  },
+  {
+    "date": "2026-07-17",
+    "date_short": "07-17",
+    "total": 16,
+    "alerts": 10,
+    "hits": 10,
+    "misses": 0,
+    "accuracy": 1.0,
+    "is_today": false,
+    "details": [
+      {
+        "region": "北京·香山",
+        "category": "fire",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "大兴安岭",
+        "category": "fire",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "拉萨·西藏",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "太原·山西",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "昆明·云南",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "杭州·西湖",
+        "category": "fire",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "广州·珠江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "哈尔滨·黑龙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "武汉·长江",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "重庆",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "南京·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "桂林·广西",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "杭州·浙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "南京",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "武汉·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      }
+    ]
+  },
+  {
+    "date": "2026-07-16",
+    "date_short": "07-16",
+    "total": 17,
+    "alerts": 10,
+    "hits": 9,
+    "misses": 1,
+    "accuracy": 0.9,
+    "is_today": false,
+    "details": [
+      {
+        "region": "深圳·海岸",
+        "category": "fire",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "杭州·浙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "南京·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "武汉·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "北京·香山",
+        "category": "fire",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "南京",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "重庆",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "昆明·云南",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "拉萨·西藏",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "太原·山西",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "哈尔滨·黑龙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "杭州·西湖",
+        "category": "fire",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      },
+      {
+        "region": "大兴安岭",
+        "category": "fire",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "广州·珠江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "drought",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "武汉·长江",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true
+      },
+      {
+        "region": "桂林·广西",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true
+      }
+    ]
+  }
+]

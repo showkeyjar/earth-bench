@@ -4,96 +4,48 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>地球风险日报 — AI 决策系统</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif; background: #f5f7fa; color: #333; font-size: 13px; }
 
-.dashboard {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 10px 16px;
-}
+.dashboard { max-width: 1200px; margin: 0 auto; padding: 10px 16px; }
 
 /* Header */
 .header {
   background: linear-gradient(135deg, #2c5364 0%, #203a43 100%);
-  color: white;
-  padding: 14px 20px;
-  border-radius: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
+  color: white; padding: 14px 20px; border-radius: 12px;
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
 }
 .header h1 { font-size: 1.3em; }
 .header .meta { font-size: 0.8em; opacity: 0.8; text-align: right; }
 
 /* Mini Stats */
-.mini-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.mini-stat {
-  background: white;
-  border-radius: 10px;
-  padding: 10px;
-  text-align: center;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
+.mini-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 10px; }
+.mini-stat { background: white; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
 .mini-stat .num { font-size: 1.6em; font-weight: bold; }
 .mini-stat .label { font-size: 0.75em; color: #718096; }
 
+/* Map */
+.map-section { background: white; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 10px; }
+.section-title-bar { background: #2d3748; color: white; padding: 8px 14px; font-weight: 600; font-size: 0.95em; }
+#risk-map { height: 380px; width: 100%; }
+
 /* Two-column layout */
-.main-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 10px;
-  margin-bottom: 10px;
-}
+.main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px; }
 
 /* Alert Table */
-.alert-section {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  overflow: hidden;
-}
-.section-title-bar {
-  background: #2d3748;
-  color: white;
-  padding: 8px 14px;
-  font-weight: 600;
-  font-size: 0.95em;
-}
-.table-scroll { max-height: calc(100vh - 280px); overflow-y: auto; }
+.alert-section { background: white; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); overflow: hidden; }
+.table-scroll { max-height: calc(100vh - 520px); min-height: 300px; overflow-y: auto; }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.82em;
-}
-th {
-  position: sticky;
-  top: 0;
-  background: #4a5568;
-  color: white;
-  padding: 6px 5px;
-  text-align: left;
-  font-weight: 600;
-}
+table { width: 100%; border-collapse: collapse; font-size: 0.82em; }
+th { position: sticky; top: 0; background: #4a5568; color: white; padding: 6px 5px; text-align: left; font-weight: 600; z-index: 10; }
 td { padding: 5px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
 tr:nth-child(even) { background: #f7fafc; }
 tr:hover { background: #edf2f7; }
+tr.expanded { background: #ebf4ff !important; }
 
-.cat-pill {
-  display: inline-block;
-  padding: 2px 7px;
-  border-radius: 10px;
-  font-size: 0.85em;
-  font-weight: 600;
-}
+.cat-pill { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 0.85em; font-weight: 600; }
 .cat-fire { background: #fed7d7; color: #c53030; }
 .cat-flood { background: #bee3f8; color: #2b6cb0; }
 .cat-drought { background: #fefcbf; color: #975a16; }
@@ -104,149 +56,133 @@ tr:hover { background: #edf2f7; }
 
 .bar-wrap { width: 50px; height: 5px; background: #e2e8f0; border-radius: 3px; display: inline-block; margin-right: 3px; vertical-align: middle; }
 .bar-fill { height: 100%; border-radius: 3px; }
-.bar-green { background: #48bb78; }
-.bar-yellow { background: #ecc94b; }
-.bar-red { background: #f56565; }
+.bar-green { background: #48bb78; } .bar-yellow { background: #ecc94b; } .bar-red { background: #f56565; }
 
 .mini-info { font-size: 0.9em; color: #4a5568; line-height: 1.4; }
+.expand-icon { cursor: pointer; font-size: 1.1em; transition: transform 0.2s; }
+.expand-icon.open { transform: rotate(90deg); }
+
+/* Detail Panel (expandable) */
+.detail-row td { padding: 0 !important; border: none !important; background: #f8faff !important; }
+.detail-panel { padding: 12px 16px; display: none; }
+.detail-panel.show { display: block; }
+
+.evidence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.evidence-card { background: #f7fafc; border-radius: 8px; padding: 8px 10px; border-left: 3px solid #cbd5e0; }
+.evidence-card.danger { border-left-color: #f56565; background: #fff5f5; }
+.evidence-card.warn { border-left-color: #ecc94b; background: #fffbeb; }
+.evidence-card.safe { border-left-color: #48bb78; background: #f0fff4; }
+.evidence-card .ev-name { font-weight: 600; font-size: 0.85em; margin-bottom: 3px; }
+.evidence-card .ev-value { font-size: 1.2em; font-weight: bold; }
+.evidence-card .ev-threshold { font-size: 0.75em; color: #718096; }
+.evidence-card .ev-desc { font-size: 0.8em; color: #4a5568; margin-top: 4px; line-height: 1.3; }
+.evidence-card .ev-source { font-size: 0.7em; color: #a0aec0; margin-top: 2px; }
+
+.ev-bar-wrap { width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 4px; position: relative; }
+.ev-bar-fill { height: 100%; border-radius: 2px; }
+.ev-bar-marker { position: absolute; top: -2px; width: 2px; height: 8px; background: #2d3748; }
+
+.reasoning-chain { background: #f7fafc; border-radius: 8px; padding: 10px 12px; margin-top: 8px; }
+.reasoning-chain .chain-title { font-weight: 600; font-size: 0.85em; margin-bottom: 6px; color: #2d3748; }
+.chain-step { display: flex; gap: 8px; margin: 4px 0; font-size: 0.8em; line-height: 1.4; }
+.chain-num { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75em; font-weight: bold; color: white; }
+.chain-num.intro { background: #4299e1; } .chain-num.evidence { background: #ecc94b; } .chain-num.analysis { background: #9f7aea; } .chain-num.decision { background: #f56565; }
+.chain-text { padding-top: 2px; }
+
+.verification-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; font-weight: 600; margin-left: 6px; }
+.verification-badge.hit { background: #c6f6d5; color: #22543d; }
+.verification-badge.miss { background: #fed7d7; color: #742a2a; }
 
 /* Side panel */
-.side-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+.side-panel { display: flex; flex-direction: column; gap: 10px; }
+.history-card, .info-box, .source-box, .faq-box { background: white; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.history-card h3, .info-box h3, .source-box h3, .faq-box h3 { font-size: 0.9em; margin-bottom: 8px; color: #2d3748; border-bottom: 2px solid #667eea; padding-bottom: 4px; }
 
-.history-card {
-  background: white;
-  border-radius: 12px;
-  padding: 12px 14px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
-.history-card h3 {
-  font-size: 0.9em;
-  margin-bottom: 8px;
-  color: #2d3748;
-  border-bottom: 2px solid #667eea;
-  padding-bottom: 4px;
-}
-.history-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 4px 0;
-  font-size: 0.82em;
-  border-bottom: 1px dashed #e2e8f0;
-}
-.history-row:last-child { border-bottom: none; }
-.history-date { color: #4a5568; }
-.history-val { font-weight: 600; }
-.history-val.good { color: #38a169; }
-.history-val.warn { color: #dd6b20; }
+/* History chart */
+.history-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; margin: 8px 0; }
+.history-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.history-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.3s; position: relative; cursor: pointer; }
+.history-bar.today { border: 2px solid #667eea; }
+.history-bar-label { font-size: 0.65em; color: #718096; }
+.history-bar-val { font-size: 0.65em; font-weight: 600; }
 
-.info-box {
-  background: white;
-  border-radius: 12px;
-  padding: 12px 14px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
-.info-box h3 {
-  font-size: 0.9em;
-  margin-bottom: 8px;
-  color: #2d3748;
-}
+.history-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin: 8px 0; }
+.history-stat { text-align: center; padding: 6px; background: #f7fafc; border-radius: 6px; }
+.history-stat .num { font-size: 1.3em; font-weight: bold; }
+.history-stat .label { font-size: 0.7em; color: #718096; }
+
+.history-detail-list { max-height: 200px; overflow-y: auto; }
+.history-detail-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; font-size: 0.78em; border-bottom: 1px dashed #e2e8f0; }
+.history-detail-row .region { color: #4a5568; }
+.history-detail-row .result { font-weight: 600; }
+.history-detail-row .result.hit { color: #38a169; }
+.history-detail-row .result.miss { color: #e53e3e; }
+
 .info-item { font-size: 0.82em; margin: 6px 0; line-height: 1.5; }
 .info-item strong { color: #2d3748; }
 
-.source-box {
-  background: white;
-  border-radius: 12px;
-  padding: 12px 14px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
-.source-box h3 {
-  font-size: 0.9em;
-  margin-bottom: 8px;
-  color: #2d3748;
-}
-.source-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 0;
-  font-size: 0.82em;
-  border-bottom: 1px dashed #e2e8f0;
-}
+.source-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 0.82em; border-bottom: 1px dashed #e2e8f0; }
 .source-item:last-child { border-bottom: none; }
 .source-icon { font-size: 1.2em; }
 
-.low-conf-note {
-  background: #fffff0;
-  border: 1px solid #fbd38d;
-  border-radius: 8px;
-  padding: 8px 14px;
-  margin-bottom: 10px;
-  font-size: 0.85em;
-  color: #975a16;
-  text-align: center;
-}
+.low-conf-note { background: #fffff0; border: 1px solid #fbd38d; border-radius: 8px; padding: 8px 14px; margin-bottom: 10px; font-size: 0.85em; color: #975a16; text-align: center; }
 
-footer {
-  text-align: center;
-  padding: 8px;
-  color: #cbd5e0;
-  font-size: 0.75em;
+.map-legend { display: flex; gap: 12px; padding: 6px 14px; background: #f7fafc; font-size: 0.78em; color: #4a5568; }
+.legend-item { display: flex; align-items: center; gap: 4px; }
+.legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+
+footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
+
+@media (max-width: 768px) {
+  .mini-stats { grid-template-columns: repeat(3, 1fr); }
+  .main-grid { grid-template-columns: 1fr; }
+  .evidence-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 <body>
 <div class="dashboard">
-  <!-- Header -->
   <div class="header">
-    <div>
-      <h1>🌍 地球风险日报</h1>
-    </div>
+    <div><h1>🌍 地球风险日报</h1></div>
     <div class="meta" id="header-meta"></div>
   </div>
 
-  <!-- Mini Stats -->
   <div class="mini-stats">
-    <div class="mini-stat">
-      <div class="num" style="color:#667eea;" id="s-total">-</div>
-      <div class="label">监测区域</div>
-    </div>
-    <div class="mini-stat">
-      <div class="num" style="color:#e53e3e;" id="s-alert">-</div>
-      <div class="label">有风险</div>
-    </div>
-    <div class="mini-stat">
-      <div class="num" style="color:#38a169;" id="s-safe">-</div>
-      <div class="label">安全</div>
-    </div>
-    <div class="mini-stat">
-      <div class="num" style="color:#dd6b20;" id="s-conf">-</div>
-      <div class="label">平均把握</div>
+    <div class="mini-stat"><div class="num" style="color:#667eea;" id="s-total">-</div><div class="label">监测区域</div></div>
+    <div class="mini-stat"><div class="num" style="color:#e53e3e;" id="s-alert">-</div><div class="label">有风险</div></div>
+    <div class="mini-stat"><div class="num" style="color:#38a169;" id="s-safe">-</div><div class="label">安全</div></div>
+    <div class="mini-stat"><div class="num" style="color:#dd6b20;" id="s-conf">-</div><div class="label">平均把握</div></div>
+    <div class="mini-stat"><div class="num" style="color:#38a169;" id="s-acc">-</div><div class="label">7天准确率</div></div>
+  </div>
+
+  <div id="low-conf-bar" class="low-conf-note" style="display:none;"></div>
+
+  <!-- Map -->
+  <div class="map-section">
+    <div class="section-title-bar">📍 风险地图 — 点击标记查看详情</div>
+    <div id="risk-map"></div>
+    <div class="map-legend">
+      <div class="legend-item"><span class="legend-dot" style="background:#e53e3e;opacity:0.7;"></span> 有风险</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#48bb78;opacity:0.7;"></span> 安全</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#ecc94b;opacity:0.7;"></span> 把握度&lt;70%（未公布）</div>
     </div>
   </div>
 
-  <!-- Low confidence note -->
-  <div id="low-conf-bar" class="low-conf-note" style="display:none;"></div>
-
-  <!-- Two-column layout -->
+  <!-- Main grid -->
   <div class="main-grid">
-    <!-- Left: Alert Table -->
     <div class="alert-section">
-      <div class="section-title-bar">📋 今日监测结果（仅显示把握度≥70%）</div>
+      <div class="section-title-bar">📋 今日监测结果（点击行展开详细证据和推理过程）</div>
       <div class="table-scroll">
         <table>
           <thead>
             <tr>
+              <th></th>
               <th>地点</th>
               <th>类型</th>
               <th>状态</th>
               <th>把握</th>
               <th>关键信号</th>
-              <th>数据来源</th>
-              <th>建议</th>
+              <th>验证</th>
             </tr>
           </thead>
           <tbody id="alert-body"></tbody>
@@ -254,69 +190,37 @@ footer {
       </div>
     </div>
 
-    <!-- Right: Side Panel -->
     <div class="side-panel">
-      <!-- Recent accuracy -->
       <div class="history-card">
-        <h3>📊 近 7 天准确率</h3>
-        <div id="history-list"></div>
+        <h3>📊 历史 7 天战绩</h3>
+        <div class="history-chart" id="history-chart"></div>
+        <div class="history-summary" id="history-summary"></div>
+        <div style="font-size:0.8em;color:#4a5568;margin-bottom:4px;">今日命中详情：</div>
+        <div class="history-detail-list" id="history-detail-list"></div>
       </div>
 
-      <!-- Risk categories -->
       <div class="info-box">
         <h3>⚠️ 风险等级说明</h3>
-        <div class="info-item">
-          <strong>🔴 高风险 (≥85%)：</strong>需要立即关注，建议启动应急预案
-        </div>
-        <div class="info-item">
-          <strong>🟡 中风险 (75%-84%)：</strong>需持续监控，建议加强巡查
-        </div>
-        <div class="info-item">
-          <strong>🟢 低风险 (<75%)：</strong>暂时无需特殊措施
-        </div>
+        <div class="info-item"><strong>🔴 高风险 (≥85%)：</strong>需要立即关注，建议启动应急预案</div>
+        <div class="info-item"><strong>🟡 中风险 (75%-84%)：</strong>需持续监控，建议加强巡查</div>
+        <div class="info-item"><strong>🟢 低风险 (&lt;75%)：</strong>暂时无需特殊措施</div>
       </div>
 
-      <!-- Data sources -->
       <div class="source-box">
         <h3>🛰️ 数据来源</h3>
-        <div class="source-item">
-          <span class="source-icon">🛰️</span>
-          <div>
-            <strong>卫星数据</strong><br>
-            <span style="color:#718096;">NASA MODIS / ECMWF 数值预报</span>
-          </div>
-        </div>
-        <div class="source-item">
-          <span class="source-icon">🏭</span>
-          <div>
-            <strong>气象站</strong><br>
-            <span style="color:#718096;">中国气象局(CMA)地面观测</span>
-          </div>
-        </div>
-        <div class="source-item">
-          <span class="source-icon">💧</span>
-          <div>
-            <strong>水文传感器</strong><br>
-            <span style="color:#718096;">水位/土壤湿度实时监测</span>
-          </div>
-        </div>
+        <div class="source-item"><span class="source-icon">🛰️</span><div><strong>NASA MODIS 卫星</strong><br><span style="color:#718096;">地表温度、植被指数(NDVI)</span></div></div>
+        <div class="source-item"><span class="source-icon">🌬️</span><div><strong>ECMWF 数值预报</strong><br><span style="color:#718096;">火险指数(FWI)、气象预报</span></div></div>
+        <div class="source-item"><span class="source-icon">🏭</span><div><strong>中国气象局(CMA)</strong><br><span style="color:#718096;">降水量、SPI/Palmer干旱指数</span></div></div>
+        <div class="source-item"><span class="source-icon">📡</span><div><strong>地面气象站</strong><br><span style="color:#718096;">湿度、风速、温度、湿球温度</span></div></div>
+        <div class="source-item"><span class="source-icon">💧</span><div><strong>水文传感器</strong><br><span style="color:#718096;">水位、土壤含水率实时监测</span></div></div>
       </div>
 
-      <!-- FAQ -->
-      <div class="faq-box" id="faq-box">
+      <div class="faq-box">
         <h3>💡 快速了解</h3>
-        <div class="info-item">
-          <strong>这是什么？</strong><br>
-          AI 帮您提前知道哪里可能有火灾、洪水、干旱或太热。
-        </div>
-        <div class="info-item">
-          <strong>数据从哪来？</strong><br>
-          卫星(NASA/ECMWF)、气象站(CMA)、水文传感器。每条记录标明来源。
-        </div>
-        <div class="info-item">
-          <strong>为什么有时不报？</strong><br>
-          把握度低于70%就不显示——AI 自己都不确定的事，不误导您。
-        </div>
+        <div class="info-item"><strong>这是什么？</strong><br>AI 帮您提前知道哪里可能有火灾、洪水、干旱或高温热浪。</div>
+        <div class="info-item"><strong>怎么判断的？</strong><br>多源数据融合：卫星+气象站+传感器，AI 综合分析各指标是否超过国标阈值。</div>
+        <div class="info-item"><strong>为什么有时不报？</strong><br>把握度低于70%就不显示——AI 自己都不确定的事，不误导您。</div>
+        <div class="info-item"><strong>准不准？</strong><br>过去7天平均准确率见右侧战绩面板，每条预警都标注是否命中。</div>
       </div>
     </div>
   </div>
@@ -324,36 +228,27 @@ footer {
   <footer>© 2026 地球风险日报 | Powered by AI · 每天自动更新</footer>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const accuracyHistory = [
-  { date: '07-12', total: 20, alerts: 10, acc: '100%', accColor: 'good' },
-  { date: '07-11', total: 20, alerts: 9, acc: '95%', accColor: 'good' },
-  { date: '07-10', total: 20, alerts: 7, acc: '100%', accColor: 'good' },
-  { date: '07-09', total: 20, alerts: 12, acc: '90%', accColor: 'warn' },
-  { date: '07-08', total: 20, alerts: 6, acc: '95%', accColor: 'good' },
-  { date: '07-07', total: 20, alerts: 8, acc: '100%', accColor: 'good' },
-  { date: '07-06', total: 20, alerts: 5, acc: '90%', accColor: 'warn' },
-];
-
 const categoryIcons = {
-  'fire': { label: '🔥 火', cls: 'cat-fire' },
-  'flood': { label: '🌊 洪', cls: 'cat-flood' },
-  'drought': { label: '🏜️ 旱', cls: 'cat-drought' },
-  'heat': { label: '☀️ 热', cls: 'cat-heat' }
+  'fire':   { label: '🔥 火',   cls: 'cat-fire' },
+  'flood':  { label: '🌊 洪',   cls: 'cat-flood' },
+  'drought':{ label: '🏜️ 旱',   cls: 'cat-drought' },
+  'heat':   { label: '☀️ 热',   cls: 'cat-heat' }
 };
-
+const categoryNames = { fire: '森林火险', flood: '洪涝灾害', drought: '干旱', heat: '高温热浪' };
+const suggestions = { fire: '注意防火', flood: '远离低洼', drought: '节约用水', heat: '减少户外' };
 const signalLabels = {
-  'FWI': '火险', 'humidity': '湿度', 'wind': '风', 'temp': '温度',
+  'FWI': '火险', 'humidity': '湿度', 'wind_speed': '风', 'wind': '风', 'temp': '温度', 'temperature': '温度',
   'rainfall': '降雨', 'wet_bulb_temp': '闷热', 'soil_moisture': '土湿',
-  'water_level': '水位', 'rainfall_24h': '降雨24h', 'rainfall_6h': '降雨6h'
+  'water_level': '水位', 'rainfall_24h': '降雨24h', 'rainfall_6h': '降雨6h',
+  'SPI': 'SPI', 'palmer_index': 'Palmer', 'NDVI': 'NDVI', 'rainfall_monthly': '月降雨',
+  'temperature_max': '最高温', 'heat_duration_days': '持续天数'
 };
 
-const suggestions = {
-  fire: '注意防火', flood: '远离低洼', drought: '节约用水', heat: '减少户外'
-};
+let mapInstance = null;
+let historyData = [];
 
-// 智能获取 JSON 文件路径
-// 策略：先试 latest.json，再按日期从近到远尝试
 async function fetchJSON(url) {
   const resp = await fetch(url);
   if (!resp.ok) return null;
@@ -366,101 +261,105 @@ async function fetchJSON(url) {
 
 async function loadData() {
   let data = null;
-
-  // 1. 优先加载 latest.json
-  try {
-    console.log('Trying: latest.json');
-    data = await fetchJSON('latest.json');
-  } catch (e) {
-    console.log('latest.json failed:', e.message);
-  }
-
-  // 2. 如果 latest.json 不存在，按日期从近到远尝试（最多回溯 30 天）
+  try { data = await fetchJSON('latest.json'); } catch(e) {}
   if (!data) {
     const today = new Date();
     for (let i = 0; i < 30; i++) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const dateStr = d.getFullYear() + '' +
-                      String(d.getMonth() + 1).padStart(2, '0') +
-                      String(d.getDate()).padStart(2, '0');
-      const url = 'decisions_' + dateStr + '.json';
-      try {
-        console.log('Trying:', url);
-        data = await fetchJSON(url);
-        if (data) {
-          console.log('Found:', url);
-          break;
-        }
-      } catch (e) {
-        // 继续尝试下一天
-      }
+      const d = new Date(today); d.setDate(d.getDate() - i);
+      const dateStr = d.getFullYear() + '' + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+      try { data = await fetchJSON('decisions_' + dateStr + '.json'); if (data) break; } catch(e) {}
     }
   }
 
+  // 加载历史数据
+  try { historyData = await fetchJSON('history.json') || []; } catch(e) { historyData = []; }
+
   if (data) {
     renderToday(data);
+    renderMap(data);
     renderHistory();
   } else {
-    console.error('All JSON load attempts failed');
     document.getElementById('alert-body').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#e53e3e;padding:30px;">暂时无法加载数据，请稍后刷新页面重试</td></tr>';
   }
 }
 
 function renderToday(data) {
-  document.getElementById('header-meta').innerHTML = 
+  document.getElementById('header-meta').innerHTML =
     '<div>更新于 ' + new Date(data.published_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) + '</div>';
-
   document.getElementById('s-total').textContent = data.total_scenarios;
   document.getElementById('s-alert').textContent = data.alert_count;
   document.getElementById('s-safe').textContent = data.total_scenarios - data.alert_count;
   document.getElementById('s-conf').textContent = Math.round(data.average_confidence * 100) + '%';
 
+  // 7天准确率
+  if (historyData.length > 0) {
+    const avgAcc = historyData.reduce((s,h) => s + h.accuracy, 0) / historyData.length;
+    document.getElementById('s-acc').textContent = Math.round(avgAcc * 100) + '%';
+  } else {
+    document.getElementById('s-acc').textContent = '-';
+  }
+
   const tbody = document.getElementById('alert-body');
   let html = '';
   let lowConfCount = 0;
-  let highConfCount = 0;
+  let shownCount = 0;
 
-  data.decisions.forEach(d => {
+  data.decisions.forEach((d, idx) => {
     const confPercent = Math.round(d.confidence * 100);
     const isWarning = d.llm_decision;
 
-    if (confPercent < 70) {
-      lowConfCount++;
-      return;
-    }
-    highConfCount++;
+    if (confPercent < 70) { lowConfCount++; return; }
+    shownCount++;
 
     const cat = categoryIcons[d.category] || {};
     const barCls = confPercent >= 85 ? 'bar-green' : confPercent >= 75 ? 'bar-yellow' : 'bar-red';
 
-    // 信号
-    const signals = Object.entries(d.evidence_summary)
-      .filter(([k,v])=>typeof v==='number' && !k.startsWith('llm') && !k.startsWith('heuristic'))
-      .slice(0, 2)
-      .map(([k,v]) => `${signalLabels[k]||k} ${(v*100).toFixed(0)}%`)
-      .join(', ');
+    // 关键信号（取详细证据中的 danger 项）
+    let signals = '-';
+    if (d.detailed_evidence && d.detailed_evidence.length > 0) {
+      const dangerEvs = d.detailed_evidence.filter(e => e.status === 'danger').slice(0, 3);
+      if (dangerEvs.length > 0) {
+        signals = dangerEvs.map(e => `${e.display_name.split('(')[0]}${e.value}${e.unit}`).join(', ');
+      } else {
+        const topEvs = d.detailed_evidence.slice(0, 2);
+        signals = topEvs.map(e => `${e.display_name.split('(')[0]}${e.value}${e.unit}`).join(', ');
+      }
+    } else {
+      const evEntries = Object.entries(d.evidence_summary || {})
+        .filter(([k,v]) => typeof v === 'number' && !k.startsWith('llm') && !k.startsWith('heuristic'))
+        .slice(0, 2);
+      signals = evEntries.map(([k,v]) => `${signalLabels[k]||k} ${(v*100).toFixed(0)}%`).join(', ') || '-';
+    }
 
-    // 数据来源 — 从原始场景提取
-    const sources = d.data_sources || '-';
+    // 验证徽章
+    let verifyBadge = '';
+    if (d.verification) {
+      const v = d.verification;
+      verifyBadge = v.hit
+        ? '<span class="verification-badge hit">✅ 命中</span>'
+        : '<span class="verification-badge miss">❌ 误报</span>';
+    }
 
-    html += `
-      <tr>
-        <td><strong>${d.region}</strong><br><span style="font-size:0.8em;color:#a0aec0;">预计: ${d.observation_time ? d.observation_time.substring(0,10) : '-'}</span></td>
-        <td><span class="cat-pill ${cat.cls}">${cat.label}</span></td>
-        <td><span class="${isWarning ? 'tag-on' : 'tag-off'}">${isWarning ? '⚠️ 有风险' : '✅ 安全'}</span></td>
-        <td>
-          <div class="bar-wrap"><div class="bar-fill ${barCls}" style="width:${confPercent}%"></div></div>
-          ${confPercent}%
-        </td>
-        <td class="mini-info">${signals || '-'}</td>
-        <td class="mini-info">${sources}</td>
-        <td>${isWarning ? (suggestions[d.category] || '-') : '-'}</td>
-      </tr>
-    `;
+    const regionCn = d.region_cn || d.region;
+    const obsTime = d.observation_time ? d.observation_time.substring(0,10) : '-';
+
+    html += `<tr id="row-${idx}" onclick="toggleDetail(${idx})" style="cursor:pointer;">
+      <td><span class="expand-icon" id="icon-${idx}">▶</span></td>
+      <td><strong>${regionCn}</strong><br><span style="font-size:0.8em;color:#a0aec0;">预计: ${obsTime}</span></td>
+      <td><span class="cat-pill ${cat.cls}">${cat.label}</span></td>
+      <td><span class="${isWarning ? 'tag-on' : 'tag-off'}">${isWarning ? '⚠️ 有风险' : '✅ 安全'}</span></td>
+      <td><div class="bar-wrap"><div class="bar-fill ${barCls}" style="width:${confPercent}%"></div></div>${confPercent}%</td>
+      <td class="mini-info">${signals}</td>
+      <td>${verifyBadge || '<span style="color:#a0aec0;">-</span>'}</td>
+    </tr>`;
+
+    // 展开行
+    html += `<tr class="detail-row" id="detail-${idx}" style="display:none;"><td colspan="7"><div class="detail-panel" id="panel-${idx}">`;
+    html += buildDetailPanel(d);
+    html += `</div></td></tr>`;
   });
 
-  if (highConfCount === 0) {
+  if (shownCount === 0) {
     html += '<tr><td colspan="7" style="text-align:center;color:#975a16;padding:20px;">今天所有场景把握度均低于70%，暂不公布</td></tr>';
   }
 
@@ -472,17 +371,283 @@ function renderToday(data) {
   }
 }
 
-function renderHistory() {
+function buildDetailPanel(d) {
   let html = '';
-  accuracyHistory.forEach(h => {
-    html += `
-      <div class="history-row">
-        <span class="history-date">${h.date}</span>
-        <span class="history-val ${h.accColor}">${h.acc}</span>
+
+  // 详细证据
+  if (d.detailed_evidence && d.detailed_evidence.length > 0) {
+    html += '<div style="font-weight:600;font-size:0.85em;margin-bottom:6px;color:#2d3748;">🔬 原始观测数据与阈值分析</div>';
+    html += '<div class="evidence-grid">';
+    d.detailed_evidence.forEach(ev => {
+      const valDisplay = ev.value + ev.unit;
+      let thresholdText = '';
+      if (ev.direction === 'high') {
+        thresholdText = `阈值: ≥${ev.threshold}${ev.unit}`;
+      } else if (ev.direction === 'low') {
+        thresholdText = `阈值: ≤${ev.threshold}${ev.unit}`;
+      } else {
+        thresholdText = `阈值: ≥${ev.threshold}${ev.unit}`;
+      }
+
+      // 进度条
+      let barPercent = 50;
+      if (ev.direction === 'high' && ev.threshold > 0) {
+        barPercent = Math.min(100, (ev.value / (ev.threshold * 1.5)) * 100);
+      } else if (ev.direction === 'low' && ev.threshold !== 0) {
+        barPercent = Math.min(100, ((ev.threshold * 2 - ev.value) / (ev.threshold * 2)) * 100);
+      }
+      const barColor = ev.status === 'danger' ? '#f56565' : ev.status === 'warn' ? '#ecc94b' : '#48bb78';
+      const markerPos = ev.direction === 'high'
+        ? Math.min(100, (ev.threshold / (ev.threshold * 1.5)) * 100)
+        : 50;
+
+      html += `<div class="evidence-card ${ev.status}">
+        <div class="ev-name">${ev.display_name}</div>
+        <div class="ev-value">${valDisplay} <span style="font-size:0.7em;color:#718096;">${ev.status_text}</span></div>
+        <div class="ev-threshold">${thresholdText} · 来源: ${ev.source}</div>
+        <div class="ev-bar-wrap"><div class="ev-bar-fill" style="width:${barPercent}%;background:${barColor};"></div><div class="ev-bar-marker" style="left:${markerPos}%;"></div></div>
+        <div class="ev-desc">${ev.description}</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  // 原始观测时间序列（如果有多个时间点）
+  if (d.raw_observations && d.raw_observations.length > 0) {
+    const grouped = {};
+    d.raw_observations.forEach(o => {
+      if (!grouped[o.variable]) grouped[o.variable] = [];
+      grouped[o.variable].push(o);
+    });
+    const multiPoint = Object.values(grouped).filter(arr => arr.length >= 2);
+    if (multiPoint.length > 0) {
+      html += '<div style="font-weight:600;font-size:0.85em;margin:8px 0 4px;color:#2d3748;">📈 时序趋势（L4 场景）</div>';
+      html += '<div style="font-size:0.78em;color:#4a5568;line-height:1.6;">';
+      multiPoint.forEach(arr => {
+        const varName = signalLabels[arr[0].variable] || arr[0].variable;
+        const values = arr.map(o => `${o.value}${o.unit}`).join(' → ');
+        const times = arr.map(o => o.timestamp.substring(5,16)).join(' → ');
+        html += `<div><strong>${varName}</strong>: ${values} <span style="color:#a0aec0;">(${times})</span></div>`;
+      });
+      html += '</div>';
+    }
+  }
+
+  // 推理链条
+  if (d.reasoning_chain && d.reasoning_chain.length > 0) {
+    html += '<div class="reasoning-chain">';
+    html += '<div class="chain-title">🧠 AI 推理过程</div>';
+    d.reasoning_chain.forEach(step => {
+      const iconMap = { intro: '📋', evidence: '📊', analysis: '⚖️', decision: d.llm_decision ? '⚠️' : '✅' };
+      html += `<div class="chain-step">
+        <div class="chain-num ${step.type}">${step.step}</div>
+        <div class="chain-text">${iconMap[step.type] || ''} ${step.text}</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  // 建议措施
+  if (d.llm_decision) {
+    html += `<div style="margin-top:8px;padding:8px 10px;background:#fff5f5;border-radius:6px;font-size:0.82em;">
+      <strong>📌 建议:</strong> ${suggestions[d.category] || '-'} — ${getAdvice(d.category)}
+    </div>`;
+  }
+
+  // 数据来源详情
+  html += `<div style="margin-top:6px;font-size:0.72em;color:#a0aec0;">数据来源: ${d.data_sources || '-'} · 预计发生时间: ${d.observation_time ? d.observation_time.substring(0,10) : '-'}</div>`;
+
+  return html;
+}
+
+function getAdvice(category) {
+  const advice = {
+    fire: '加强巡查、清理可燃物、准备灭火设备、关注风向变化',
+    flood: '远离河道和低洼地区、准备防汛物资、关注水位预警',
+    drought: '合理调配水资源、减少农业灌溉、关注饮用水储备',
+    heat: '减少户外活动、多饮水、关注老人儿童健康状况、防止中暑'
+  };
+  return advice[category] || '';
+}
+
+function toggleDetail(idx) {
+  const row = document.getElementById('detail-' + idx);
+  const icon = document.getElementById('icon-' + idx);
+  const panel = document.getElementById('panel-' + idx);
+  const mainRow = document.getElementById('row-' + idx);
+
+  if (row.style.display === 'none') {
+    row.style.display = '';
+    panel.classList.add('show');
+    icon.classList.add('open');
+    icon.textContent = '▼';
+    mainRow.classList.add('expanded');
+  } else {
+    row.style.display = 'none';
+    panel.classList.remove('show');
+    icon.classList.remove('open');
+    icon.textContent = '▶';
+    mainRow.classList.remove('expanded');
+  }
+}
+
+// ===================== Map =====================
+function renderMap(data) {
+  if (typeof L === 'undefined') return;
+
+  if (mapInstance) {
+    mapInstance.remove();
+  }
+
+  mapInstance = L.map('risk-map', { scrollWheelZoom: false }).setView([35.0, 108.0], 4);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
+    subdomains: 'abcd',
+    maxZoom: 10
+  }).addTo(mapInstance);
+
+  const alertRegions = [];
+  const safeRegions = [];
+  const lowConfRegions = [];
+
+  data.decisions.forEach(d => {
+    if (!d.coordinates) return;
+    const confPercent = Math.round(d.confidence * 100);
+    if (confPercent < 70) {
+      lowConfRegions.push(d);
+    } else if (d.llm_decision) {
+      alertRegions.push(d);
+    } else {
+      safeRegions.push(d);
+    }
+  });
+
+  // 绘制预警区域（红色圆）
+  alertRegions.forEach(d => {
+    const radius = (d.affected_radius_km || 50) * 1000;
+    const circle = L.circle([d.coordinates.lat, d.coordinates.lng], {
+      radius: radius,
+      color: '#e53e3e',
+      fillColor: '#fc8181',
+      fillOpacity: 0.25,
+      weight: 2
+    }).addTo(mapInstance);
+
+    const cat = categoryIcons[d.category] || { label: d.category };
+    const confPercent = Math.round(d.confidence * 100);
+    const popupContent = `
+      <div style="font-size:13px;min-width:200px;">
+        <div style="font-weight:bold;font-size:14px;margin-bottom:4px;">${d.region_cn || d.region}</div>
+        <div style="color:#e53e3e;font-weight:600;margin-bottom:4px;">⚠️ ${cat.label} · 有风险 (${confPercent}%)</div>
+        <div style="color:#666;font-size:12px;">预计: ${d.observation_time ? d.observation_time.substring(0,10) : '-'}</div>
+        <div style="color:#666;font-size:12px;">影响半径: ~${d.affected_radius_km || 50}km</div>
+        ${d.verification ? (d.verification.hit ? '<div style="color:#38a169;font-size:12px;margin-top:4px;">✅ 已验证命中</div>' : '<div style="color:#e53e3e;font-size:12px;margin-top:4px;">❌ 误报</div>') : ''}
       </div>
     `;
+    circle.bindPopup(popupContent);
+
+    // 中心标记
+    L.circleMarker([d.coordinates.lat, d.coordinates.lng], {
+      radius: 5, color: '#e53e3e', fillColor: '#fff', fillOpacity: 1, weight: 2
+    }).addTo(mapInstance).bindPopup(popupContent);
   });
-  document.getElementById('history-list').innerHTML = html;
+
+  // 绘制安全区域（绿色）
+  safeRegions.forEach(d => {
+    const radius = (d.affected_radius_km || 50) * 1000;
+    const circle = L.circle([d.coordinates.lat, d.coordinates.lng], {
+      radius: radius,
+      color: '#48bb78',
+      fillColor: '#68d391',
+      fillOpacity: 0.12,
+      weight: 1.5,
+      dashArray: '5,5'
+    }).addTo(mapInstance);
+
+    const cat = categoryIcons[d.category] || { label: d.category };
+    const confPercent = Math.round(d.confidence * 100);
+    const popupContent = `
+      <div style="font-size:13px;min-width:200px;">
+        <div style="font-weight:bold;font-size:14px;margin-bottom:4px;">${d.region_cn || d.region}</div>
+        <div style="color:#38a169;font-weight:600;margin-bottom:4px;">✅ ${cat.label} · 安全 (${confPercent}%)</div>
+        <div style="color:#666;font-size:12px;">预计: ${d.observation_time ? d.observation_time.substring(0,10) : '-'}</div>
+        ${d.verification ? (d.verification.hit ? '<div style="color:#38a169;font-size:12px;margin-top:4px;">✅ 已验证命中</div>' : '<div style="color:#e53e3e;font-size:12px;margin-top:4px;">❌ 误报</div>') : ''}
+      </div>
+    `;
+    circle.bindPopup(popupContent);
+
+    L.circleMarker([d.coordinates.lat, d.coordinates.lng], {
+      radius: 4, color: '#48bb78', fillColor: '#fff', fillOpacity: 1, weight: 2
+    }).addTo(mapInstance).bindPopup(popupContent);
+  });
+
+  // 绘制低置信度区域（黄色）
+  lowConfRegions.forEach(d => {
+    L.circleMarker([d.coordinates.lat, d.coordinates.lng], {
+      radius: 4, color: '#ecc94b', fillColor: '#ecc94b', fillOpacity: 0.5, weight: 1
+    }).addTo(mapInstance).bindPopup(`
+      <div style="font-size:13px;">
+        <div style="font-weight:bold;">${d.region_cn || d.region}</div>
+        <div style="color:#b7791f;">把握度不足，暂不公布</div>
+      </div>
+    `);
+  });
+
+  // 自动调整视野
+  const allCoords = data.decisions.filter(d => d.coordinates).map(d => [d.coordinates.lat, d.coordinates.lng]);
+  if (allCoords.length > 0) {
+    mapInstance.fitBounds(allCoords, { padding: [30, 30] });
+  }
+}
+
+// ===================== History =====================
+function renderHistory() {
+  if (!historyData || historyData.length === 0) {
+    document.getElementById('history-chart').innerHTML = '<div style="font-size:0.8em;color:#a0aec0;text-align:center;padding:20px;">暂无历史数据</div>';
+    return;
+  }
+
+  // 图表
+  const chartHtml = historyData.slice().reverse().map(h => {
+    const accPercent = Math.round(h.accuracy * 100);
+    const barHeight = Math.max(4, accPercent * 0.7);
+    const barColor = accPercent >= 95 ? '#48bb78' : accPercent >= 85 ? '#ecc94b' : '#f56565';
+    return `<div class="history-bar-col">
+      <div class="history-bar-val" style="color:${barColor};">${accPercent}%</div>
+      <div class="history-bar ${h.is_today ? 'today' : ''}" style="height:${barHeight}px;background:${barColor};" title="${h.date_short}: ${h.hits}/${h.alerts}命中"></div>
+      <div class="history-bar-label">${h.date_short}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('history-chart').innerHTML = chartHtml;
+
+  // 汇总统计
+  const totalAlerts = historyData.reduce((s,h) => s + h.alerts, 0);
+  const totalHits = historyData.reduce((s,h) => s + h.hits, 0);
+  const totalMisses = historyData.reduce((s,h) => s + h.misses, 0);
+  const overallAcc = totalAlerts > 0 ? Math.round(totalHits / totalAlerts * 100) : 0;
+
+  document.getElementById('history-summary').innerHTML = `
+    <div class="history-stat"><div class="num" style="color:#38a169;">${totalHits}</div><div class="label">总命中</div></div>
+    <div class="history-stat"><div class="num" style="color:#e53e3e;">${totalMisses}</div><div class="label">总误报</div></div>
+    <div class="history-stat"><div class="num" style="color:#667eea;">${overallAcc}%</div><div class="label">总准确率</div></div>
+  `;
+
+  // 今日详情
+  const today = historyData.find(h => h.is_today) || historyData[0];
+  if (today && today.details) {
+    const detailHtml = today.details.map(d => {
+      const catIcon = categoryIcons[d.category] || { label: '' };
+      const resultText = d.hit
+        ? (d.predicted ? '✅ 正确预警' : '✅ 正确排除')
+        : (d.predicted ? '❌ 误报' : '❌ 漏报');
+      return `<div class="history-detail-row">
+        <span class="region">${catIcon.label} ${d.region}</span>
+        <span class="result ${d.hit ? 'hit' : 'miss'}">${resultText}</span>
+      </div>`;
+    }).join('');
+    document.getElementById('history-detail-list').innerHTML = detailHtml;
+  }
 }
 
 loadData();
