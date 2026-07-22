@@ -32,11 +32,11 @@ body { font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
 #risk-map { height: 380px; width: 100%; }
 
 /* Two-column layout */
-.main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px; }
+.main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px; align-items: stretch; }
 
 /* Alert Table */
-.alert-section { background: white; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); overflow: hidden; }
-.table-scroll { max-height: calc(100vh - 520px); min-height: 300px; overflow-y: auto; }
+.alert-section { background: white; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); overflow: hidden; display: flex; flex-direction: column; }
+.table-scroll { flex: 1; overflow-y: auto; min-height: 0; }
 
 table { width: 100%; border-collapse: collapse; font-size: 0.82em; }
 th { position: sticky; top: 0; background: #4a5568; color: white; padding: 6px 5px; text-align: left; font-weight: 600; z-index: 10; }
@@ -95,8 +95,9 @@ tr.expanded { background: #ebf4ff !important; }
 
 /* Side panel */
 .side-panel { display: flex; flex-direction: column; gap: 10px; }
-.history-card, .info-box, .source-box, .faq-box { background: white; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-.history-card h3, .info-box h3, .source-box h3, .faq-box h3 { font-size: 0.9em; margin-bottom: 8px; color: #2d3748; border-bottom: 2px solid #667eea; padding-bottom: 4px; }
+.side-panel > :last-child { flex: 1; }
+.history-card, .info-box, .source-box, .faq-box, .contact-box { background: white; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.history-card h3, .info-box h3, .source-box h3, .faq-box h3, .contact-box h3 { font-size: 0.9em; margin-bottom: 8px; color: #2d3748; border-bottom: 2px solid #667eea; padding-bottom: 4px; }
 
 /* History chart */
 .history-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; margin: 8px 0; }
@@ -111,8 +112,10 @@ tr.expanded { background: #ebf4ff !important; }
 .history-stat .num { font-size: 1.3em; font-weight: bold; }
 .history-stat .label { font-size: 0.7em; color: #718096; }
 
-.history-detail-list { max-height: 200px; overflow-y: auto; }
-.history-detail-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; font-size: 0.78em; border-bottom: 1px dashed #e2e8f0; }
+.history-detail-list { max-height: 280px; overflow-y: auto; }
+.history-detail-row { padding: 4px 0; border-bottom: 1px dashed #e2e8f0; }
+.hd-row-top { display: flex; justify-content: space-between; align-items: center; font-size: 0.78em; }
+.hd-row-reason { font-size: 0.72em; color: #718096; margin-top: 2px; line-height: 1.3; padding-left: 2px; }
 .history-detail-row .region { color: #4a5568; }
 .history-detail-row .result { font-weight: 600; }
 .history-detail-row .result.hit { color: #38a169; }
@@ -126,6 +129,10 @@ tr.expanded { background: #ebf4ff !important; }
 .source-icon { font-size: 1.2em; }
 
 .low-conf-note { background: #fffff0; border: 1px solid #fbd38d; border-radius: 8px; padding: 8px 14px; margin-bottom: 10px; font-size: 0.85em; color: #975a16; text-align: center; }
+
+.contact-links { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
+.contact-link { display: block; padding: 5px 10px; background: #f7fafc; border-radius: 6px; font-size: 0.8em; color: #4a5568; text-decoration: none; transition: background 0.2s; }
+.contact-link:hover { background: #ebf4ff; color: #3182ce; }
 
 .map-legend { display: flex; gap: 12px; padding: 6px 14px; background: #f7fafc; font-size: 0.78em; color: #4a5568; }
 .legend-item { display: flex; align-items: center; gap: 4px; }
@@ -222,10 +229,25 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
         <div class="info-item"><strong>为什么有时不报？</strong><br>把握度低于70%就不显示——AI 自己都不确定的事，不误导您。</div>
         <div class="info-item"><strong>准不准？</strong><br>过去7天平均准确率见右侧战绩面板，每条预警都标注是否命中。</div>
       </div>
+
+      <div class="contact-box">
+        <h3>📬 关于与联系</h3>
+        <div class="info-item"><strong>EarthBench</strong> — 基于 AI 的自然灾害预警系统，每天自动分析全国 20+ 监测区域的火灾、洪涝、干旱和高温热浪风险。</div>
+        <div class="contact-links">
+          <a href="mailto:contact@earth-ai.fun" class="contact-link">📧 contact@earth-ai.fun</a>
+          <a href="https://github.com/showkeyjar/earth-bench" target="_blank" class="contact-link">🔗 GitHub 项目仓库</a>
+        </div>
+        <div class="info-item" style="margin-top:6px;font-size:0.75em;color:#a0aec0;">如有数据合作、技术咨询或问题反馈，欢迎通过以上方式联系。</div>
+      </div>
     </div>
   </div>
 
-  <footer>© 2026 地球风险日报 | Powered by AI · 每天自动更新</footer>
+  <footer>
+    © 2026 EarthBench · 地球风险日报 | Powered by AI · 每天自动更新<br>
+    <a href="mailto:contact@earth-ai.fun" style="color:#a0aec0;text-decoration:none;">contact@earth-ai.fun</a>
+    <span style="color:#cbd5e0;"> · </span>
+    <a href="https://github.com/showkeyjar/earth-bench" target="_blank" style="color:#a0aec0;text-decoration:none;">GitHub</a>
+  </footer>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -457,6 +479,21 @@ function buildDetailPanel(d) {
   // 数据来源详情
   html += `<div style="margin-top:6px;font-size:0.72em;color:#a0aec0;">数据来源: ${d.data_sources || '-'} · 预计发生时间: ${d.observation_time ? d.observation_time.substring(0,10) : '-'}</div>`;
 
+  // 验证结果与理由
+  if (d.verification) {
+    const v = d.verification;
+    const hitClass = v.hit ? 'hit' : 'miss';
+    const hitIcon = v.hit ? '✅' : '❌';
+    const hitLabel = v.hit
+      ? (v.predicted ? '正确预警' : '正确排除')
+      : (v.predicted ? '误报' : '漏报');
+    const reasonText = d.verification_reason || '';
+    html += `<div style="margin-top:8px;padding:10px 12px;background:${v.hit ? '#f0fff4' : '#fff5f5'};border-radius:8px;border-left:3px solid ${v.hit ? '#48bb78' : '#f56565'};">
+      <div style="font-weight:600;font-size:0.85em;margin-bottom:4px;color:${v.hit ? '#22543d' : '#742a2a'};">${hitIcon} 验证结果：${hitLabel}</div>
+      <div style="font-size:0.78em;color:#4a5568;line-height:1.5;">${reasonText}</div>
+    </div>`;
+  }
+
   return html;
 }
 
@@ -501,10 +538,10 @@ function renderMap(data) {
 
   mapInstance = L.map('risk-map', { scrollWheelZoom: false }).setView([35.0, 108.0], 4);
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap &copy; CARTO',
-    subdomains: 'abcd',
-    maxZoom: 10
+  L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+    attribution: '&copy; 高德地图 (AMap)',
+    subdomains: ['1', '2', '3', '4'],
+    maxZoom: 18
   }).addTo(mapInstance);
 
   const alertRegions = [];
@@ -542,7 +579,7 @@ function renderMap(data) {
         <div style="color:#e53e3e;font-weight:600;margin-bottom:4px;">⚠️ ${cat.label} · 有风险 (${confPercent}%)</div>
         <div style="color:#666;font-size:12px;">预计: ${d.observation_time ? d.observation_time.substring(0,10) : '-'}</div>
         <div style="color:#666;font-size:12px;">影响半径: ~${d.affected_radius_km || 50}km</div>
-        ${d.verification ? (d.verification.hit ? '<div style="color:#38a169;font-size:12px;margin-top:4px;">✅ 已验证命中</div>' : '<div style="color:#e53e3e;font-size:12px;margin-top:4px;">❌ 误报</div>') : ''}
+        ${d.verification ? (d.verification.hit ? '<div style="color:#38a169;font-size:12px;margin-top:4px;">✅ 已验证命中</div>' : '<div style="color:#e53e3e;font-size:12px;margin-top:4px;">❌ 误报</div>') : ''}${d.verification_reason ? '<div style="font-size:11px;color:#718096;margin-top:3px;line-height:1.4;border-top:1px solid #eee;padding-top:3px;">' + d.verification_reason + '</div>' : ''}
       </div>
     `;
     circle.bindPopup(popupContent);
@@ -572,7 +609,7 @@ function renderMap(data) {
         <div style="font-weight:bold;font-size:14px;margin-bottom:4px;">${d.region_cn || d.region}</div>
         <div style="color:#38a169;font-weight:600;margin-bottom:4px;">✅ ${cat.label} · 安全 (${confPercent}%)</div>
         <div style="color:#666;font-size:12px;">预计: ${d.observation_time ? d.observation_time.substring(0,10) : '-'}</div>
-        ${d.verification ? (d.verification.hit ? '<div style="color:#38a169;font-size:12px;margin-top:4px;">✅ 已验证命中</div>' : '<div style="color:#e53e3e;font-size:12px;margin-top:4px;">❌ 误报</div>') : ''}
+        ${d.verification ? (d.verification.hit ? '<div style="color:#38a169;font-size:12px;margin-top:4px;">✅ 已验证命中</div>' : '<div style="color:#e53e3e;font-size:12px;margin-top:4px;">❌ 误报</div>') : ''}${d.verification_reason ? '<div style="font-size:11px;color:#718096;margin-top:3px;line-height:1.4;border-top:1px solid #eee;padding-top:3px;">' + d.verification_reason + '</div>' : ''}
       </div>
     `;
     circle.bindPopup(popupContent);
@@ -641,9 +678,13 @@ function renderHistory() {
       const resultText = d.hit
         ? (d.predicted ? '✅ 正确预警' : '✅ 正确排除')
         : (d.predicted ? '❌ 误报' : '❌ 漏报');
+      const reason = d.hit_reason || '';
       return `<div class="history-detail-row">
-        <span class="region">${catIcon.label} ${d.region}</span>
-        <span class="result ${d.hit ? 'hit' : 'miss'}">${resultText}</span>
+        <div class="hd-row-top">
+          <span class="region">${catIcon.label} ${d.region}</span>
+          <span class="result ${d.hit ? 'hit' : 'miss'}">${resultText}</span>
+        </div>
+        ${reason ? `<div class="hd-row-reason">${reason}</div>` : ''}
       </div>`;
     }).join('');
     document.getElementById('history-detail-list').innerHTML = detailHtml;
