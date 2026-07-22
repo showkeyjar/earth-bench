@@ -109,7 +109,6 @@ tr:hover { background: #edf2f7; }
 .bar-red { background: #f56565; }
 
 .mini-info { font-size: 0.9em; color: #4a5568; line-height: 1.4; }
-.source-badge { display: inline-block; background: #edf2f7; padding: 1px 5px; border-radius: 4px; font-size: 0.8em; color: #4a5568; margin-right: 3px; margin-top: 2px; }
 
 /* Side panel */
 .side-panel {
@@ -144,19 +143,41 @@ tr:hover { background: #edf2f7; }
 .history-val.good { color: #38a169; }
 .history-val.warn { color: #dd6b20; }
 
-.faq-box {
+.info-box {
   background: white;
   border-radius: 12px;
   padding: 12px 14px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
-.faq-box h3 {
+.info-box h3 {
   font-size: 0.9em;
   margin-bottom: 8px;
   color: #2d3748;
 }
-.faq-item { font-size: 0.82em; margin: 6px 0; line-height: 1.5; }
-.faq-item strong { color: #2d3748; }
+.info-item { font-size: 0.82em; margin: 6px 0; line-height: 1.5; }
+.info-item strong { color: #2d3748; }
+
+.source-box {
+  background: white;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.source-box h3 {
+  font-size: 0.9em;
+  margin-bottom: 8px;
+  color: #2d3748;
+}
+.source-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 0.82em;
+  border-bottom: 1px dashed #e2e8f0;
+}
+.source-item:last-child { border-bottom: none; }
+.source-icon { font-size: 1.2em; }
 
 .low-conf-note {
   background: #fffff0;
@@ -191,7 +212,7 @@ footer {
   <div class="mini-stats">
     <div class="mini-stat">
       <div class="num" style="color:#667eea;" id="s-total">-</div>
-      <div class="label">监测</div>
+      <div class="label">监测区域</div>
     </div>
     <div class="mini-stat">
       <div class="num" style="color:#e53e3e;" id="s-alert">-</div>
@@ -241,18 +262,58 @@ footer {
         <div id="history-list"></div>
       </div>
 
+      <!-- Risk categories -->
+      <div class="info-box">
+        <h3>⚠️ 风险等级说明</h3>
+        <div class="info-item">
+          <strong>🔴 高风险 (≥85%)：</strong>需要立即关注，建议启动应急预案
+        </div>
+        <div class="info-item">
+          <strong>🟡 中风险 (75%-84%)：</strong>需持续监控，建议加强巡查
+        </div>
+        <div class="info-item">
+          <strong>🟢 低风险 (<75%)：</strong>暂时无需特殊措施
+        </div>
+      </div>
+
+      <!-- Data sources -->
+      <div class="source-box">
+        <h3>🛰️ 数据来源</h3>
+        <div class="source-item">
+          <span class="source-icon">🛰️</span>
+          <div>
+            <strong>卫星数据</strong><br>
+            <span style="color:#718096;">NASA MODIS / ECMWF 数值预报</span>
+          </div>
+        </div>
+        <div class="source-item">
+          <span class="source-icon">🏭</span>
+          <div>
+            <strong>气象站</strong><br>
+            <span style="color:#718096;">中国气象局(CMA)地面观测</span>
+          </div>
+        </div>
+        <div class="source-item">
+          <span class="source-icon">💧</span>
+          <div>
+            <strong>水文传感器</strong><br>
+            <span style="color:#718096;">水位/土壤湿度实时监测</span>
+          </div>
+        </div>
+      </div>
+
       <!-- FAQ -->
-      <div class="faq-box">
+      <div class="faq-box" id="faq-box">
         <h3>💡 快速了解</h3>
-        <div class="faq-item">
+        <div class="info-item">
           <strong>这是什么？</strong><br>
           AI 帮您提前知道哪里可能有火灾、洪水、干旱或太热。
         </div>
-        <div class="faq-item">
+        <div class="info-item">
           <strong>数据从哪来？</strong><br>
           卫星(NASA/ECMWF)、气象站(CMA)、水文传感器。每条记录标明来源。
         </div>
-        <div class="faq-item">
+        <div class="info-item">
           <strong>为什么有时不报？</strong><br>
           把握度低于70%就不显示——AI 自己都不确定的事，不误导您。
         </div>
@@ -291,21 +352,43 @@ const suggestions = {
   fire: '注意防火', flood: '远离低洼', drought: '节约用水', heat: '减少户外'
 };
 
+// 智能获取 JSON 文件路径
 async function loadData() {
   try {
-    const resp = await fetch('decisions_20260712.json');
+    // 尝试加载当日 JSON（从同一目录）
+    const today = new Date();
+    const dateStr = today.getFullYear() + '' + 
+                    String(today.getMonth()+1).padStart(2,'0') + 
+                    String(today.getDate()).padStart(2,'0');
+    
+    // 先尝试最新日期的文件
+    let latestJson = 'decisions_' + dateStr + '.json';
+    try {
+      await fetch(latestJson);
+    } catch {
+      // 如果最新日期的文件不存在，尝试昨天或其他文件
+      yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate()-1);
+      latestJson = 'decisions_' + yesterday.getFullYear() + '' + 
+                   String(yesterday.getMonth()+1).padStart(2,'0') + 
+                   String(yesterday.getDate()).padStart(2,'0') + '.json';
+    }
+    
+    console.log('Loading:', latestJson);
+    const resp = await fetch(latestJson);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const data = await resp.json();
     renderToday(data);
     renderHistory();
   } catch (e) {
-    document.getElementById('alert-body').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#e53e3e;padding:30px;">加载失败</td></tr>';
+    console.error('Load failed:', e);
+    document.getElementById('alert-body').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#e53e3e;padding:30px;">暂时无法加载数据，请稍后刷新</td></tr>';
   }
 }
 
 function renderToday(data) {
   document.getElementById('header-meta').innerHTML = 
-    '<div>更新于 ' + new Date(data.published_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) + '</div>' +
-    '<div style="margin-top:2px;">引擎: Ollama/qwen3:14b</div>';
+    '<div>更新于 ' + new Date(data.published_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) + '</div>';
 
   document.getElementById('s-total').textContent = data.total_scenarios;
   document.getElementById('s-alert').textContent = data.alert_count;
