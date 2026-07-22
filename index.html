@@ -353,36 +353,57 @@ const suggestions = {
 };
 
 // 智能获取 JSON 文件路径
+// 策略：先试 latest.json，再按日期从近到远尝试
+async function fetchJSON(url) {
+  const resp = await fetch(url);
+  if (!resp.ok) return null;
+  const ct = resp.headers.get('content-type') || '';
+  if (!ct.includes('application/json') && !ct.includes('text/plain')) return null;
+  const text = await resp.text();
+  if (!text.trim().startsWith('{') && !text.trim().startsWith('[')) return null;
+  return JSON.parse(text);
+}
+
 async function loadData() {
+  let data = null;
+
+  // 1. 优先加载 latest.json
   try {
-    // 尝试加载当日 JSON（从同一目录）
+    console.log('Trying: latest.json');
+    data = await fetchJSON('latest.json');
+  } catch (e) {
+    console.log('latest.json failed:', e.message);
+  }
+
+  // 2. 如果 latest.json 不存在，按日期从近到远尝试（最多回溯 30 天）
+  if (!data) {
     const today = new Date();
-    const dateStr = today.getFullYear() + '' + 
-                    String(today.getMonth()+1).padStart(2,'0') + 
-                    String(today.getDate()).padStart(2,'0');
-    
-    // 先尝试最新日期的文件
-    let latestJson = 'decisions_' + dateStr + '.json';
-    try {
-      await fetch(latestJson);
-    } catch {
-      // 如果最新日期的文件不存在，尝试昨天或其他文件
-      yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate()-1);
-      latestJson = 'decisions_' + yesterday.getFullYear() + '' + 
-                   String(yesterday.getMonth()+1).padStart(2,'0') + 
-                   String(yesterday.getDate()).padStart(2,'0') + '.json';
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.getFullYear() + '' +
+                      String(d.getMonth() + 1).padStart(2, '0') +
+                      String(d.getDate()).padStart(2, '0');
+      const url = 'decisions_' + dateStr + '.json';
+      try {
+        console.log('Trying:', url);
+        data = await fetchJSON(url);
+        if (data) {
+          console.log('Found:', url);
+          break;
+        }
+      } catch (e) {
+        // 继续尝试下一天
+      }
     }
-    
-    console.log('Loading:', latestJson);
-    const resp = await fetch(latestJson);
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const data = await resp.json();
+  }
+
+  if (data) {
     renderToday(data);
     renderHistory();
-  } catch (e) {
-    console.error('Load failed:', e);
-    document.getElementById('alert-body').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#e53e3e;padding:30px;">暂时无法加载数据，请稍后刷新</td></tr>';
+  } else {
+    console.error('All JSON load attempts failed');
+    document.getElementById('alert-body').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#e53e3e;padding:30px;">暂时无法加载数据，请稍后刷新页面重试</td></tr>';
   }
 }
 
@@ -425,7 +446,7 @@ function renderToday(data) {
 
     html += `
       <tr>
-        <td><strong>${d.region}</strong><br><span style="font-size:0.8em;color:#a0aec0;">${d.observation_time ? new Date(d.observation_time).slice(0,10) : ''}</span></td>
+        <td><strong>${d.region}</strong><br><span style="font-size:0.8em;color:#a0aec0;">预计: ${d.observation_time ? d.observation_time.substring(0,10) : '-'}</span></td>
         <td><span class="cat-pill ${cat.cls}">${cat.label}</span></td>
         <td><span class="${isWarning ? 'tag-on' : 'tag-off'}">${isWarning ? '⚠️ 有风险' : '✅ 安全'}</span></td>
         <td>
