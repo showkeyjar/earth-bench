@@ -368,7 +368,7 @@ function renderToday(data) {
 
     // 展开行
     html += `<tr class="detail-row" id="detail-${idx}" style="display:none;"><td colspan="7"><div class="detail-panel" id="panel-${idx}">`;
-    html += buildDetailPanel(d);
+    html += buildDetailPanel(d, idx);
     html += `</div></td></tr>`;
   });
 
@@ -384,7 +384,7 @@ function renderToday(data) {
   }
 }
 
-function buildDetailPanel(d) {
+function buildDetailPanel(d, idx) {
   let html = '';
 
   // 详细证据
