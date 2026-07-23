@@ -19,6 +19,7 @@ body { font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
 }
 .header h1 { font-size: 1.3em; }
 .header .meta { font-size: 0.8em; opacity: 0.8; text-align: right; }
+.publication-badge { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 16px; border-radius: 20px; font-weight: bold; font-size: 0.9em; white-space: nowrap; box-shadow: 0 2px 8px rgba(102,126,234,0.4); }
 
 /* Mini Stats */
 .mini-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 10px; }
@@ -153,6 +154,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
     <div><h1>🌍 地球风险日报</h1></div>
     <div class="meta" id="header-meta"></div>
   </div>
+  <div class="publication-badge">今日发布</div>
 
   <div class="mini-stats">
     <div class="mini-stat"><div class="num" style="color:#667eea;" id="s-total">-</div><div class="label">监测区域</div></div>
@@ -363,7 +365,8 @@ function renderToday(data) {
     }
 
     const regionCn = d.region_cn || d.region;
-    const obsTime = d.observation_time ? d.observation_time.substring(0,10) : '-';
+    // 统一显示"今日"而不是原始观测日期（所有场景都是今天评估的）
+    const obsTime = '今日';
 
     html += `<tr id="row-${idx}" onclick="toggleDetail(${idx})" style="cursor:pointer;">
       <td><span class="expand-icon" id="icon-${idx}">▶</span></td>
@@ -577,7 +580,6 @@ function renderMap(data) {
       <div style="font-size:13px;min-width:200px;">
         <div style="font-weight:bold;font-size:14px;margin-bottom:4px;">${d.region_cn || d.region}</div>
         <div style="color:#e53e3e;font-weight:600;margin-bottom:4px;">⚠️ ${cat.label} · 有风险 (${confPercent}%)</div>
-        <div style="color:#666;font-size:12px;">预计: ${d.observation_time ? d.observation_time.substring(0,10) : '-'}</div>
         <div style="color:#666;font-size:12px;">影响半径: ~${d.affected_radius_km || 50}km</div>
         ${d.verification ? (d.verification.hit ? '<div style="color:#38a169;font-size:12px;margin-top:4px;">✅ 已验证命中</div>' : '<div style="color:#e53e3e;font-size:12px;margin-top:4px;">❌ 误报</div>') : ''}${d.verification_reason ? '<div style="font-size:11px;color:#718096;margin-top:3px;line-height:1.4;border-top:1px solid #eee;padding-top:3px;">' + d.verification_reason + '</div>' : ''}
       </div>
@@ -608,7 +610,6 @@ function renderMap(data) {
       <div style="font-size:13px;min-width:200px;">
         <div style="font-weight:bold;font-size:14px;margin-bottom:4px;">${d.region_cn || d.region}</div>
         <div style="color:#38a169;font-weight:600;margin-bottom:4px;">✅ ${cat.label} · 安全 (${confPercent}%)</div>
-        <div style="color:#666;font-size:12px;">预计: ${d.observation_time ? d.observation_time.substring(0,10) : '-'}</div>
         ${d.verification ? (d.verification.hit ? '<div style="color:#38a169;font-size:12px;margin-top:4px;">✅ 已验证命中</div>' : '<div style="color:#e53e3e;font-size:12px;margin-top:4px;">❌ 误报</div>') : ''}${d.verification_reason ? '<div style="font-size:11px;color:#718096;margin-top:3px;line-height:1.4;border-top:1px solid #eee;padding-top:3px;">' + d.verification_reason + '</div>' : ''}
       </div>
     `;
@@ -658,15 +659,15 @@ function renderHistory() {
   }).join('');
   document.getElementById('history-chart').innerHTML = chartHtml;
 
-  // 汇总统计
-  const totalAlerts = historyData.reduce((s,h) => s + h.alerts, 0);
+  // 汇总统计 — 按"总决策数"计算准确率，更清晰
+  const totalDecisions = historyData.reduce((s,h) => s + h.total, 0);
   const totalHits = historyData.reduce((s,h) => s + h.hits, 0);
-  const totalMisses = historyData.reduce((s,h) => s + h.misses, 0);
-  const overallAcc = totalAlerts > 0 ? Math.round(totalHits / totalAlerts * 100) : 0;
+  const totalErrors = historyData.reduce((s,h) => s + h.misses, 0);
+  const overallAcc = totalDecisions > 0 ? Math.round(totalHits / totalDecisions * 100) : 0;
 
   document.getElementById('history-summary').innerHTML = `
-    <div class="history-stat"><div class="num" style="color:#38a169;">${totalHits}</div><div class="label">总命中</div></div>
-    <div class="history-stat"><div class="num" style="color:#e53e3e;">${totalMisses}</div><div class="label">总误报</div></div>
+    <div class="history-stat"><div class="num" style="color:#38a169;">${totalHits}</div><div class="label">正确 ${totalDecisions}次</div></div>
+    <div class="history-stat"><div class="num" style="color:#e53e3e;">${totalErrors}</div><div class="label">错误</div></div>
     <div class="history-stat"><div class="num" style="color:#667eea;">${overallAcc}%</div><div class="label">总准确率</div></div>
   `;
 

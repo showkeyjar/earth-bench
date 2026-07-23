@@ -29,7 +29,7 @@
         "lng": 116.16
       },
       "region_cn": "北京·香山",
-      "affected_radius_km": 50,
+      "affected_radius_km": 20,
       "raw_observations": [
         {
           "source": "ECMWF",
@@ -240,7 +240,7 @@
         "lng": 120.15
       },
       "region_cn": "杭州·西湖",
-      "affected_radius_km": 30,
+      "affected_radius_km": 15,
       "raw_observations": [
         {
           "source": "ECMWF",
@@ -406,7 +406,7 @@
         "lng": 128.08
       },
       "region_cn": "长白山",
-      "affected_radius_km": 80,
+      "affected_radius_km": 50,
       "raw_observations": [
         {
           "source": "ECMWF",
@@ -583,7 +583,7 @@
         "lng": 114.06
       },
       "region_cn": "深圳·海岸",
-      "affected_radius_km": 40,
+      "affected_radius_km": 20,
       "raw_observations": [
         {
           "source": "ECMWF",
@@ -753,7 +753,7 @@
         "lng": 124.39
       },
       "region_cn": "大兴安岭",
-      "affected_radius_km": 120,
+      "affected_radius_km": 60,
       "raw_observations": [
         {
           "source": "ECMWF",
@@ -926,7 +926,7 @@
         "lng": 114.31
       },
       "region_cn": "武汉·长江",
-      "affected_radius_km": 60,
+      "affected_radius_km": 25,
       "raw_observations": [
         {
           "source": "CMA",
@@ -1121,7 +1121,7 @@
         "lng": 91.11
       },
       "region_cn": "拉萨·西藏",
-      "affected_radius_km": 50,
+      "affected_radius_km": 15,
       "raw_observations": [
         {
           "source": "CMA",
@@ -1266,7 +1266,7 @@
         "lng": 113.27
       },
       "region_cn": "广州·珠江",
-      "affected_radius_km": 55,
+      "affected_radius_km": 25,
       "raw_observations": [
         {
           "source": "CMA",
@@ -1426,7 +1426,7 @@
         "lng": 110.29
       },
       "region_cn": "桂林·广西",
-      "affected_radius_km": 40,
+      "affected_radius_km": 20,
       "raw_observations": [
         {
           "source": "CMA",
@@ -1581,7 +1581,7 @@
         "lng": 118.8
       },
       "region_cn": "南京·长江",
-      "affected_radius_km": 50,
+      "affected_radius_km": 20,
       "raw_observations": [
         {
           "source": "Hydro",
@@ -1698,7 +1698,7 @@
         "lng": 102.71
       },
       "region_cn": "昆明·云南",
-      "affected_radius_km": 60,
+      "affected_radius_km": 25,
       "raw_observations": [
         {
           "source": "CMA",
@@ -1931,7 +1931,7 @@
         "lng": 120.16
       },
       "region_cn": "杭州·浙江",
-      "affected_radius_km": 35,
+      "affected_radius_km": 15,
       "raw_observations": [
         {
           "source": "CMA",
@@ -2137,7 +2137,7 @@
         "lng": 126.53
       },
       "region_cn": "哈尔滨·黑龙江",
-      "affected_radius_km": 70,
+      "affected_radius_km": 25,
       "raw_observations": [
         {
           "source": "CMA",
@@ -2315,7 +2315,7 @@
         "lng": 87.62
       },
       "region_cn": "乌鲁木齐·新疆",
-      "affected_radius_km": 65,
+      "affected_radius_km": 30,
       "raw_observations": [
         {
           "source": "CMA",
@@ -2546,7 +2546,7 @@
         "lng": 112.55
       },
       "region_cn": "太原·山西",
-      "affected_radius_km": 45,
+      "affected_radius_km": 18,
       "raw_observations": [
         {
           "source": "CMA",
@@ -2769,7 +2769,7 @@
         "lng": 106.91
       },
       "region_cn": "重庆",
-      "affected_radius_km": 55,
+      "affected_radius_km": 20,
       "raw_observations": [
         {
           "source": "CMA",
@@ -2967,7 +2967,7 @@
         "lng": 102.71
       },
       "region_cn": "昆明·春城",
-      "affected_radius_km": 50,
+      "affected_radius_km": 20,
       "raw_observations": [
         {
           "source": "CMA",
@@ -3108,7 +3108,7 @@
         "lng": 87.62
       },
       "region_cn": "乌鲁木齐·新疆",
-      "affected_radius_km": 65,
+      "affected_radius_km": 30,
       "raw_observations": [
         {
           "source": "CMA",
@@ -3271,7 +3271,7 @@
         "lng": 118.8
       },
       "region_cn": "南京",
-      "affected_radius_km": 45,
+      "affected_radius_km": 18,
       "raw_observations": [
         {
           "source": "CMA",
@@ -3457,7 +3457,7 @@
         "lng": 114.31
       },
       "region_cn": "武汉·长江",
-      "affected_radius_km": 60,
+      "affected_radius_km": 25,
       "raw_observations": [
         {
           "source": "CMA",
