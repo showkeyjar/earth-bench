@@ -66,6 +66,7 @@ tr.expanded { background: #ebf4ff !important; }
 .detail-panel.show { display: block; }
 /* 详情联动小地图 */
 .detail-map-section { background: #f0f4f8; border-radius: 8px; padding: 10px; margin-top: 10px; }
+.detail-map-section > div { height: 180px; }
 .detail-map-header { font-size: 0.85em; font-weight: 600; color: #2d3748; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
 #detail-map-container { height: 180px; width: 100%; border-radius: 6px; overflow: hidden; border: 2px solid #cbd5e0; }
 .detail-map-controls { font-size: 0.75em; color: #718096; }
@@ -521,7 +522,8 @@ function toggleDetail(idx) {
   const mainRow = document.getElementById('row-' + idx);
   const mapSection = document.getElementById('map-section-' + idx);
 
-  if (row.style.display === 'none') {
+  const isHidden = row.style.display === 'none' || !row.style.display;
+  if (isHidden) {
     // 展开
     row.style.display = '';
     panel.classList.add('show');
@@ -529,10 +531,10 @@ function toggleDetail(idx) {
     icon.textContent = '▼';
     mainRow.classList.add('expanded');
 
-    // 显示并初始化联动地图
+    // 显示并初始化联动地图（延迟一帧确保容器已渲染）
     if (mapSection) {
       mapSection.style.display = '';
-      initDetailMap(idx);
+      setTimeout(() => initDetailMap(idx), 50);
     }
   } else {
     // 收起 — 销毁旧地图实例释放内存
