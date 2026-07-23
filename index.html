@@ -27,10 +27,7 @@ body { font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
 .mini-stat .num { font-size: 1.6em; font-weight: bold; }
 .mini-stat .label { font-size: 0.75em; color: #718096; }
 
-/* Map */
-.map-section { background: white; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 10px; }
 .section-title-bar { background: #2d3748; color: white; padding: 8px 14px; font-weight: 600; font-size: 0.95em; }
-#risk-map { height: 380px; width: 100%; }
 
 /* Two-column layout */
 .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px; align-items: stretch; }
@@ -67,6 +64,11 @@ tr.expanded { background: #ebf4ff !important; }
 .detail-row td { padding: 0 !important; border: none !important; background: #f8faff !important; }
 .detail-panel { padding: 12px 16px; display: none; }
 .detail-panel.show { display: block; }
+/* 详情联动小地图 */
+.detail-map-section { background: #f0f4f8; border-radius: 8px; padding: 10px; margin-top: 10px; }
+.detail-map-header { font-size: 0.85em; font-weight: 600; color: #2d3748; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+#detail-map-container { height: 180px; width: 100%; border-radius: 6px; overflow: hidden; border: 2px solid #cbd5e0; }
+.detail-map-controls { font-size: 0.75em; color: #718096; }
 
 .evidence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
 .evidence-card { background: #f7fafc; border-radius: 8px; padding: 8px 10px; border-left: 3px solid #cbd5e0; }
@@ -135,10 +137,6 @@ tr.expanded { background: #ebf4ff !important; }
 .contact-link { display: block; padding: 5px 10px; background: #f7fafc; border-radius: 6px; font-size: 0.8em; color: #4a5568; text-decoration: none; transition: background 0.2s; }
 .contact-link:hover { background: #ebf4ff; color: #3182ce; }
 
-.map-legend { display: flex; gap: 12px; padding: 6px 14px; background: #f7fafc; font-size: 0.78em; color: #4a5568; }
-.legend-item { display: flex; align-items: center; gap: 4px; }
-.legend-dot { width: 12px; height: 12px; border-radius: 50%; }
-
 footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
 
 @media (max-width: 768px) {
@@ -165,17 +163,6 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
   </div>
 
   <div id="low-conf-bar" class="low-conf-note" style="display:none;"></div>
-
-  <!-- Map -->
-  <div class="map-section">
-    <div class="section-title-bar">📍 风险地图 — 点击标记查看详情</div>
-    <div id="risk-map"></div>
-    <div class="map-legend">
-      <div class="legend-item"><span class="legend-dot" style="background:#e53e3e;opacity:0.7;"></span> 有风险</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#48bb78;opacity:0.7;"></span> 安全</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#ecc94b;opacity:0.7;"></span> 把握度&lt;70%（未公布）</div>
-    </div>
-  </div>
 
   <!-- Main grid -->
   <div class="main-grid">
@@ -270,7 +257,6 @@ const signalLabels = {
   'temperature_max': '最高温', 'heat_duration_days': '持续天数'
 };
 
-let mapInstance = null;
 let historyData = [];
 
 async function fetchJSON(url) {
@@ -300,7 +286,6 @@ async function loadData() {
 
   if (data) {
     renderToday(data);
-    renderMap(data);
     renderHistory();
   } else {
     document.getElementById('alert-body').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#e53e3e;padding:30px;">暂时无法加载数据，请稍后刷新页面重试</td></tr>';
@@ -327,6 +312,9 @@ function renderToday(data) {
   let html = '';
   let lowConfCount = 0;
   let shownCount = 0;
+
+  // 存储决策数据供联动地图使用
+  window._decisionData = data.decisions;
 
   data.decisions.forEach((d, idx) => {
     const confPercent = Math.round(d.confidence * 100);
@@ -497,6 +485,19 @@ function buildDetailPanel(d) {
     </div>`;
   }
 
+  // 详情联动小地图（点击行时显示）
+  if (d.coordinates && d.affected_radius_km) {
+    const riskColor = d.llm_decision ? '#e53e3e' : '#48bb78';
+    const riskLabel = d.llm_decision ? '⚠️ 有风险' : '✅ 安全';
+    html += `<div class="detail-map-section" id="map-section-${idx}" style="display:none;">
+      <div class="detail-map-header">
+        <span>📍 ${d.region_cn || d.region} — ${riskLabel}</span>
+        <span class="detail-map-controls">影响半径 ~${d.affected_radius_km}km · 滚动缩放</span>
+      </div>
+      <div id="detail-map-${idx}"></div>
+    </div>`;
+  }
+
   return html;
 }
 
@@ -510,19 +511,36 @@ function getAdvice(category) {
   return advice[category] || '';
 }
 
+let activeDetailMap = null; // 当前激活的详情地图实例
+let activeDetailMapIdx = -1;
+
 function toggleDetail(idx) {
   const row = document.getElementById('detail-' + idx);
   const icon = document.getElementById('icon-' + idx);
   const panel = document.getElementById('panel-' + idx);
   const mainRow = document.getElementById('row-' + idx);
+  const mapSection = document.getElementById('map-section-' + idx);
 
   if (row.style.display === 'none') {
+    // 展开
     row.style.display = '';
     panel.classList.add('show');
     icon.classList.add('open');
     icon.textContent = '▼';
     mainRow.classList.add('expanded');
+
+    // 显示并初始化联动地图
+    if (mapSection) {
+      mapSection.style.display = '';
+      initDetailMap(idx);
+    }
   } else {
+    // 收起 — 销毁旧地图实例释放内存
+    if (activeDetailMap && activeDetailMapIdx === idx) {
+      activeDetailMap.remove();
+      activeDetailMap = null;
+      activeDetailMapIdx = -1;
+    }
     row.style.display = 'none';
     panel.classList.remove('show');
     icon.classList.remove('open');
@@ -531,114 +549,64 @@ function toggleDetail(idx) {
   }
 }
 
-// ===================== Map =====================
-function renderMap(data) {
+function initDetailMap(idx) {
   if (typeof L === 'undefined') return;
 
-  if (mapInstance) {
-    mapInstance.remove();
+  // 销毁旧地图实例
+  if (activeDetailMap) {
+    activeDetailMap.remove();
+    activeDetailMap = null;
+    activeDetailMapIdx = -1;
   }
 
-  mapInstance = L.map('risk-map', { scrollWheelZoom: false }).setView([35.0, 108.0], 4);
+  const d = window._decisionData[idx];
+  if (!d || !d.coordinates) return;
 
+  const mapContainer = document.getElementById('detail-map-' + idx);
+  if (!mapContainer) return;
+
+  const riskColor = d.llm_decision ? '#e53e3e' : '#48bb78';
+  const radius = (d.affected_radius_km || 30) * 1000;
+
+  // 创建地图，聚焦到该区域
+  const detailMap = L.map('detail-map-' + idx, {
+    scrollWheelZoom: true,
+    zoomControl: true,
+  }).setView([d.coordinates.lat, d.coordinates.lng], 10);
+
+  // 高德地图瓦片
   L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
-    attribution: '&copy; 高德地图 (AMap)',
+    attribution: '&copy; 高德',
     subdomains: ['1', '2', '3', '4'],
-    maxZoom: 18
-  }).addTo(mapInstance);
+    maxZoom: 16
+  }).addTo(detailMap);
 
-  const alertRegions = [];
-  const safeRegions = [];
-  const lowConfRegions = [];
+  // 风险范围圆圈
+  L.circle([d.coordinates.lat, d.coordinates.lng], {
+    radius: radius,
+    color: riskColor,
+    fillColor: riskColor,
+    fillOpacity: 0.2,
+    weight: 2
+  }).addTo(detailMap).bindPopup(`<strong>${d.region_cn}</strong><br>影响半径 ~${d.affected_radius_km}km`);
 
-  data.decisions.forEach(d => {
-    if (!d.coordinates) return;
-    const confPercent = Math.round(d.confidence * 100);
-    if (confPercent < 70) {
-      lowConfRegions.push(d);
-    } else if (d.llm_decision) {
-      alertRegions.push(d);
-    } else {
-      safeRegions.push(d);
-    }
-  });
+  // 中心点标记
+  L.circleMarker([d.coordinates.lat, d.coordinates.lng], {
+    radius: 6,
+    color: riskColor,
+    fillColor: '#fff',
+    fillOpacity: 1,
+    weight: 2
+  }).addTo(detailMap);
 
-  // 绘制预警区域（红色圆）
-  alertRegions.forEach(d => {
-    const radius = (d.affected_radius_km || 50) * 1000;
-    const circle = L.circle([d.coordinates.lat, d.coordinates.lng], {
-      radius: radius,
-      color: '#e53e3e',
-      fillColor: '#fc8181',
-      fillOpacity: 0.25,
-      weight: 2
-    }).addTo(mapInstance);
-
-    const cat = categoryIcons[d.category] || { label: d.category };
-    const confPercent = Math.round(d.confidence * 100);
-    const popupContent = `
-      <div style="font-size:13px;min-width:200px;">
-        <div style="font-weight:bold;font-size:14px;margin-bottom:4px;">${d.region_cn || d.region}</div>
-        <div style="color:#e53e3e;font-weight:600;margin-bottom:4px;">⚠️ ${cat.label} · 有风险 (${confPercent}%)</div>
-        <div style="color:#666;font-size:12px;">影响半径: ~${d.affected_radius_km || 50}km</div>
-        ${d.verification ? (d.verification.hit ? '<div style="color:#38a169;font-size:12px;margin-top:4px;">✅ 已验证命中</div>' : '<div style="color:#e53e3e;font-size:12px;margin-top:4px;">❌ 误报</div>') : ''}${d.verification_reason ? '<div style="font-size:11px;color:#718096;margin-top:3px;line-height:1.4;border-top:1px solid #eee;padding-top:3px;">' + d.verification_reason + '</div>' : ''}
-      </div>
-    `;
-    circle.bindPopup(popupContent);
-
-    // 中心标记
-    L.circleMarker([d.coordinates.lat, d.coordinates.lng], {
-      radius: 5, color: '#e53e3e', fillColor: '#fff', fillOpacity: 1, weight: 2
-    }).addTo(mapInstance).bindPopup(popupContent);
-  });
-
-  // 绘制安全区域（绿色）
-  safeRegions.forEach(d => {
-    const radius = (d.affected_radius_km || 50) * 1000;
-    const circle = L.circle([d.coordinates.lat, d.coordinates.lng], {
-      radius: radius,
-      color: '#48bb78',
-      fillColor: '#68d391',
-      fillOpacity: 0.12,
-      weight: 1.5,
-      dashArray: '5,5'
-    }).addTo(mapInstance);
-
-    const cat = categoryIcons[d.category] || { label: d.category };
-    const confPercent = Math.round(d.confidence * 100);
-    const popupContent = `
-      <div style="font-size:13px;min-width:200px;">
-        <div style="font-weight:bold;font-size:14px;margin-bottom:4px;">${d.region_cn || d.region}</div>
-        <div style="color:#38a169;font-weight:600;margin-bottom:4px;">✅ ${cat.label} · 安全 (${confPercent}%)</div>
-        ${d.verification ? (d.verification.hit ? '<div style="color:#38a169;font-size:12px;margin-top:4px;">✅ 已验证命中</div>' : '<div style="color:#e53e3e;font-size:12px;margin-top:4px;">❌ 误报</div>') : ''}${d.verification_reason ? '<div style="font-size:11px;color:#718096;margin-top:3px;line-height:1.4;border-top:1px solid #eee;padding-top:3px;">' + d.verification_reason + '</div>' : ''}
-      </div>
-    `;
-    circle.bindPopup(popupContent);
-
-    L.circleMarker([d.coordinates.lat, d.coordinates.lng], {
-      radius: 4, color: '#48bb78', fillColor: '#fff', fillOpacity: 1, weight: 2
-    }).addTo(mapInstance).bindPopup(popupContent);
-  });
-
-  // 绘制低置信度区域（黄色）
-  lowConfRegions.forEach(d => {
-    L.circleMarker([d.coordinates.lat, d.coordinates.lng], {
-      radius: 4, color: '#ecc94b', fillColor: '#ecc94b', fillOpacity: 0.5, weight: 1
-    }).addTo(mapInstance).bindPopup(`
-      <div style="font-size:13px;">
-        <div style="font-weight:bold;">${d.region_cn || d.region}</div>
-        <div style="color:#b7791f;">把握度不足，暂不公布</div>
-      </div>
-    `);
-  });
-
-  // 自动调整视野
-  const allCoords = data.decisions.filter(d => d.coordinates).map(d => [d.coordinates.lat, d.coordinates.lng]);
-  if (allCoords.length > 0) {
-    mapInstance.fitBounds(allCoords, { padding: [30, 30] });
-  }
+  activeDetailMap = detailMap;
+  activeDetailMapIdx = idx;
 }
 
+// 存储所有决策数据供联动地图使用
+window._decisionData = [];
+
+// ===================== Map =====================
 // ===================== History =====================
 function renderHistory() {
   if (!historyData || historyData.length === 0) {
