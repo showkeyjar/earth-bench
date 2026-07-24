@@ -402,6 +402,11 @@ function renderToday(data) {
     document.getElementById('low-conf-bar').style.display = 'block';
     document.getElementById('low-conf-bar').textContent = `ℹ️ 还有 ${lowConfCount} 个地点把握度 <70%，AI 也不太确定，暂不公布`;
   }
+
+  // 自动展开第一条记录（如果有）
+  if (shownCount > 0) {
+    setTimeout(() => toggleDetail(0), 200);
+  }
 }
 
 function buildDetailPanel(d, idx) {
