@@ -38,7 +38,6 @@ body { font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
 
 table { width: 100%; border-collapse: collapse; font-size: 0.82em; }
 th { position: sticky; top: 0; background: #4a5568; color: white; padding: 6px 5px; text-align: left; font-weight: 600; z-index: 10; }
-.map-col-th { width: 80px; }
 td { padding: 5px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
 tr:nth-child(even) { background: #f7fafc; }
 tr:hover { background: #edf2f7; }
@@ -65,6 +64,15 @@ tr.expanded { background: #ebf4ff !important; }
 .detail-row td { padding: 0 !important; border: none !important; background: #f8faff !important; }
 .detail-panel { padding: 12px 16px; display: none; }
 .detail-panel.show { display: block; }
+
+/* 侧栏联动地图 */
+.detail-map-section { background: #f0f4f8; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.08); }
+.side-map-header { font-size: 0.9em; font-weight: 600; color: #2d3748; padding: 8px 12px; background: #fff; border-bottom: 1px solid #e2e8f0; }
+#side-map { height: 200px; width: 100%; }
+.side-map-empty { text-align: center; color: #a0aec0; padding: 40px 10px; font-size: 0.9em; }
+
+.inline-map { width: 80px; height: 80px; border-radius: 6px; overflow: hidden; border: 2px solid #e2e8f0; flex-shrink: 0; }
+.inline-map.showing { border-color: #667eea; box-shadow: 0 0 6px rgba(102,126,234,0.3); }
 
 .evidence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
 .evidence-card { background: #f7fafc; border-radius: 8px; padding: 8px 10px; border-left: 3px solid #cbd5e0; }
@@ -179,7 +187,6 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
               <th>把握</th>
               <th>关键信号</th>
               <th>验证</th>
-              <th class="map-col-th">地图</th>
             </tr>
           </thead>
           <tbody id="alert-body"></tbody>
@@ -188,6 +195,13 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
     </div>
 
     <div class="side-panel">
+      <!-- 联动地图 — 固定在侧栏顶部 -->
+      <div class="detail-map-section" id="side-map-container">
+        <div class="side-map-header">📍 当前选中区域</div>
+        <div id="side-map"></div>
+        <div class="side-map-empty" id="side-map-empty">点击左侧行查看地图</div>
+      </div>
+
       <div class="history-card">
         <h3>📊 历史 7 天战绩</h3>
         <div class="history-chart" id="history-chart"></div>
@@ -259,7 +273,7 @@ const signalLabels = {
 };
 
 let historyData = [];
-const inlineMaps = {}; // 存储每行的内联小地图实例
+// 存储每行的内联小地图实例（已废弃，改用侧栏联动）
 
 async function fetchJSON(url) {
   const resp = await fetch(url);
@@ -366,11 +380,10 @@ function renderToday(data) {
       <td><div class="bar-wrap"><div class="bar-fill ${barCls}" style="width:${confPercent}%"></div></div>${confPercent}%</td>
       <td class="mini-info">${signals}</td>
       <td>${verifyBadge || '<span style="color:#a0aec0;">-</span>'}</td>
-      <td><div class="inline-map" id="inline-map-${idx}" onclick="event.stopPropagation()"></div></td>
     </tr>`;
 
     // 展开行
-    html += `<tr class="detail-row" id="detail-${idx}" data-expanded="false" style="display:none;"><td colspan="8"><div class="detail-panel" id="panel-${idx}">`;
+    html += `<tr class="detail-row" id="detail-${idx}" data-expanded="false" style="display:none;"><td colspan="7"><div class="detail-panel" id="panel-${idx}">`;
     html += buildDetailPanel(d, idx);
     html += `</div></td></tr>`;
   });
@@ -503,15 +516,32 @@ function getAdvice(category) {
 
 // 存储所有决策数据供联动地图使用
 window._decisionData = [];
+let sideMapInstance = null;
+let currentExpandedIdx = -1; // 当前展开的行
 
 function toggleDetail(idx) {
   const row = document.getElementById('detail-' + idx);
   const icon = document.getElementById('icon-' + idx);
   const panel = document.getElementById('panel-' + idx);
   const mainRow = document.getElementById('row-' + idx);
-  const mapDiv = document.getElementById('inline-map-' + idx);
+  const d = window._decisionData[idx];
 
   if (row.dataset.expanded !== 'true') {
+    // === 收起上一行 ===
+    if (currentExpandedIdx >= 0 && currentExpandedIdx !== idx) {
+      const oldRow = document.getElementById('detail-' + currentExpandedIdx);
+      if (oldRow) {
+        oldRow.style.display = 'none';
+        oldRow.dataset.expanded = 'false';
+        oldRow.classList.remove('expanded');
+        const oldIcon = document.getElementById('icon-' + currentExpandedIdx);
+        if (oldIcon) { oldIcon.classList.remove('open'); oldIcon.textContent = '▶'; }
+      }
+      // 销毁旧侧栏地图
+      if (sideMapInstance) { sideMapInstance.remove(); sideMapInstance = null; }
+      document.getElementById('side-map-container').style.display = 'none';
+    }
+
     // 展开
     row.dataset.expanded = 'true';
     row.style.display = '';
@@ -519,57 +549,52 @@ function toggleDetail(idx) {
     icon.classList.add('open');
     icon.textContent = '▼';
     mainRow.classList.add('expanded');
+    currentExpandedIdx = idx;
 
-    // 在表格行中显示迷你地图
-    if (mapDiv && window._decisionData[idx]) {
-      mapDiv.style.display = 'block';
-      mapDiv.classList.add('showing');
-      setTimeout(() => initInlineMap(idx), 50);
+    // 显示侧栏地图
+    if (d && d.coordinates) {
+      document.getElementById('side-map-container').style.display = '';
+      document.getElementById('side-map-empty').style.display = 'none';
+      setTimeout(() => showSideMap(d, idx), 50);
     }
   } else {
-    // 收起 — 销毁该行的地图实例释放内存
-    if (inlineMaps[idx]) {
-      inlineMaps[idx].remove();
-      delete inlineMaps[idx];
-    }
-    mapDiv.style.display = 'none';
-    mapDiv.classList.remove('showing');
-    row.style.display = 'none';
+    // 收起当前行
     row.dataset.expanded = 'false';
+    row.style.display = 'none';
     panel.classList.remove('show');
     icon.classList.remove('open');
     icon.textContent = '▶';
     mainRow.classList.remove('expanded');
+    currentExpandedIdx = -1;
+
+    // 销毁侧栏地图
+    if (sideMapInstance) { sideMapInstance.remove(); sideMapInstance = null; }
+    document.getElementById('side-map-container').style.display = 'none';
   }
 }
 
-function initInlineMap(idx) {
-  if (typeof L === 'undefined') return;
-  if (inlineMaps[idx]) return; // 已存在
+function showSideMap(d, idx) {
+  if (typeof L === 'undefined' || !d.coordinates) return;
+  if (sideMapInstance) return;
 
-  const d = window._decisionData[idx];
-  if (!d || !d.coordinates) return;
-
-  const mapContainer = document.getElementById('inline-map-' + idx);
-  if (!mapContainer) return;
+  const mapEl = document.getElementById('side-map');
+  if (!mapEl) return;
 
   const riskColor = d.llm_decision ? '#e53e3e' : '#48bb78';
   const radiusM = (d.affected_radius_km || 20) * 1000;
 
-  // 创建小地图 — 更小更紧凑
-  const detailMap = L.map('inline-map-' + idx, {
+  sideMapInstance = L.map('side-map', {
     scrollWheelZoom: true,
-    zoomControl: false, // 隐藏缩放控件节省空间
-    attributionControl: false, // 隐藏水印
+    zoomControl: false,
+    attributionControl: false,
   }).setView([d.coordinates.lat, d.coordinates.lng], 11);
 
-  // 高德地图瓦片
   L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
     subdomains: ['1', '2', '3', '4'],
     maxZoom: 16
-  }).addTo(detailMap);
+  }).addTo(sideMapInstance);
 
-  // 不规则影响多边形（模拟真实区域边界）
+  // 不规则影响多边形
   const numSides = 6 + Math.floor(Math.random() * 3);
   const latRange = (radiusM / 111320) * 0.8;
   const lngRange = (radiusM / (111320 * Math.cos(d.coordinates.lat * Math.PI / 180))) * 0.8;
@@ -588,18 +613,15 @@ function initInlineMap(idx) {
     fillOpacity: 0.15,
     weight: 2,
     dashArray: '6,3'
-  }).addTo(detailMap).bindPopup(`<strong>${d.region_cn}</strong><br>影响范围`);
+  }).addTo(sideMapInstance).bindPopup(`<strong>${d.region_cn}</strong><br>影响范围`);
 
-  // 中心点标记
   L.circleMarker([d.coordinates.lat, d.coordinates.lng], {
-    radius: 4,
+    radius: 5,
     color: riskColor,
     fillColor: '#fff',
     fillOpacity: 1,
-    weight: 1.5
-  }).addTo(detailMap);
-
-  inlineMaps[idx] = detailMap;
+    weight: 2
+  }).addTo(sideMapInstance);
 }
 
 // ===================== History =====================
