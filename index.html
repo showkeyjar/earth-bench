@@ -38,7 +38,7 @@ body { font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
 
 table { width: 100%; border-collapse: collapse; font-size: 0.82em; }
 th { position: sticky; top: 0; background: #4a5568; color: white; padding: 6px 5px; text-align: left; font-weight: 600; z-index: 10; }
-.map-col-th { width: 60px; }
+.map-col-th { width: 80px; }
 td { padding: 5px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
 tr:nth-child(even) { background: #f7fafc; }
 tr:hover { background: #edf2f7; }
@@ -136,8 +136,8 @@ tr.expanded { background: #ebf4ff !important; }
 footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
 
 /* Inline map in table */
-.inline-map { width: 60px; height: 60px; border-radius: 4px; overflow: hidden; border: 2px solid #e2e8f0; }
-.inline-map.showing { border-color: #667eea; }
+.inline-map { width: 80px; height: 80px; border-radius: 6px; overflow: hidden; border: 2px solid #e2e8f0; flex-shrink: 0; }
+.inline-map.showing { border-color: #667eea; box-shadow: 0 0 6px rgba(102,126,234,0.3); }
 
 @media (max-width: 768px) {
   .mini-stats { grid-template-columns: repeat(3, 1fr); }
@@ -224,7 +224,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
         <h3>📬 关于与联系</h3>
         <div class="info-item"><strong>EarthBench</strong> — 基于 AI 的自然灾害预警系统，每天自动分析全国 20+ 监测区域的火灾、洪涝、干旱和高温热浪风险。</div>
         <div class="contact-links">
-          <a href="mailto:contact@earth-ai.fun" class="contact-link">📧 contact@earth-ai.fun</a>
+          <a href="mailto:zergskj@163.com" class="contact-link">📧 zergskj@163.com</a>
           <a href="https://github.com/showkeyjar/earth-bench" target="_blank" class="contact-link">🔗 GitHub 项目仓库</a>
         </div>
         <div class="info-item" style="margin-top:6px;font-size:0.75em;color:#a0aec0;">如有数据合作、技术咨询或问题反馈，欢迎通过以上方式联系。</div>
@@ -234,7 +234,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
 
   <footer>
     © 2026 EarthBench · 地球风险日报 | Powered by AI · 每天自动更新<br>
-    <a href="mailto:contact@earth-ai.fun" style="color:#a0aec0;text-decoration:none;">contact@earth-ai.fun</a>
+    <a href="mailto:zergskj@163.com" style="color:#a0aec0;text-decoration:none;">zergskj@163.com</a>
     <span style="color:#cbd5e0;"> · </span>
     <a href="https://github.com/showkeyjar/earth-bench" target="_blank" style="color:#a0aec0;text-decoration:none;">GitHub</a>
   </footer>
@@ -370,7 +370,7 @@ function renderToday(data) {
     </tr>`;
 
     // 展开行
-    html += `<tr class="detail-row" id="detail-${idx}" style="display:none;"><td colspan="8"><div class="detail-panel" id="panel-${idx}">`;
+    html += `<tr class="detail-row" id="detail-${idx}" data-expanded="false" style="display:none;"><td colspan="8"><div class="detail-panel" id="panel-${idx}">`;
     html += buildDetailPanel(d, idx);
     html += `</div></td></tr>`;
   });
@@ -511,8 +511,9 @@ function toggleDetail(idx) {
   const mainRow = document.getElementById('row-' + idx);
   const mapDiv = document.getElementById('inline-map-' + idx);
 
-  if (row.style.display === 'none' || row.style.display === '') {
+  if (row.dataset.expanded !== 'true') {
     // 展开
+    row.dataset.expanded = 'true';
     row.style.display = '';
     panel.classList.add('show');
     icon.classList.add('open');
@@ -534,6 +535,7 @@ function toggleDetail(idx) {
     mapDiv.style.display = 'none';
     mapDiv.classList.remove('showing');
     row.style.display = 'none';
+    row.dataset.expanded = 'false';
     panel.classList.remove('show');
     icon.classList.remove('open');
     icon.textContent = '▶';
