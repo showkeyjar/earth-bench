@@ -1,9 +1,9 @@
 {
-  "published_at": "2026-07-24T19:58:54.427992",
+  "published_at": "2026-07-23T08:37:28.714003",
   "engine": "AI Decision System",
   "total_scenarios": 20,
-  "alert_count": 6,
-  "average_confidence": 0.4323,
+  "alert_count": 7,
+  "average_confidence": 0.494,
   "decisions": [
     {
       "case_id": "fire-l1-extreme-risk",
@@ -11,8 +11,8 @@
       "difficulty": "L1",
       "region": "Xiangshan-Beijing",
       "ground_truth": true,
-      "observation_time": "2026-07-24T19:49:29+08:00",
-      "data_sources": "MODIS, ECMWF, Station",
+      "observation_time": "2026-07-23T08:27:52+08:00",
+      "data_sources": "ECMWF, Station, MODIS",
       "llm_decision": true,
       "confidence": 0.85,
       "heuristic_decision": true,
@@ -23,7 +23,7 @@
         "temp": 0.6
       },
       "rationale": "True\n辅助判断: YES, confidence=0.725\n多变量加权风险评分: 0.725, 证据权重: {\"FWI\": 1.0, \"humidity\": 0.9, \"wind\": 0.9, \"temp\": 0.6}",
-      "timestamp": "2026-07-24T11:49:29.753664+00:00",
+      "timestamp": "2026-07-23T00:27:52.751290+00:00",
       "coordinates": {
         "lat": 39.99,
         "lng": 116.16
@@ -223,7 +223,7 @@
       "difficulty": "L1",
       "region": "WestLake-Hangzhou",
       "ground_truth": false,
-      "observation_time": "2026-07-24T19:50:01+08:00",
+      "observation_time": "2026-07-23T08:28:24+08:00",
       "data_sources": "ECMWF, Station",
       "llm_decision": false,
       "confidence": 0.145,
@@ -234,7 +234,7 @@
         "rainfall": -0.4
       },
       "rationale": "AI 分析完成\n辅助判断: NO, confidence=0.145\n多变量加权风险评分: 0.145, 证据权重: {\"FWI\": 0.33, \"humidity\": 0.35, \"rainfall\": -0.4}",
-      "timestamp": "2026-07-24T11:50:01.793655+00:00",
+      "timestamp": "2026-07-23T00:28:24.823018+00:00",
       "coordinates": {
         "lat": 30.25,
         "lng": 120.15
@@ -389,18 +389,18 @@
       "difficulty": "L2",
       "region": "ChangbaiMountain",
       "ground_truth": false,
-      "observation_time": "2026-07-24T19:50:30+08:00",
+      "observation_time": "2026-07-23T08:28:56+08:00",
       "data_sources": "ECMWF, Station",
-      "llm_decision": false,
-      "confidence": 0.85,
+      "llm_decision": true,
+      "confidence": 0.413,
       "heuristic_decision": true,
       "evidence_summary": {
         "FWI": 0.98,
         "humidity": 0.85,
         "rainfall": -1.25
       },
-      "rationale": "False\n辅助判断: YES, confidence=0.413\n多变量加权风险评分: 0.413, 证据权重: {\"FWI\": 0.98, \"humidity\": 0.85, \"rainfall\": -1.25}",
-      "timestamp": "2026-07-24T11:50:30.027342+00:00",
+      "rationale": "AI 分析完成\n辅助判断: YES, confidence=0.413\n多变量加权风险评分: 0.413, 证据权重: {\"FWI\": 0.98, \"humidity\": 0.85, \"rainfall\": -1.25}",
+      "timestamp": "2026-07-23T00:28:56.865870+00:00",
       "coordinates": {
         "lat": 42.02,
         "lng": 128.08
@@ -542,13 +542,13 @@
         {
           "step": 6,
           "type": "decision",
-          "text": "综合风险评分0.193低于预警阈值，AI判定为暂时安全（置信度85%），无需特殊措施"
+          "text": "综合风险评分0.193超过预警阈值，AI判定为有风险（置信度41%），建议启动应急预案"
         }
       ],
       "verification": {
-        "predicted": false,
+        "predicted": true,
         "actual": false,
-        "hit": true,
+        "hit": false,
         "ground_truth_score": 0.248,
         "ground_truth_explanation": {
           "fwi_mean": 49.0,
@@ -558,7 +558,7 @@
           "temperature_mean": 0.0
         }
       },
-      "verification_reason": "AI 预测安全，验证数据确认无风险。森林火险场景的实际观测指标：火险指数(FWI)=49.0(超过阈值40.0)；空气湿度=15.0(低于阈值20.0)；风速=0.0(低于阈值12.0)；降雨抑制率=0.833；温度=0.0(低于阈值35.0)。综合风险评分 0.248，低于预警阈值，排除正确。"
+      "verification_reason": "AI 预测有风险，但实际观测数据未达危险阈值（误报）。森林火险场景的实际指标：火险指数(FWI)=49.0(超过阈值40.0)；空气湿度=15.0(低于阈值20.0)；风速=0.0(低于阈值12.0)；降雨抑制率=0.833；温度=0.0(低于阈值35.0)。综合风险评分 0.248，低于预警阈值，预警过于敏感。"
     },
     {
       "case_id": "fire-l3-coastal-humid",
@@ -566,8 +566,8 @@
       "difficulty": "L3",
       "region": "Shenzhen-Coast",
       "ground_truth": false,
-      "observation_time": "2026-07-24T19:51:02+08:00",
-      "data_sources": "MODIS, ECMWF, Station",
+      "observation_time": "2026-07-23T08:29:28+08:00",
+      "data_sources": "ECMWF, Station, MODIS",
       "llm_decision": false,
       "confidence": 0.371,
       "heuristic_decision": true,
@@ -577,7 +577,7 @@
         "temp": 0.467
       },
       "rationale": "AI 分析完成\n辅助判断: NO, confidence=0.371\n多变量加权风险评分: 0.371, 证据权重: {\"FWI\": 0.67, \"humidity\": 0.45, \"temp\": 0.467}",
-      "timestamp": "2026-07-24T11:51:02.068806+00:00",
+      "timestamp": "2026-07-23T00:29:28.900356+00:00",
       "coordinates": {
         "lat": 22.54,
         "lng": 114.06
@@ -737,7 +737,7 @@
       "difficulty": "L4",
       "region": "GreaterKhingan",
       "ground_truth": true,
-      "observation_time": "2026-07-24T19:51:26+08:00",
+      "observation_time": "2026-07-23T08:29:57+08:00",
       "data_sources": "ECMWF, Station",
       "llm_decision": true,
       "confidence": 0.85,
@@ -747,7 +747,7 @@
         "humidity": 0.775
       },
       "rationale": "True\n辅助判断: YES, confidence=0.412\n多变量加权风险评分: 0.412, 证据权重: {\"FWI\": 0.735, \"humidity\": 0.775}",
-      "timestamp": "2026-07-24T11:51:26.872683+00:00",
+      "timestamp": "2026-07-23T00:29:57.312575+00:00",
       "coordinates": {
         "lat": 51.17,
         "lng": 124.39
@@ -913,14 +913,14 @@
       "difficulty": "L1",
       "region": "Wuhan-Yangtze",
       "ground_truth": true,
-      "observation_time": "2026-07-24T19:51:58+08:00",
-      "data_sources": "Sensor, Hydro, CMA",
-      "llm_decision": false,
-      "confidence": 0.0,
+      "observation_time": "2026-07-23T08:30:24+08:00",
+      "data_sources": "Hydro, Sensor, CMA",
+      "llm_decision": true,
+      "confidence": 0.85,
       "heuristic_decision": true,
       "evidence_summary": {},
-      "rationale": "AI 分析完成\n辅助判断: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
-      "timestamp": "2026-07-24T11:51:58.918508+00:00",
+      "rationale": "True\n辅助判断: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
+      "timestamp": "2026-07-23T00:30:24.662328+00:00",
       "coordinates": {
         "lat": 30.59,
         "lng": 114.31
@@ -1085,13 +1085,13 @@
         {
           "step": 7,
           "type": "decision",
-          "text": "综合风险评分0.000低于预警阈值，AI判定为暂时安全（置信度0%），无需特殊措施"
+          "text": "综合风险评分0.000超过预警阈值，AI判定为有风险（置信度85%），建议启动应急预案"
         }
       ],
       "verification": {
-        "predicted": false,
+        "predicted": true,
         "actual": true,
-        "hit": false,
+        "hit": true,
         "ground_truth_score": 0.963,
         "ground_truth_explanation": {
           "rainfall_24h": 120.0,
@@ -1100,7 +1100,7 @@
           "water_level_mean": 12.5
         }
       },
-      "verification_reason": "AI 预测安全，但实际观测数据已超过危险阈值（漏报）。洪涝灾害场景的实际指标：24小时降水量=120.0(超过阈值50.0)；6小时降水量=65.0(超过阈值30.0)；土壤含水率=0.9(超过阈值0.85)；水位=12.5(超过阈值10.0)。综合风险评分 0.963，超过预警阈值，存在漏报。"
+      "verification_reason": "AI 预测有风险，验证数据确认风险成立。洪涝灾害场景的实际观测指标：24小时降水量=120.0(超过阈值50.0)；6小时降水量=65.0(超过阈值30.0)；土壤含水率=0.9(超过阈值0.85)；水位=12.5(超过阈值10.0)。综合风险评分 0.963，超过预警阈值，预警正确。"
     },
     {
       "case_id": "flood-l1-no-rain",
@@ -1108,14 +1108,14 @@
       "difficulty": "L1",
       "region": "Lhasa-Tibet",
       "ground_truth": false,
-      "observation_time": "2026-07-24T19:52:30+08:00",
-      "data_sources": "Sensor, Hydro, CMA",
+      "observation_time": "2026-07-23T08:30:56+08:00",
+      "data_sources": "Hydro, Sensor, CMA",
       "llm_decision": false,
       "confidence": 0.0,
       "heuristic_decision": true,
       "evidence_summary": {},
       "rationale": "AI 分析完成\n辅助判断: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
-      "timestamp": "2026-07-24T11:52:30.981601+00:00",
+      "timestamp": "2026-07-23T00:30:56.725498+00:00",
       "coordinates": {
         "lat": 29.65,
         "lng": 91.11
@@ -1253,14 +1253,14 @@
       "difficulty": "L2",
       "region": "Guangzhou-PearlR",
       "ground_truth": true,
-      "observation_time": "2026-07-24T19:53:03+08:00",
-      "data_sources": "Sensor, Hydro, CMA",
+      "observation_time": "2026-07-23T08:31:28+08:00",
+      "data_sources": "Hydro, Sensor, CMA",
       "llm_decision": false,
       "confidence": 0.0,
       "heuristic_decision": true,
       "evidence_summary": {},
       "rationale": "AI 分析完成\n辅助判断: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
-      "timestamp": "2026-07-24T11:53:03.026065+00:00",
+      "timestamp": "2026-07-23T00:31:28.793181+00:00",
       "coordinates": {
         "lat": 23.13,
         "lng": 113.27
@@ -1413,14 +1413,14 @@
       "difficulty": "L3",
       "region": "Guilin-Guangxi",
       "ground_truth": false,
-      "observation_time": "2026-07-24T19:53:35+08:00",
-      "data_sources": "Sensor, Hydro, CMA",
+      "observation_time": "2026-07-23T08:31:59+08:00",
+      "data_sources": "Hydro, Sensor, CMA",
       "llm_decision": false,
-      "confidence": 0.0,
+      "confidence": 0.85,
       "heuristic_decision": true,
       "evidence_summary": {},
-      "rationale": "AI 分析完成\n辅助判断: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
-      "timestamp": "2026-07-24T11:53:35.060218+00:00",
+      "rationale": "False\n辅助判断: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
+      "timestamp": "2026-07-23T00:31:59.478780+00:00",
       "coordinates": {
         "lat": 25.27,
         "lng": 110.29
@@ -1545,7 +1545,7 @@
         {
           "step": 5,
           "type": "decision",
-          "text": "综合风险评分0.000低于预警阈值，AI判定为暂时安全（置信度0%），无需特殊措施"
+          "text": "综合风险评分0.000低于预警阈值，AI判定为暂时安全（置信度85%），无需特殊措施"
         }
       ],
       "verification": {
@@ -1568,14 +1568,14 @@
       "difficulty": "L4",
       "region": "Nanjing-Yangtze",
       "ground_truth": true,
-      "observation_time": "2026-07-24T19:54:00+08:00",
+      "observation_time": "2026-07-23T08:32:31+08:00",
       "data_sources": "Hydro",
-      "llm_decision": true,
-      "confidence": 0.85,
+      "llm_decision": false,
+      "confidence": 0.0,
       "heuristic_decision": true,
       "evidence_summary": {},
-      "rationale": "True\n辅助判断: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
-      "timestamp": "2026-07-24T11:54:00.350275+00:00",
+      "rationale": "AI 分析完成\n辅助判断: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
+      "timestamp": "2026-07-23T00:32:31.500420+00:00",
       "coordinates": {
         "lat": 32.06,
         "lng": 118.8
@@ -1659,13 +1659,13 @@
         {
           "step": 4,
           "type": "decision",
-          "text": "综合风险评分0.000超过预警阈值，AI判定为有风险（置信度85%），建议启动应急预案"
+          "text": "综合风险评分0.000低于预警阈值，AI判定为暂时安全（置信度0%），无需特殊措施"
         }
       ],
       "verification": {
-        "predicted": true,
+        "predicted": false,
         "actual": true,
-        "hit": true,
+        "hit": false,
         "ground_truth_score": 0.75,
         "ground_truth_explanation": {
           "rainfall_24h": 0.0,
@@ -1675,7 +1675,7 @@
           "water_trend": "rising_above_critical"
         }
       },
-      "verification_reason": "AI 预测有风险，验证数据确认风险成立。洪涝灾害场景的实际观测指标：24小时降水量=0.0(低于阈值50.0)；6小时降水量=0.0(低于阈值30.0)；土壤含水率=0.0(低于阈值0.85)；水位=10.17(超过阈值10.0)；水位趋势=rising_above_critical。综合风险评分 0.750，超过预警阈值，预警正确。"
+      "verification_reason": "AI 预测安全，但实际观测数据已超过危险阈值（漏报）。洪涝灾害场景的实际指标：24小时降水量=0.0(低于阈值50.0)；6小时降水量=0.0(低于阈值30.0)；土壤含水率=0.0(低于阈值0.85)；水位=10.17(超过阈值10.0)；水位趋势=rising_above_critical。综合风险评分 0.750，超过预警阈值，存在漏报。"
     },
     {
       "case_id": "drought-l1-severe-spi",
@@ -1683,16 +1683,16 @@
       "difficulty": "L1",
       "region": "Kunming-Yunnan",
       "ground_truth": true,
-      "observation_time": "2026-07-24T19:54:30+08:00",
-      "data_sources": "MODIS, Station, CMA",
-      "llm_decision": true,
-      "confidence": 0.85,
+      "observation_time": "2026-07-23T08:33:03+08:00",
+      "data_sources": "Station, MODIS, CMA",
+      "llm_decision": false,
+      "confidence": 0.17,
       "heuristic_decision": true,
       "evidence_summary": {
         "humidity": 0.85
       },
-      "rationale": "True\n辅助判断: NO, confidence=0.170\n多变量加权风险评分: 0.170, 证据权重: {\"humidity\": 0.85}",
-      "timestamp": "2026-07-24T11:54:30.153249+00:00",
+      "rationale": "AI 分析完成\n辅助判断: NO, confidence=0.170\n多变量加权风险评分: 0.170, 证据权重: {\"humidity\": 0.85}",
+      "timestamp": "2026-07-23T00:33:03.542788+00:00",
       "coordinates": {
         "lat": 25.04,
         "lng": 102.71
@@ -1892,13 +1892,13 @@
         {
           "step": 8,
           "type": "decision",
-          "text": "综合风险评分0.850超过预警阈值，AI判定为有风险（置信度85%），建议启动应急预案"
+          "text": "综合风险评分0.850低于预警阈值，AI判定为暂时安全（置信度17%），无需特殊措施"
         }
       ],
       "verification": {
-        "predicted": true,
+        "predicted": false,
         "actual": true,
-        "hit": true,
+        "hit": false,
         "ground_truth_score": 0.747,
         "ground_truth_explanation": {
           "spi_mean": -2.3,
@@ -1908,7 +1908,7 @@
           "ndvi_mean": 0.15
         }
       },
-      "verification_reason": "AI 预测有风险，验证数据确认风险成立。干旱场景的实际观测指标：SPI指数=-2.3(低于阈值-1.0)；Palmer指数=-0.8(低于阈值-0.5)；空气湿度=15.0(低于阈值20.0)；月降雨量=5.0(低于阈值10.0)；植被指数(NDVI)=0.15(低于阈值0.3)。综合风险评分 0.747，超过预警阈值，预警正确。"
+      "verification_reason": "AI 预测安全，但实际观测数据已超过危险阈值（漏报）。干旱场景的实际指标：SPI指数=-2.3(低于阈值-1.0)；Palmer指数=-0.8(低于阈值-0.5)；空气湿度=15.0(低于阈值20.0)；月降雨量=5.0(低于阈值10.0)；植被指数(NDVI)=0.15(低于阈值0.3)。综合风险评分 0.747，超过预警阈值，存在漏报。"
     },
     {
       "case_id": "drought-l1-normal",
@@ -1916,16 +1916,16 @@
       "difficulty": "L1",
       "region": "Hangzhou-Zhejiang",
       "ground_truth": false,
-      "observation_time": "2026-07-24T19:55:02+08:00",
-      "data_sources": "MODIS, Station, CMA",
+      "observation_time": "2026-07-23T08:33:34+08:00",
+      "data_sources": "Station, MODIS, CMA",
       "llm_decision": false,
-      "confidence": 0.08,
+      "confidence": 0.85,
       "heuristic_decision": true,
       "evidence_summary": {
         "humidity": 0.4
       },
-      "rationale": "AI 分析完成\n辅助判断: NO, confidence=0.080\n多变量加权风险评分: 0.080, 证据权重: {\"humidity\": 0.4}",
-      "timestamp": "2026-07-24T11:55:02.196864+00:00",
+      "rationale": "False\n辅助判断: NO, confidence=0.080\n多变量加权风险评分: 0.080, 证据权重: {\"humidity\": 0.4}",
+      "timestamp": "2026-07-23T00:33:34.653032+00:00",
       "coordinates": {
         "lat": 30.27,
         "lng": 120.16
@@ -2100,7 +2100,7 @@
         {
           "step": 3,
           "type": "decision",
-          "text": "综合风险评分0.400低于预警阈值，AI判定为暂时安全（置信度8%），无需特殊措施"
+          "text": "综合风险评分0.400低于预警阈值，AI判定为暂时安全（置信度85%），无需特殊措施"
         }
       ],
       "verification": {
@@ -2124,14 +2124,14 @@
       "difficulty": "L2",
       "region": "Harbin-Heilongjiang",
       "ground_truth": false,
-      "observation_time": "2026-07-24T19:55:28+08:00",
+      "observation_time": "2026-07-23T08:34:02+08:00",
       "data_sources": "MODIS, CMA",
       "llm_decision": false,
       "confidence": 0.85,
       "heuristic_decision": true,
       "evidence_summary": {},
       "rationale": "False\n辅助判断: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
-      "timestamp": "2026-07-24T11:55:28.504982+00:00",
+      "timestamp": "2026-07-23T00:34:02.359798+00:00",
       "coordinates": {
         "lat": 45.8,
         "lng": 126.53
@@ -2300,8 +2300,8 @@
       "difficulty": "L3",
       "region": "Urumqi-Xinjiang",
       "ground_truth": true,
-      "observation_time": "2026-07-24T19:56:00+08:00",
-      "data_sources": "MODIS, Station, CMA",
+      "observation_time": "2026-07-23T08:34:34+08:00",
+      "data_sources": "Station, MODIS, CMA",
       "llm_decision": false,
       "confidence": 0.16,
       "heuristic_decision": true,
@@ -2309,7 +2309,7 @@
         "humidity": 0.8
       },
       "rationale": "AI 分析完成\n辅助判断: NO, confidence=0.160\n多变量加权风险评分: 0.160, 证据权重: {\"humidity\": 0.8}",
-      "timestamp": "2026-07-24T11:56:00.545132+00:00",
+      "timestamp": "2026-07-23T00:34:34.408790+00:00",
       "coordinates": {
         "lat": 43.83,
         "lng": 87.62
@@ -2533,14 +2533,14 @@
       "difficulty": "L4",
       "region": "Taiyuan-Shanxi",
       "ground_truth": true,
-      "observation_time": "2026-07-24T19:56:32+08:00",
+      "observation_time": "2026-07-23T08:35:06+08:00",
       "data_sources": "MODIS, CMA",
       "llm_decision": false,
       "confidence": 0.0,
       "heuristic_decision": true,
       "evidence_summary": {},
       "rationale": "AI 分析完成\n辅助判断: NO, confidence=0.000\n多变量加权风险评分: 0.000, 证据权重: {}",
-      "timestamp": "2026-07-24T11:56:32.605480+00:00",
+      "timestamp": "2026-07-23T00:35:06.423085+00:00",
       "coordinates": {
         "lat": 37.87,
         "lng": 112.55
@@ -2753,7 +2753,7 @@
       "difficulty": "L1",
       "region": "Chongqing-HotPotato",
       "ground_truth": true,
-      "observation_time": "2026-07-24T19:57:01+08:00",
+      "observation_time": "2026-07-23T08:35:26+08:00",
       "data_sources": "Station, CMA",
       "llm_decision": true,
       "confidence": 0.85,
@@ -2763,7 +2763,7 @@
         "wet_bulb_temp": 0.75
       },
       "rationale": "True\n辅助判断: NO, confidence=0.237\n多变量加权风险评分: 0.237, 证据权重: {\"humidity\": 0.25, \"wet_bulb_temp\": 0.75}",
-      "timestamp": "2026-07-24T11:57:01.112140+00:00",
+      "timestamp": "2026-07-23T00:35:26.902461+00:00",
       "coordinates": {
         "lat": 29.43,
         "lng": 106.91
@@ -2952,7 +2952,7 @@
       "difficulty": "L1",
       "region": "Kunming-SpringCity",
       "ground_truth": false,
-      "observation_time": "2026-07-24T19:57:33+08:00",
+      "observation_time": "2026-07-23T08:35:58+08:00",
       "data_sources": "Station, CMA",
       "llm_decision": false,
       "confidence": 0.12,
@@ -2961,7 +2961,7 @@
         "humidity": 0.6
       },
       "rationale": "AI 分析完成\n辅助判断: NO, confidence=0.120\n多变量加权风险评分: 0.120, 证据权重: {\"humidity\": 0.6}",
-      "timestamp": "2026-07-24T11:57:33.139064+00:00",
+      "timestamp": "2026-07-23T00:35:58.945793+00:00",
       "coordinates": {
         "lat": 25.04,
         "lng": 102.71
@@ -3092,7 +3092,7 @@
       "difficulty": "L2",
       "region": "Urumqi-Xinjiang",
       "ground_truth": false,
-      "observation_time": "2026-07-24T19:57:57+08:00",
+      "observation_time": "2026-07-23T08:36:29+08:00",
       "data_sources": "Station, CMA",
       "llm_decision": false,
       "confidence": 0.85,
@@ -3102,7 +3102,7 @@
         "wet_bulb_temp": 0
       },
       "rationale": "False\n辅助判断: NO, confidence=0.170\n多变量加权风险评分: 0.170, 证据权重: {\"humidity\": 0.85, \"wet_bulb_temp\": 0}",
-      "timestamp": "2026-07-24T11:57:57.800533+00:00",
+      "timestamp": "2026-07-23T00:36:29.765979+00:00",
       "coordinates": {
         "lat": 43.83,
         "lng": 87.62
@@ -3255,7 +3255,7 @@
       "difficulty": "L3",
       "region": "Nanjing-OvenCity",
       "ground_truth": true,
-      "observation_time": "2026-07-24T19:58:22+08:00",
+      "observation_time": "2026-07-23T08:37:00+08:00",
       "data_sources": "Station, CMA",
       "llm_decision": true,
       "confidence": 0.85,
@@ -3265,7 +3265,7 @@
         "wet_bulb_temp": 0.562
       },
       "rationale": "True\n辅助判断: NO, confidence=0.197\n多变量加权风险评分: 0.197, 证据权重: {\"humidity\": 0.28, \"wet_bulb_temp\": 0.562}",
-      "timestamp": "2026-07-24T11:58:22.360648+00:00",
+      "timestamp": "2026-07-23T00:37:00.317393+00:00",
       "coordinates": {
         "lat": 32.06,
         "lng": 118.8
@@ -3442,16 +3442,16 @@
       "difficulty": "L4",
       "region": "Wuhan-Yangtze",
       "ground_truth": true,
-      "observation_time": "2026-07-24T19:58:54+08:00",
+      "observation_time": "2026-07-23T08:37:28+08:00",
       "data_sources": "Station, CMA",
-      "llm_decision": false,
-      "confidence": 0.12,
+      "llm_decision": true,
+      "confidence": 0.85,
       "heuristic_decision": true,
       "evidence_summary": {
         "wet_bulb_temp": 0.479
       },
-      "rationale": "AI 分析完成\n辅助判断: NO, confidence=0.120\n多变量加权风险评分: 0.120, 证据权重: {\"wet_bulb_temp\": 0.479}",
-      "timestamp": "2026-07-24T11:58:54.414725+00:00",
+      "rationale": "True\n辅助判断: NO, confidence=0.120\n多变量加权风险评分: 0.120, 证据权重: {\"wet_bulb_temp\": 0.479}",
+      "timestamp": "2026-07-23T00:37:28.713284+00:00",
       "coordinates": {
         "lat": 30.59,
         "lng": 114.31
@@ -3594,13 +3594,13 @@
         {
           "step": 5,
           "type": "decision",
-          "text": "综合风险评分0.479低于预警阈值，AI判定为暂时安全（置信度12%），无需特殊措施"
+          "text": "综合风险评分0.479超过预警阈值，AI判定为有风险（置信度85%），建议启动应急预案"
         }
       ],
       "verification": {
-        "predicted": false,
+        "predicted": true,
         "actual": true,
-        "hit": false,
+        "hit": true,
         "ground_truth_score": 0.474,
         "ground_truth_explanation": {
           "temperature_max_mean": 35.0,
@@ -3609,7 +3609,7 @@
           "humidity_mean": 0.0
         }
       },
-      "verification_reason": "AI 预测安全，但实际观测数据已超过危险阈值（漏报）。高温热浪场景的实际指标：最高温度=35.0(超过阈值35.0)；空气湿度=0.0(低于阈值20.0)。综合风险评分 0.474，超过预警阈值，存在漏报。"
+      "verification_reason": "AI 预测有风险，验证数据确认风险成立。高温热浪场景的实际观测指标：最高温度=35.0(超过阈值35.0)；空气湿度=0.0(低于阈值20.0)。综合风险评分 0.474，超过预警阈值，预警正确。"
     }
   ]
 }

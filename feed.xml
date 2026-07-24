@@ -4,127 +4,67 @@
   <subtitle>Environmental Risk Decision Intelligence</subtitle>
   <link href="https://earthbench.io/feed.xml" rel="self"/>
   <link href="https://earthbench.io"/>
-  <updated>2026-07-12T16:07:54+08:00</updated>
+  <updated>2026-07-24T19:58:54+08:00</updated>
   <id>tag:earthbench.io,2026:</id>
   <generator>EarthBench Pipeline v0.3.0</generator>
 
   <entry>
     <title>EarthBench Alert: Forest Fire in Xiangshan-Beijing</title>
-    <link href="/reports/20260712/fire-l1-extreme-risk" rel="alternate"/>
-    <id>tag:earthbench.io,2026-07-12T08:01:06.781968+00:00</id>
-    <published>2026-07-12T08:01:06.781968+00:00</published>
-    <summary>LLM Decision (source=ollama_llm): True
-Heuristic Decision: YES, confidence=0.725
-多变量加权风险评分: 0.725, 证据权重: {"FWI": 1.0, "humidity": 0.9, "wind": 0.9, "t</summary>
-  </entry>
-
-  <entry>
-    <title>EarthBench Alert: Forest Fire in ChangbaiMountain</title>
-    <link href="/reports/20260712/fire-l2-fwi-high-rain-suppress" rel="alternate"/>
-    <id>tag:earthbench.io,2026-07-12T08:01:55.527564+00:00</id>
-    <published>2026-07-12T08:01:55.527564+00:00</published>
-    <summary>LLM unavailable, fallback to heuristic
-Heuristic Decision: YES, confidence=0.413
-多变量加权风险评分: 0.413, 证据权重: {"FWI": 0.98, "humidity": 0.85, "rainfall": -</summary>
+    <link href="/reports/20260724/fire-l1-extreme-risk" rel="alternate"/>
+    <id>tag:earthbench.io,2026-07-24T11:49:29.753664+00:00</id>
+    <published>2026-07-24T11:49:29.753664+00:00</published>
+    <summary>True
+辅助判断: YES, confidence=0.725
+多变量加权风险评分: 0.725, 证据权重: {"FWI": 1.0, "humidity": 0.9, "wind": 0.9, "temp": 0.6}</summary>
   </entry>
 
   <entry>
     <title>EarthBench Alert: Forest Fire in GreaterKhingan</title>
-    <link href="/reports/20260712/fire-l4-trend-rising" rel="alternate"/>
-    <id>tag:earthbench.io,2026-07-12T08:02:43.488263+00:00</id>
-    <published>2026-07-12T08:02:43.488263+00:00</published>
-    <summary>LLM Decision (source=ollama_llm): True
-Heuristic Decision: YES, confidence=0.412
+    <link href="/reports/20260724/fire-l4-trend-rising" rel="alternate"/>
+    <id>tag:earthbench.io,2026-07-24T11:51:26.872683+00:00</id>
+    <published>2026-07-24T11:51:26.872683+00:00</published>
+    <summary>True
+辅助判断: YES, confidence=0.412
 多变量加权风险评分: 0.412, 证据权重: {"FWI": 0.735, "humidity": 0.775}</summary>
   </entry>
 
   <entry>
-    <title>EarthBench Alert: Flood in Wuhan-Yangtze</title>
-    <link href="/reports/20260712/flood-l1-extreme-rainfall" rel="alternate"/>
-    <id>tag:earthbench.io,2026-07-12T08:03:01.133884+00:00</id>
-    <published>2026-07-12T08:03:01.133884+00:00</published>
-    <summary>LLM Decision (source=ollama_llm): True
-Heuristic Decision: NO, confidence=0.000
-多变量加权风险评分: 0.000, 证据权重: {}</summary>
-  </entry>
-
-  <entry>
-    <title>EarthBench Alert: Flood in Guangzhou-PearlR</title>
-    <link href="/reports/20260712/flood-l2-soil-saturated" rel="alternate"/>
-    <id>tag:earthbench.io,2026-07-12T08:03:37.378983+00:00</id>
-    <published>2026-07-12T08:03:37.378983+00:00</published>
-    <summary>LLM Decision (source=ollama_llm): True
-Heuristic Decision: NO, confidence=0.000
-多变量加权风险评分: 0.000, 证据权重: {}</summary>
-  </entry>
-
-  <entry>
     <title>EarthBench Alert: Flood in Nanjing-Yangtze</title>
-    <link href="/reports/20260712/flood-l4-water-trend-rise" rel="alternate"/>
-    <id>tag:earthbench.io,2026-07-12T08:04:23.776086+00:00</id>
-    <published>2026-07-12T08:04:23.776086+00:00</published>
-    <summary>LLM Decision (source=ollama_llm): True
-Heuristic Decision: NO, confidence=0.000
+    <link href="/reports/20260724/flood-l4-water-trend-rise" rel="alternate"/>
+    <id>tag:earthbench.io,2026-07-24T11:54:00.350275+00:00</id>
+    <published>2026-07-24T11:54:00.350275+00:00</published>
+    <summary>True
+辅助判断: NO, confidence=0.000
 多变量加权风险评分: 0.000, 证据权重: {}</summary>
   </entry>
 
   <entry>
     <title>EarthBench Alert: Drought in Kunming-Yunnan</title>
-    <link href="/reports/20260712/drought-l1-severe-spi" rel="alternate"/>
-    <id>tag:earthbench.io,2026-07-12T08:04:36.615246+00:00</id>
-    <published>2026-07-12T08:04:36.615246+00:00</published>
-    <summary>LLM Decision (source=ollama_llm): True
-Heuristic Decision: NO, confidence=0.170
+    <link href="/reports/20260724/drought-l1-severe-spi" rel="alternate"/>
+    <id>tag:earthbench.io,2026-07-24T11:54:30.153249+00:00</id>
+    <published>2026-07-24T11:54:30.153249+00:00</published>
+    <summary>True
+辅助判断: NO, confidence=0.170
 多变量加权风险评分: 0.170, 证据权重: {"humidity": 0.85}</summary>
   </entry>
 
   <entry>
-    <title>EarthBench Alert: Drought in Urumqi-Xinjiang</title>
-    <link href="/reports/20260712/drought-l3-palmerspi-conflict" rel="alternate"/>
-    <id>tag:earthbench.io,2026-07-12T08:05:34.646150+00:00</id>
-    <published>2026-07-12T08:05:34.646150+00:00</published>
-    <summary>LLM Decision (source=ollama_llm): True
-Heuristic Decision: NO, confidence=0.160
-多变量加权风险评分: 0.160, 证据权重: {"humidity": 0.8}</summary>
-  </entry>
-
-  <entry>
-    <title>EarthBench Alert: Drought in Taiyuan-Shanxi</title>
-    <link href="/reports/20260712/drought-l4-spir-declining" rel="alternate"/>
-    <id>tag:earthbench.io,2026-07-12T08:06:02.657562+00:00</id>
-    <published>2026-07-12T08:06:02.657562+00:00</published>
-    <summary>LLM Decision (source=ollama_llm): True
-Heuristic Decision: NO, confidence=0.000
-多变量加权风险评分: 0.000, 证据权重: {}</summary>
-  </entry>
-
-  <entry>
     <title>EarthBench Alert: Heat Wave in Chongqing-HotPotato</title>
-    <link href="/reports/20260712/heat-l1-extreme-wetbulb" rel="alternate"/>
-    <id>tag:earthbench.io,2026-07-12T08:06:16.166279+00:00</id>
-    <published>2026-07-12T08:06:16.166279+00:00</published>
-    <summary>LLM Decision (source=ollama_llm): True
-Heuristic Decision: NO, confidence=0.237
+    <link href="/reports/20260724/heat-l1-extreme-wetbulb" rel="alternate"/>
+    <id>tag:earthbench.io,2026-07-24T11:57:01.112140+00:00</id>
+    <published>2026-07-24T11:57:01.112140+00:00</published>
+    <summary>True
+辅助判断: NO, confidence=0.237
 多变量加权风险评分: 0.237, 证据权重: {"humidity": 0.25, "wet_bulb_temp": 0.75}</summary>
   </entry>
 
   <entry>
     <title>EarthBench Alert: Heat Wave in Nanjing-OvenCity</title>
-    <link href="/reports/20260712/heat-l3-borderline" rel="alternate"/>
-    <id>tag:earthbench.io,2026-07-12T08:07:23.282331+00:00</id>
-    <published>2026-07-12T08:07:23.282331+00:00</published>
-    <summary>LLM Decision (source=ollama_llm): True
-Heuristic Decision: NO, confidence=0.197
+    <link href="/reports/20260724/heat-l3-borderline" rel="alternate"/>
+    <id>tag:earthbench.io,2026-07-24T11:58:22.360648+00:00</id>
+    <published>2026-07-24T11:58:22.360648+00:00</published>
+    <summary>True
+辅助判断: NO, confidence=0.197
 多变量加权风险评分: 0.197, 证据权重: {"humidity": 0.28, "wet_bulb_temp": 0.562}</summary>
-  </entry>
-
-  <entry>
-    <title>EarthBench Alert: Heat Wave in Wuhan-Yangtze</title>
-    <link href="/reports/20260712/heat-l4-progressive-heat" rel="alternate"/>
-    <id>tag:earthbench.io,2026-07-12T08:07:54.933567+00:00</id>
-    <published>2026-07-12T08:07:54.933567+00:00</published>
-    <summary>LLM Decision (source=ollama_llm): True
-Heuristic Decision: NO, confidence=0.120
-多变量加权风险评分: 0.120, 证据权重: {"wet_bulb_temp": 0.479}</summary>
   </entry>
 </feed>
