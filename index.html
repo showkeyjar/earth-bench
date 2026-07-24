@@ -608,17 +608,23 @@ function showSideMap(d, idx) {
     L.control.attribution({ position: 'bottomleft' }).addTo(sideMapInstance);
   }
 
-  // 生成不规则影响多边形
-  const numSides = 6 + Math.floor(Math.random() * 3);
-  const latRange = (radiusM / 111320) * 0.8;
-  const lngRange = (radiusM / (111320 * Math.cos(d.coordinates.lat * Math.PI / 180))) * 0.8;
-  const polygonPoints = [];
-  for (let i = 0; i < numSides; i++) {
-    const angle = (i / numSides) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
-    const r = (0.6 + Math.random() * 0.4);
-    const lat = d.coordinates.lat + Math.sin(angle) * latRange * r;
-    const lng = d.coordinates.lng + Math.cos(angle) * lngRange * r;
-    polygonPoints.push([lat, lng]);
+  // 使用后端生成的固定多边形（如果有），否则回退到随机生成
+  let polygonPoints;
+  if (d.polygon && d.polygon.length > 0) {
+    polygonPoints = d.polygon.map(p => [p.lat, p.lng]);
+  } else {
+    // 旧数据没有 polygon 字段，回退到客户端随机生成
+    const latRange = (radiusM / 111320) * 0.8;
+    const lngRange = (radiusM / (111320 * Math.cos(d.coordinates.lat * Math.PI / 180))) * 0.8;
+    polygonPoints = [];
+    const numSides = 7;
+    for (let i = 0; i < numSides; i++) {
+      const angle = (i / numSides) * Math.PI * 2;
+      const r = 0.7 + (i % 3) * 0.1;
+      const lat = d.coordinates.lat + Math.sin(angle) * latRange * r;
+      const lng = d.coordinates.lng + Math.cos(angle) * lngRange * r;
+      polygonPoints.push([lat, lng]);
+    }
   }
 
   const polygon = L.polygon(polygonPoints, {
