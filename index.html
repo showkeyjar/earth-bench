@@ -3,7 +3,85 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>地球风险日报 — AI 决策系统</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<!-- SEO Meta Tags -->
+<title>EarthBench — 每日环境风险AI预警 | 火灾·洪水·干旱·热浪</title>
+<meta name="description" content="EarthBench是全球首个地球决策智能基准测试框架。基于多源时空观测数据（卫星+气象站+传感器），每日自动生成中国20+区域的森林火险、洪涝、干旱和高温热浪风险预警。Decision > Prediction。">
+<meta name="keywords" content="EarthBench,AI决策,环境风险预警,森林火险,洪水预警,干旱监测,热浪预警,遥感,AI防灾减灾,地球科学,big data,benchmark,LLM Agent">
+<meta name="author" content="Kejia Shao / EarthBench Team">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://earth-ai.fun/">
+
+<!-- Open Graph (微信/QQ/微博/Discord) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="EarthBench">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:title" content="EarthBench — 每日环境风险AI预警日报">
+<meta property="og:description" content="基于多源时空观测数据的AI决策智能评测框架。今日监测XX个区域，触发XX次预警，准确率XX%。">
+<meta property="og:url" content="https://earth-ai.fun/">
+<meta property="og:image" content="https://earth-ai.fun/og-banner.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="EarthBench 环境风险预警系统界面截图">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="EarthBench — 每日环境风险AI预警">
+<meta name="twitter:description" content="AI驱动的地球科学决策智能基准测试框架">
+<meta name="twitter:image" content="https://earth-ai.fun/og-banner.png">
+
+<!-- Feeds & Discovery -->
+<link rel="alternate" type="application/rss+xml" title="EarthBench RSS Feed" href="feed.xml">
+<link rel="alternate" type="application/json" title="EarthBench JSON API" href="latest.json">
+
+<!-- Favicon -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+
+<!-- Structured Data (JSON-LD) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "EarthBench - Earth Decision Intelligence Benchmark",
+  "alternateName": ["EarthBench", "地球决策智能基准测试"],
+  "url": "https://earth-ai.fun/",
+  "description": "全球首个地球决策智能基准测试框架，测试AI能否利用多源时空观测数据做出真实世界的环境风险二元决策。",
+  "author": {
+    "@type": "Person",
+    "name": "Kejia Shao"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "EarthBench",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://earth-ai.fun/logo.png"
+    }
+  },
+  "potentialAction": {
+    "@type": "SubscribeAction",
+    "target": "https://earth-ai.fun/feed.xml"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "name": "AlertBenchmarkSuite",
+  "description": "EarthBench AlertBench测试套件 — 覆盖森林火险、洪涝灾害、干旱、高温热浪四类灾种，L1-L4四级难度共20个测试用例的AI决策基准数据集。",
+  "url": "https://github.com/showkeyjar/earth-bench",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "distribution": "api",
+  "keywords": "AI benchmark, Earth science decision intelligence, multi-hazard alert system"
+}
+</script>
+
+<!-- Preconnect to external resources -->
+<link rel="preconnect" href="https://unpkg.com">
+<link rel="dns-prefetch" href="https://webrd0{s}.is.autonavi.com">
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -161,10 +239,28 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
 <body>
 <div class="dashboard">
   <div class="header">
-    <div><h1>🌍 地球风险日报</h1></div>
+    <div>
+      <h1>🌍 EarthBench · 每日环境风险预警</h1>
+      <div style="font-size:0.75em;opacity:0.85;margin-top:2px;">Decision &gt; Prediction — AI 地球决策智能基准测试框架</div>
+    </div>
     <div class="meta" id="header-meta"></div>
   </div>
-  <div class="publication-badge">今日发布</div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <span class="publication-badge">今日发布</span>
+    <span style="font-size:0.7em;color:#a0aec0;opacity:0.9;">
+      <a href="feed.xml" target="_blank" style="color:inherit;text-decoration:none;">RSS订阅</a>
+      <span style="margin:0 4px;">·</span>
+      <a href="https://github.com/showkeyjar/earth-bench" target="_blank" style="color:inherit;text-decoration:none;">GitHub</a>
+    </span>
+  </div>
+
+  <!-- Social Share Bar -->
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+    <span style="font-size:0.8em;color:#718096;">分享今日报告:</span>
+    <button onclick="shareReport()" style="background:#667eea;color:white;border:none;padding:4px 12px;border-radius:15px;font-size:0.75em;cursor:pointer;">📤 复制链接</button>
+    <button onclick="copyToClipboard('telegram')" style="background:#0088cc;color:white;border:none;padding:4px 12px;border-radius:15px;font-size:0.75em;cursor:pointer;">✈️ Telegram</button>
+    <button onclick="copyToClipboard('twitter')" style="background:#1DA1F2;color:white;border:none;padding:4px 12px;border-radius:15px;font-size:0.75em;cursor:pointer;">🐦 Twitter</button>
+  </div>
 
   <div class="mini-stats">
     <div class="mini-stat"><div class="num" style="color:#667eea;" id="s-total">-</div><div class="label">监测区域</div></div>
@@ -251,10 +347,12 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
   </div>
 
   <footer>
-    © 2026 EarthBench · 地球风险日报 | Powered by AI · 每天自动更新<br>
-    <a href="mailto:zergskj@163.com" style="color:#a0aec0;text-decoration:none;">zergskj@163.com</a>
-    <span style="color:#cbd5e0;"> · </span>
-    <a href="https://github.com/showkeyjar/earth-bench" target="_blank" style="color:#a0aec0;text-decoration:none;">GitHub</a>
+    © 2026 EarthBench · 地球决策智能基准测试框架 | Powered by AI · 每天自动更新
+    <div style="margin-top:4px;display:flex;justify-content:center;gap:12px;">
+      <a href="mailto:zergskj@163.com" style="color:#a0aec0;text-decoration:none;">📧 Email</a>
+      <a href="https://github.com/showkeyjar/earth-bench" target="_blank" style="color:#a0aec0;text-decoration:none;">🔗 GitHub</a>
+      <a href="feed.xml" target="_blank" style="color:#a0aec0;text-decoration:none;">📡 RSS Feed</a>
+    </div>
   </footer>
 </div>
 
@@ -275,6 +373,27 @@ const signalLabels = {
   'SPI': 'SPI', 'palmer_index': 'Palmer', 'NDVI': 'NDVI', 'rainfall_monthly': '月降雨',
   'temperature_max': '最高温', 'heat_duration_days': '持续天数'
 };
+
+function shareReport() {
+  const url = window.location.href;
+  navigator.clipboard.writeText(url).then(() => {
+    alert('链接已复制到剪贴板！');
+  }).catch(() => {
+    prompt('复制此链接:', url);
+  });
+}
+
+function copyToClipboard(platform) {
+  const url = encodeURIComponent(window.location.href);
+  const text = encodeURIComponent('🌍 EarthBench 每日环境风险预警 — 基于AI的多源时空数据决策智能基准测试框架\n\n' + window.location.href);
+  let shareUrl = '';
+  if (platform === 'telegram') {
+    shareUrl = `https://t.me/share/url?url=${url}&text=${text}`;
+  } else if (platform === 'twitter') {
+    shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${text}`;
+  }
+  window.open(shareUrl, '_blank', 'width=600,height=400');
+}
 
 let historyData = [];
 // 存储每行的内联小地图实例（已废弃，改用侧栏联动）
