@@ -4,7 +4,7 @@
   <subtitle>Environmental Risk Decision Intelligence</subtitle>
   <link href="https://earthbench.io/feed.xml" rel="self"/>
   <link href="https://earthbench.io"/>
-  <updated>2026-07-26T10:28:54+08:00</updated>
+  <updated>2026-07-26T10:29:08+08:00</updated>
   <id>tag:earthbench.io,2026:</id>
   <generator>EarthBench Pipeline v0.3.0</generator>
 
@@ -19,10 +19,20 @@
   </entry>
 
   <entry>
+    <title>EarthBench Alert: Forest Fire in ChangbaiMountain</title>
+    <link href="/reports/20260726/fire-l2-fwi-high-rain-suppress" rel="alternate"/>
+    <id>tag:earthbench.io,2026-07-26T02:20:27.344146+00:00</id>
+    <published>2026-07-26T02:20:27.344146+00:00</published>
+    <summary>AI 分析完成
+辅助判断: YES, confidence=0.413
+多变量加权风险评分: 0.413, 证据权重: {"FWI": 0.98, "humidity": 0.85, "rainfall": -1.25}</summary>
+  </entry>
+
+  <entry>
     <title>EarthBench Alert: Forest Fire in GreaterKhingan</title>
     <link href="/reports/20260726/fire-l4-trend-rising" rel="alternate"/>
-    <id>tag:earthbench.io,2026-07-26T02:21:12.690460+00:00</id>
-    <published>2026-07-26T02:21:12.690460+00:00</published>
+    <id>tag:earthbench.io,2026-07-26T02:21:21.672040+00:00</id>
+    <published>2026-07-26T02:21:21.672040+00:00</published>
     <summary>True
 辅助判断: YES, confidence=0.412
 多变量加权风险评分: 0.412, 证据权重: {"FWI": 0.735, "humidity": 0.775}</summary>
@@ -31,8 +41,18 @@
   <entry>
     <title>EarthBench Alert: Flood in Wuhan-Yangtze</title>
     <link href="/reports/20260726/flood-l1-extreme-rainfall" rel="alternate"/>
-    <id>tag:earthbench.io,2026-07-26T02:21:42.216299+00:00</id>
-    <published>2026-07-26T02:21:42.216299+00:00</published>
+    <id>tag:earthbench.io,2026-07-26T02:21:50.552378+00:00</id>
+    <published>2026-07-26T02:21:50.552378+00:00</published>
+    <summary>True
+辅助判断: NO, confidence=0.000
+多变量加权风险评分: 0.000, 证据权重: {}</summary>
+  </entry>
+
+  <entry>
+    <title>EarthBench Alert: Flood in Guangzhou-PearlR</title>
+    <link href="/reports/20260726/flood-l2-soil-saturated" rel="alternate"/>
+    <id>tag:earthbench.io,2026-07-26T02:22:53.854523+00:00</id>
+    <published>2026-07-26T02:22:53.854523+00:00</published>
     <summary>True
 辅助判断: NO, confidence=0.000
 多变量加权风险评分: 0.000, 证据权重: {}</summary>
@@ -41,10 +61,20 @@
   <entry>
     <title>EarthBench Alert: Drought in Taiyuan-Shanxi</title>
     <link href="/reports/20260726/drought-l4-spir-declining" rel="alternate"/>
-    <id>tag:earthbench.io,2026-07-26T02:26:19.389162+00:00</id>
-    <published>2026-07-26T02:26:19.389162+00:00</published>
+    <id>tag:earthbench.io,2026-07-26T02:26:33.763009+00:00</id>
+    <published>2026-07-26T02:26:33.763009+00:00</published>
     <summary>True
 辅助判断: NO, confidence=0.000
 多变量加权风险评分: 0.000, 证据权重: {}</summary>
+  </entry>
+
+  <entry>
+    <title>EarthBench Alert: Heat Wave in Chongqing-HotPotato</title>
+    <link href="/reports/20260726/heat-l1-extreme-wetbulb" rel="alternate"/>
+    <id>tag:earthbench.io,2026-07-26T02:27:01.637263+00:00</id>
+    <published>2026-07-26T02:27:01.637263+00:00</published>
+    <summary>True
+辅助判断: NO, confidence=0.237
+多变量加权风险评分: 0.237, 证据权重: {"humidity": 0.25, "wet_bulb_temp": 0.75}</summary>
   </entry>
 </feed>
