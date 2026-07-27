@@ -1,73 +1,48 @@
-# EarthBench — Earth Decision Intelligence Benchmark
+# 🌍 EarthBench — Earth Decision Intelligence Benchmark
 
-**地球决策智能基准测试框架**
+**地球决策智能基准测试框架 | Decision > Prediction**
 
-## 定位
+---
 
-EarthBench 不是一个天气预报精度评测（那是 WeatherBench 做的事），而是一个**地球决策智能基准测试（Earth Decision Intelligence Benchmark）**。它测试的是：**AI 是否能够利用多源时空信息，支持一个真实世界的环境决策。**
+## Quick Links
 
-核心问题不是"预测降雨量 123mm"，而是：
+- **Daily Risk Dashboard**: [https://earth-ai.fun](https://earth-ai.fun)
+- **RSS Feed**: [feed.xml](feed.xml)
+- **JSON API**: [latest.json](latest.json)
+- **History**: [history.json](history.json)
 
-> "未来 72 小时，是否需要启动一级森林防火响应？"
+## What is EarthBench?
 
-## 核心理念
+EarthBench is the world's first benchmark testing whether AI can make **real-world binary decisions** about environmental risks (fire, flood, drought, heatwave) using multi-source spatio-temporal observations.
 
-- **Decision > Prediction** — 决策优于预测
-- **Evidence Fusion > Rules** — 证据融合优于规则
-- **Temporal Understanding > Image Understanding** — 时间理解优于图像理解
-- **Multi-source + Temporal + Decision + Verifiable** — 多源、时序、决策、可验证
+We don't just predict numbers — we decide actions: *Should we activate Level 1 fire response today?*
 
-## 设计哲学
+### Key Features
 
-EarthBench 采用 **Decision Template（决策模板）** 而非预定义决策场景：
+- **Decision-first paradigm** — not prediction accuracy, but decision quality
+- **Four hazard categories**: Fire, Flood, Drought, Heatwave
+- **Five decision templates**: Alert, Deploy, Upgrade, Close, Recover
+- **Multi-source data fusion**: Satellite (MODIS), meteorological stations, hydrological sensors
+- **Transparent reasoning**: Every decision includes full evidence chain and LLM inference trace
+- **Ground truth verification**: Each decision verified against national/international thresholds
 
-| 模板 | 问题 | 示例 |
-|------|------|------|
-| ① 是否预警？ | YES/NO | 森林火险预警 |
-| ② 是否调度？ | YES/NO | 巡护力量部署 |
-| ③ 是否升级？ | YES/NO | 防火等级升级 |
-| ④ 是否关闭？ | YES/NO | 景区封闭 |
-| ⑤ 是否恢复？ | YES/NO | 灾后恢复开放 |
-
-所有行业场景都可映射到这 5 个二元决策模板。
-
-## 路线图
-
-### Phase 1 — FireBench（森林火险决策基准）
-聚焦森林防火决策，利用已有 GPP/FWI/遥感数据积累。
-
-### Phase 2 — 多灾种扩展
-增加洪水、干旱、城市应急等场景。
-
-### Phase 3 — 多模态 Agent
-结合遥感、传感器、气象等多源数据的决策 Agent。
-
-## 项目结构
+### Architecture
 
 ```
-EarthBench/
-├── earthbench/          # 核心包
-│   ├── __init__.py
-│   ├── models.py        # 数据结构定义
-│   ├── scenarios.py     # 场景管理
-│   ├── templates.py     # 决策模板
-│   ├── eval.py          # 评测引擎
-│   └── agents.py        # 决策 Agent
-├── data/                # 数据目录
-│   ├── raw/             # 原始数据
-│   └── scenarios/       # 场景数据
-├── scenarios/           # 场景定义
-├── eval/                # 评测脚本
-├── agents/              # Agent 实现
-├── capability/          # 能力包（借鉴 SIM 项目）
-├── tests/               # 测试
-├── scripts/             # 入口脚本
-└── docs/                # 文档
+Scenarios (20 test cases × 4 categories × 4 difficulty levels)
+    ↓
+Agents (Rule-based baseline + LLM Agent via CARM framework)
+    ↓
+Benchmark Engine (Accuracy per category/difficulty)
+    ↓
+Publish Pipeline (Markdown + JSON + RSS + Web Dashboard)
 ```
 
-## 引用与背景
+## Contact
 
-基于与 GPT 的深度对话（2026-07-11），以及作者在生态监测领域的专业积累（GPP、FWI、NDVI、碳通量等）。
+- Email: zergskj@163.com
+- GitHub: https://github.com/showkeyjar/earth-bench
+- Website: https://earth-ai.fun
 
 ## License
 

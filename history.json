@@ -1,0 +1,1006 @@
+[
+  {
+    "date": "2026-07-26",
+    "date_short": "07-26",
+    "total": 17,
+    "alerts": 5,
+    "hits": 8,
+    "misses": 9,
+    "accuracy": 0.471,
+    "is_today": true,
+    "details": [
+      {
+        "region": "杭州·西湖",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": false,
+        "hit_reason": "AI 预测有风险，验证数据确认风险成立。森林火险场景的实际观测指标：火险指数(FWI)=49.5(超过阈值40.0)；空气湿度=51.0(高于阈值20.0)；风速=4.7(低于阈值12.0)；温度=34.0(低于阈值35.0)。综合风险评分 0.533，超过预警阈值，预警正确。"
+      },
+      {
+        "region": "长白山",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": false,
+        "hit_reason": "AI 预测有风险，但实际观测数据未达危险阈值（误报）。森林火险场景的实际指标：火险指数(FWI)=29.1(低于阈值40.0)；空气湿度=88.0(高于阈值20.0)；风速=4.7(低于阈值12.0)；温度=23.0(低于阈值35.0)。综合风险评分 0.269，低于预警阈值，预警过于敏感。"
+      },
+      {
+        "region": "深圳·海岸",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": false,
+        "hit_reason": "AI 预测有风险，验证数据确认风险成立。森林火险场景的实际观测指标：火险指数(FWI)=44.9(超过阈值40.0)；空气湿度=91.0(高于阈值20.0)；风速=10.8(低于阈值12.0)；温度=25.0(低于阈值35.0)。综合风险评分 0.423，超过预警阈值，预警正确。"
+      },
+      {
+        "region": "大兴安岭",
+        "category": "fire",
+        "predicted": false,
+        "actual": true,
+        "hit": false,
+        "hit_reason": "AI 预测安全，验证数据确认无风险。森林火险场景的实际观测指标：火险指数(FWI)=18.4(低于阈值40.0)；空气湿度=98.0(高于阈值20.0)；风速=3.9(低于阈值12.0)；温度=20.0(低于阈值35.0)。综合风险评分 0.156，低于预警阈值，排除正确。"
+      },
+      {
+        "region": "武汉·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "AI 预测有风险，验证数据确认风险成立。洪涝灾害场景的实际观测指标：24小时降水量=120.0(超过阈值50.0)；6小时降水量=65.0(超过阈值30.0)；土壤含水率=0.9(超过阈值0.85)；水位=12.5(超过阈值10.0)。综合风险评分 0.963，超过预警阈值，预警正确。"
+      },
+      {
+        "region": "拉萨·西藏",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "AI 预测安全，验证数据确认无风险。洪涝灾害场景的实际观测指标：24小时降水量=0.0(低于阈值50.0)；6小时降水量=0.0(低于阈值30.0)；土壤含水率=0.0(低于阈值0.85)；水位=0.0(低于阈值10.0)。综合风险评分 0.000，低于预警阈值，排除正确。"
+      },
+      {
+        "region": "广州·珠江",
+        "category": "flood",
+        "predicted": false,
+        "actual": true,
+        "hit": false,
+        "hit_reason": "AI 预测安全，验证数据确认无风险。洪涝灾害场景的实际观测指标：24小时降水量=4.0(低于阈值50.0)；6小时降水量=4.0(低于阈值30.0)；土壤含水率=0.0(低于阈值0.85)；水位=0.0(低于阈值10.0)。综合风险评分 0.034，低于预警阈值，排除正确。"
+      },
+      {
+        "region": "桂林·广西",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "AI 预测安全，验证数据确认无风险。洪涝灾害场景的实际观测指标：24小时降水量=0.0(低于阈值50.0)；6小时降水量=0.0(低于阈值30.0)；土壤含水率=0.0(低于阈值0.85)；水位=0.0(低于阈值10.0)。综合风险评分 0.000，低于预警阈值，排除正确。"
+      },
+      {
+        "region": "南京·长江",
+        "category": "flood",
+        "predicted": false,
+        "actual": true,
+        "hit": false,
+        "hit_reason": "AI 预测安全，验证数据确认无风险。洪涝灾害场景的实际观测指标：24小时降水量=0.0(低于阈值50.0)；6小时降水量=0.0(低于阈值30.0)；土壤含水率=0.0(低于阈值0.85)；水位=0.0(低于阈值10.0)。综合风险评分 0.000，低于预警阈值，排除正确。"
+      },
+      {
+        "region": "昆明·云南",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": false,
+        "hit_reason": "AI 预测安全，但实际观测数据已超过危险阈值（漏报）。干旱场景的实际指标：SPI指数=0.0(高于阈值-1.0)；Palmer指数=0.0(高于阈值-0.5)；空气湿度=78.0(高于阈值20.0)；月降雨量=0.0(低于阈值10.0)；植被指数(NDVI)=0.0(低于阈值0.3)。综合风险评分 0.400，超过预警阈值，存在漏报。"
+      },
+      {
+        "region": "杭州·浙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "AI 预测安全，但实际观测数据已超过危险阈值（漏报）。干旱场景的实际指标：SPI指数=0.0(高于阈值-1.0)；Palmer指数=0.0(高于阈值-0.5)；空气湿度=51.0(高于阈值20.0)；月降雨量=0.0(低于阈值10.0)；植被指数(NDVI)=0.0(低于阈值0.3)。综合风险评分 0.400，超过预警阈值，存在漏报。"
+      },
+      {
+        "region": "哈尔滨·黑龙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "AI 预测安全，但实际观测数据已超过危险阈值（漏报）。干旱场景的实际指标：SPI指数=0.0(高于阈值-1.0)；Palmer指数=0.0(高于阈值-0.5)；空气湿度=70.0(高于阈值20.0)；月降雨量=0.0(低于阈值10.0)；植被指数(NDVI)=0.0(低于阈值0.3)。综合风险评分 0.400，超过预警阈值，存在漏报。"
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": false,
+        "hit_reason": "AI 预测安全，但实际观测数据已超过危险阈值（漏报）。干旱场景的实际指标：SPI指数=0.0(高于阈值-1.0)；Palmer指数=0.0(高于阈值-0.5)；空气湿度=36.0(高于阈值20.0)；月降雨量=0.0(低于阈值10.0)；植被指数(NDVI)=0.0(低于阈值0.3)。综合风险评分 0.400，超过预警阈值，存在漏报。"
+      },
+      {
+        "region": "太原·山西",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": false,
+        "hit_reason": "AI 预测安全，但实际观测数据已超过危险阈值（漏报）。干旱场景的实际指标：SPI指数=0.0(高于阈值-1.0)；Palmer指数=0.0(高于阈值-0.5)；空气湿度=62.0(高于阈值20.0)；月降雨量=0.0(低于阈值10.0)；植被指数(NDVI)=0.0(低于阈值0.3)。综合风险评分 0.400，超过预警阈值，存在漏报。"
+      },
+      {
+        "region": "昆明·春城",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "AI 预测安全，验证数据确认无风险。高温热浪场景的实际观测指标：最高温度=26.0(低于阈值35.0)；空气湿度=40.0(高于阈值20.0)。综合风险评分 0.150，低于预警阈值，排除正确。"
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "AI 预测安全，验证数据确认无风险。高温热浪场景的实际观测指标：最高温度=0.0(低于阈值35.0)；空气湿度=36.0(高于阈值20.0)。综合风险评分 0.150，低于预警阈值，排除正确。"
+      },
+      {
+        "region": "南京",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "AI 预测有风险，验证数据确认风险成立。高温热浪场景的实际观测指标：最高温度=34.5(低于阈值35.0)；空气湿度=72.0(高于阈值20.0)。综合风险评分 0.546，超过预警阈值，预警正确。"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-25",
+    "date_short": "07-25",
+    "total": 15,
+    "alerts": 10,
+    "hits": 8,
+    "misses": 2,
+    "accuracy": 0.8,
+    "is_today": false,
+    "details": [
+      {
+        "region": "昆明·春城",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际高温指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "太原·山西",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "武汉·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际洪涝指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "昆明·云南",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "拉萨·西藏",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际高温指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "杭州·西湖",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": false,
+        "hit_reason": "实际火险指标未达危险阈值，AI预警过于敏感（误报）"
+      },
+      {
+        "region": "广州·珠江",
+        "category": "flood",
+        "predicted": false,
+        "actual": true,
+        "hit": false,
+        "hit_reason": "实际洪涝指标已超过阈值，AI未预警（漏报）"
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "南京",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际高温指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "杭州·浙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "长白山",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际火险指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "哈尔滨·黑龙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": false,
+        "hit_reason": "实际干旱指标已超过阈值，AI未预警（漏报）"
+      },
+      {
+        "region": "深圳·海岸",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际火险指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "大兴安岭",
+        "category": "fire",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际火险指标处于安全范围，AI排除正确"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-24",
+    "date_short": "07-24",
+    "total": 17,
+    "alerts": 9,
+    "hits": 7,
+    "misses": 2,
+    "accuracy": 0.778,
+    "is_today": false,
+    "details": [
+      {
+        "region": "昆明·云南",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "杭州·西湖",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际火险指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "大兴安岭",
+        "category": "fire",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际火险指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "深圳·海岸",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际火险指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "太原·山西",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "拉萨·西藏",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "杭州·浙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "武汉·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际洪涝指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "昆明·春城",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际高温指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "广州·珠江",
+        "category": "flood",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际高温指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "南京",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际高温指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "桂林·广西",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": false,
+        "hit_reason": "实际洪涝指标已超过阈值，AI未预警（漏报）"
+      },
+      {
+        "region": "哈尔滨·黑龙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "长白山",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际火险指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "南京·长江",
+        "category": "flood",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-23",
+    "date_short": "07-23",
+    "total": 16,
+    "alerts": 8,
+    "hits": 6,
+    "misses": 2,
+    "accuracy": 0.75,
+    "is_today": false,
+    "details": [
+      {
+        "region": "武汉·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际洪涝指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "昆明·云南",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": false,
+        "hit_reason": "实际干旱指标已超过阈值，AI未预警（漏报）"
+      },
+      {
+        "region": "长白山",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": false,
+        "hit_reason": "实际火险指标未达危险阈值，AI预警过于敏感（误报）"
+      },
+      {
+        "region": "桂林·广西",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "深圳·海岸",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际火险指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "南京",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际高温指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "广州·珠江",
+        "category": "flood",
+        "predicted": false,
+        "actual": true,
+        "hit": false,
+        "hit_reason": "实际洪涝指标已超过阈值，AI未预警（漏报）"
+      },
+      {
+        "region": "太原·山西",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "杭州·西湖",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际火险指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "拉萨·西藏",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "大兴安岭",
+        "category": "fire",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际火险指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际高温指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "哈尔滨·黑龙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "杭州·浙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": false,
+        "hit_reason": "实际干旱指标已超过阈值，AI未预警（漏报）"
+      },
+      {
+        "region": "昆明·春城",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际高温指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "南京·长江",
+        "category": "flood",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-22",
+    "date_short": "07-22",
+    "total": 19,
+    "alerts": 9,
+    "hits": 7,
+    "misses": 2,
+    "accuracy": 0.778,
+    "is_today": false,
+    "details": [
+      {
+        "region": "南京·长江",
+        "category": "flood",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "杭州·西湖",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际火险指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "拉萨·西藏",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": false,
+        "hit_reason": "实际洪涝指标已超过阈值，AI未预警（漏报）"
+      },
+      {
+        "region": "哈尔滨·黑龙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": false,
+        "hit_reason": "实际干旱指标已超过阈值，AI未预警（漏报）"
+      },
+      {
+        "region": "桂林·广西",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": false,
+        "hit_reason": "实际洪涝指标已超过阈值，AI未预警（漏报）"
+      },
+      {
+        "region": "武汉·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际洪涝指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "大兴安岭",
+        "category": "fire",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际火险指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "昆明·云南",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "昆明·春城",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际高温指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "广州·珠江",
+        "category": "flood",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "杭州·浙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": false,
+        "hit_reason": "实际干旱指标已超过阈值，AI未预警（漏报）"
+      },
+      {
+        "region": "南京",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": false,
+        "hit_reason": "实际高温指标未达危险阈值，AI预警过于敏感（误报）"
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际高温指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "太原·山西",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "长白山",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际火险指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "深圳·海岸",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": false,
+        "hit_reason": "实际火险指标未达危险阈值，AI预警过于敏感（误报）"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-21",
+    "date_short": "07-21",
+    "total": 16,
+    "alerts": 6,
+    "hits": 4,
+    "misses": 2,
+    "accuracy": 0.667,
+    "is_today": false,
+    "details": [
+      {
+        "region": "大兴安岭",
+        "category": "fire",
+        "predicted": false,
+        "actual": true,
+        "hit": false,
+        "hit_reason": "实际火险指标已超过阈值，AI未预警（漏报）"
+      },
+      {
+        "region": "武汉·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": false,
+        "hit_reason": "实际洪涝指标未达危险阈值，AI预警过于敏感（误报）"
+      },
+      {
+        "region": "广州·珠江",
+        "category": "flood",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "长白山",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际火险指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "杭州·浙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "深圳·海岸",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": false,
+        "hit_reason": "实际火险指标未达危险阈值，AI预警过于敏感（误报）"
+      },
+      {
+        "region": "太原·山西",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": false,
+        "hit_reason": "实际干旱指标已超过阈值，AI未预警（漏报）"
+      },
+      {
+        "region": "南京",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际高温指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "桂林·广西",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际高温指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "昆明·云南",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "杭州·西湖",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": false,
+        "hit_reason": "实际火险指标未达危险阈值，AI预警过于敏感（误报）"
+      },
+      {
+        "region": "昆明·春城",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际高温指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "南京·长江",
+        "category": "flood",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "拉萨·西藏",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      }
+    ]
+  },
+  {
+    "date": "2026-07-20",
+    "date_short": "07-20",
+    "total": 17,
+    "alerts": 8,
+    "hits": 6,
+    "misses": 2,
+    "accuracy": 0.75,
+    "is_today": false,
+    "details": [
+      {
+        "region": "昆明·云南",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "广州·珠江",
+        "category": "flood",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "深圳·海岸",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际火险指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "太原·山西",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "drought",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "武汉·长江",
+        "category": "flood",
+        "predicted": true,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际洪涝指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "杭州·西湖",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际火险指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "拉萨·西藏",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "南京",
+        "category": "heat",
+        "predicted": true,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际高温指标超过危险阈值，AI预警正确"
+      },
+      {
+        "region": "杭州·浙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "大兴安岭",
+        "category": "fire",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际火险指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "长白山",
+        "category": "fire",
+        "predicted": true,
+        "actual": false,
+        "hit": false,
+        "hit_reason": "实际火险指标未达危险阈值，AI预警过于敏感（误报）"
+      },
+      {
+        "region": "桂林·广西",
+        "category": "flood",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "南京·长江",
+        "category": "flood",
+        "predicted": false,
+        "actual": true,
+        "hit": true,
+        "hit_reason": "实际洪涝指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "乌鲁木齐·新疆",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际高温指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "昆明·春城",
+        "category": "heat",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际高温指标处于安全范围，AI排除正确"
+      },
+      {
+        "region": "哈尔滨·黑龙江",
+        "category": "drought",
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "hit_reason": "实际干旱指标处于安全范围，AI排除正确"
+      }
+    ]
+  }
+]
