@@ -13,6 +13,7 @@ from __future__ import annotations
 import gzip
 import json
 import logging
+import math
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -35,6 +36,32 @@ QWEATHER_HOST = os.environ.get(
     "QWEATHER_HOST",
     "na2tupd7ah.re.qweatherapi.com",  # 开发者 ID: Q980449E05
 )
+
+# NASA FIRMS MAP_KEY（卫星热异常检测，需免费注册）
+FIRMS_MAP_KEY = os.environ.get(
+    "FIRMS_MAP_KEY",
+    "00f2e394cfa2c99cec531c16c4d41925",  # EarthBench FIRMS Key
+)
+
+# FIRMS 区域边界（每个区域略大于城市范围，确保能覆盖到）
+REGION_BOUNDS: dict[str, str] = {
+    "Xiangshan-Beijing":      "116.0,39.8,116.3,40.1",   # 北京区域
+    "WestLake-Hangzhou":       "120.1,30.2,120.2,30.3",   # 杭州
+    "Shenzhen-Coast":          "114.0,22.5,114.1,22.6",   # 深圳
+    "Wuhan-Yangtze":           "114.2,30.5,114.4,30.7",   # 武汉
+    "Guangzhou-PearlR":        "113.2,23.1,113.4,23.2",   # 广州
+    "Guilin-Guangxi":          "110.2,25.2,110.4,25.4",   # 桂林
+    "Nanjing-Yangtze":         "118.7,32.0,118.9,32.2",   # 南京
+    "Kunming-Yunnan":          "102.6,25.0,102.8,25.2",   # 昆明
+    "Hangzhou-Zhejiang":       "120.1,30.2,120.2,30.3",   # 杭州
+    "Chongqing-HotPotato":     "106.8,29.4,107.0,29.6",   # 重庆
+    "Taiyuan-Shanxi":          "112.5,37.8,112.7,38.0",   # 太原
+    "Lhasa-Tibet":             "91.0,29.6,91.2,29.8",     # 拉萨
+    "Harbin-Heilongjiang":     "126.4,45.7,126.6,45.9",   # 哈尔滨
+    "GreaterKhingan":          "124.0,51.0,124.7,51.3",   # 大兴安岭 (大区域)
+    "Urumqi-Xinjiang":         "87.5,43.7,87.7,43.9",     # 乌鲁木齐
+    "ChangbaiMountain":        "128.0,42.0,128.2,42.1",   # 长白山
+}
 
 # 和风天气城市编码映射表
 REGION_LOCATION_MAP: dict[str, dict[str, Any]] = {
@@ -187,13 +214,24 @@ def fetch_daily_forecast(location_id: str, days: int = 3) -> list[dict]:
 # FWI 森林火险指数计算（简化版）
 # ===========================================================================
 
-def calculate_fwi_from_weather(realtime: dict) -> float:
+# 区域类型映射（用于水体修正）— 这些区域有大型水体/城区，需要降低火险指数
+WATER_BODY_REGIONS = {
+    "WestLake-Hangzhou":      0.3,   # 西湖大型水体，火险大幅降低
+    "Wuhan-Yangtze":          0.5,   # 长江区域，有一定水体调节
+    "Guangzhou-PearlR":       0.5,   # 珠江区域
+    "Nanjing-Yangtze":        0.5,   # 长江区域
+    "Shenzhen-Coast":         0.4,   # 沿海区域
+    "Xiangshan-Beijing":      1.0,   # 北京香山，无水体修正（正常林地）
+}
+
+
+def calculate_fwi_from_weather(realtime: dict, region_key: str = None) -> float:
     """根据实时天气数据估算 FFMC/FWI。
     
     参考: https://en.wikipedia.org/wiki/Forest_Fire_Weather_Index
     
     这是一个简化模型，真实 FWI 需要复杂的 6 个因子计算。
-    此处根据温度、湿度、风速、降水进行加权估算。
+    此处根据温度、湿度、风速、降水进行加权估算，并考虑区域水体修正。
     """
     import math
     
@@ -217,6 +255,23 @@ def calculate_fwi_from_weather(realtime: dict) -> float:
     fwi = math.sqrt(base_isi * base_dmc) if base_dmc > 0 else base_isi
     fwi = max(0, min(100, fwi))
     
+    # ==================== 区域水体修正 ====================
+    # 对于有大型水体的区域（如杭州西湖），根据水体调节效应降低 FWI
+    # 这是因为城区内有大面积水体时，实际火险远低于裸露林地
+    water_correction = 1.0
+    if region_key:
+        correction_factor = WATER_BODY_REGIONS.get(region_key, 1.0)
+        # 应用非线性修正：对高FWI值显著降低，对低值影响较小
+        if fwi > 40:
+            fwi = fwi * correction_factor
+        elif fwi > 20:
+            # 中度影响
+            fwi = fwi * (0.5 + 0.5 * correction_factor)
+        # 确保不为负
+        fwi = max(fwi * 0.6, 0)  # 最低保留40%的原值
+    
+    # ==================== 结束区域修正 ====================
+    
     return round(fwi, 1)
 
 
@@ -229,9 +284,14 @@ def weather_to_observations(
     hourly: list[dict],
     daily: list[dict],
     category: str,
+    region_key: str,
     region_name: str,
 ) -> list[dict]:
-    """将和风天气 API 返回的数据转换为 publish_pipeline 需要的 observations 格式。"""
+    """将和风天气 API 返回的数据转换为 publish_pipeline 需要的 observations 格式。
+    
+    Args:
+        region_key: 区域键值（如 WestLake-Hangzhou），用于 FWI 水体修正
+    """
     obs_list = []
     now_time = realtime.get("obsTime", datetime.now().isoformat())
     
@@ -267,8 +327,8 @@ def weather_to_observations(
             "confidence": 0.95,
         })
         
-        # FWI 估算
-        fwi = calculate_fwi_from_weather(realtime)
+        # FWI 估算 — 传入 region_key 以便进行水体修正
+        fwi = calculate_fwi_from_weather(realtime, region_key)
         obs_list.append({
             "source": "QWeather/Calculated",
             "variable": "FWI",
@@ -425,12 +485,13 @@ def collect_region_weather(region_key: str, category: str) -> list[dict]:
         hourly = fetch_hourly_forecast(location_id, hours=24)
         daily = fetch_daily_forecast(location_id, days=3)
     
-    # 转换为场景观测列表
+    # 转换为场景观测列表 — 传递 region_key 以便 FWI 计算时进行水体修正
     obs_list = weather_to_observations(
         realtime=realtime,
         hourly=hourly,
         daily=daily,
         category=category,
+        region_key=region_key,
         region_name=loc_info.get("name", region_key),
     )
     
@@ -492,5 +553,97 @@ if __name__ == "__main__":
         daily=[],
         category="fire",
         region_name="北京",
+    )
+    print(json.dumps(fire_obs, indent=2, ensure_ascii=False))
+
+
+# ===========================================================================
+# NASA FIRMS 卫星热异常检测（追加）
+# ===========================================================================
+
+def fetch_firms_hotspots(lat: float, lon: float, radius_km: int = 50) -> list[dict]:
+    """使用 NASA FIRMS API 查询指定区域内近7天的卫星热异常（火点）数据。"""
+    if not FIRMS_MAP_KEY:
+        return []
+    
+    lat_range = radius_km / 111.0
+    lng_range = radius_km / (111.0 * math.cos(math.radians(lat)))
+    
+    west = round(lon - lng_range, 2)
+    south = round(lat - lat_range, 2)
+    east = round(lon + lng_range, 2)
+    north = round(lat + lat_range, 2)
+    area_str = f"{west},{south},{east},{north}"
+    
+    url = f"https://firms.modaps.eosdis.nasa.gov/api/area/csv/{FIRMS_MAP_KEY}/VIIRS_SNPP_NRT/{area_str}/7"
+    
+    try:
+        req = Request(url, headers={"User-Agent": "EarthBench/1.0"})
+        with urlopen(req, timeout=30) as resp:
+            raw_data = resp.read()
+            if raw_data[:2] == b'\x1f\x8b':
+                raw_data = gzip.decompress(raw_data)
+            
+            text = raw_data.decode("utf-8-sig")
+            lines = text.strip().split('\n')
+            
+            if len(lines) < 2:
+                return []
+            
+            header = lines[0].strip().split(',')
+            hotspots = []
+            for line in lines[1:]:
+                fields = line.strip().split(',')
+                if len(fields) < len(header):
+                    continue
+                row = dict(zip(header, fields))
+                try:
+                    hotspots.append({
+                        "latitude": float(row.get("latitude", 0)),
+                        "longitude": float(row.get("longitude", 0)),
+                        "confidence_level": row.get("confidence", "unknown"),
+                        "brightness_ti4": float(row.get("bright_ti4", 0)),
+                        "frp": float(row.get("frp", 0)),
+                        "satellite": row.get("satellite", ""),
+                        "instrument": row.get("instrument", ""),
+                        "acq_date": row.get("acq_date", ""),
+                        "daynight": row.get("daynight", "N"),
+                    })
+                except (ValueError, KeyError):
+                    continue
+            
+            return hotspots
+    except Exception as e:
+        logger.warning(f"FIRMS query failed: {e}")
+        return []
+
+
+def has_active_fire(latitude: float, longitude: float, radius_km: int = 20) -> bool:
+    """检查指定区域内是否有活跃火点。"""
+    hotspots = fetch_firms_hotspots(latitude, longitude, radius_km)
+    significant = [h for h in hotspots if float(h.get("frp", 0)) > 0.5 or h.get("confidence_level") == "high"]
+    
+    if significant:
+        frp_total = sum(h["frp"] for h in significant)
+        logger.info(
+            f"[FIRMS] Found {len(significant)} active fire(s) within {radius_km}km, "
+            f"total FRP={frp_total:.1f} MW/m2"
+        )
+        return True
+    
+    return False
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    print("=" * 60)
+    print("Testing QWeather data collection")
+    print("=" * 60)
+    print("\n--- Fetching Beijing realtime ---")
+    bj_weather = fetch_realtime_weather("101010100", None, None)
+    print(json.dumps(bj_weather, indent=2, ensure_ascii=False))
+    print("\n--- Converting to fire scenario observations ---")
+    fire_obs = weather_to_observations(
+        realtime=bj_weather, hourly=[], daily=[], category="fire", region_name="北京"
     )
     print(json.dumps(fire_obs, indent=2, ensure_ascii=False))
