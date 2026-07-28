@@ -4,7 +4,7 @@
   <subtitle>Environmental Risk Decision Intelligence</subtitle>
   <link href="https://earthbench.io/feed.xml" rel="self"/>
   <link href="https://earthbench.io"/>
-  <updated>2026-07-28T20:32:46+08:00</updated>
+  <updated>2026-07-28T20:33:04+08:00</updated>
   <id>tag:earthbench.io,2026:</id>
   <generator>EarthBench Pipeline v0.3.0</generator>
 
@@ -12,7 +12,7 @@
     <title>No active environmental risk alerts</title>
     <link href="https://earth-ai.fun" rel="alternate"/>
     <id>tag:earthbench.io,no-alerts</id>
-    <published>2026-07-28T20:32:46+08:00</published>
+    <published>2026-07-28T20:33:04+08:00</published>
     <summary>当前所有监测区域均未触发环境风险预警。</summary>
   </entry>
 </feed>
