@@ -355,18 +355,21 @@ def generate_reports(decisions: list[dict], suite: list[dict] | None = None) -> 
                 "published": d["timestamp"],
                 "summary": d.get("rationale", "")[:150],
             })
-    
-    if feed_entries:
-        atom_xml = f"""<?xml version="1.0" encoding="utf-8"?>
+
+    # 始终重写 feed.xml：即使无任何预警也生成空 feed（含"无预警"占位条目），
+    # 避免上一轮的错误预警条目（如西湖火险误报）在场景转安全后残留。
+    updated_ts = now.strftime("%Y-%m-%dT%H:%M:%S+08:00")
+    atom_xml = f"""<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>EarthBench Alerts</title>
   <subtitle>Environmental Risk Decision Intelligence</subtitle>
   <link href="https://earthbench.io/feed.xml" rel="self"/>
   <link href="https://earthbench.io"/>
-  <updated>{now.strftime("%Y-%m-%dT%H:%M:%S+08:00")}</updated>
+  <updated>{updated_ts}</updated>
   <id>tag:earthbench.io,2026:</id>
   <generator>EarthBench Pipeline v0.3.0</generator>
 """
+    if feed_entries:
         for entry in feed_entries:
             atom_xml += f"""
   <entry>
@@ -377,13 +380,23 @@ def generate_reports(decisions: list[dict], suite: list[dict] | None = None) -> 
     <summary>{entry["summary"]}</summary>
   </entry>
 """
-        atom_xml += "</feed>"
-        
-        atom_path = output_dir / "feed.xml"
-        atom_path.write_text(atom_xml, encoding="utf-8")
-        outputs["atom"] = str(atom_path)
-        logger.info(f"  Atom feed: {atom_path.name}")
-    
+    else:
+        atom_xml += f"""
+  <entry>
+    <title>No active environmental risk alerts</title>
+    <link href="https://earth-ai.fun" rel="alternate"/>
+    <id>tag:earthbench.io,no-alerts</id>
+    <published>{updated_ts}</published>
+    <summary>当前所有监测区域均未触发环境风险预警。</summary>
+  </entry>
+"""
+    atom_xml += "</feed>"
+
+    atom_path = output_dir / "feed.xml"
+    atom_path.write_text(atom_xml, encoding="utf-8")
+    outputs["atom"] = str(atom_path)
+    logger.info(f"  Atom feed: {atom_path.name} ({len(feed_entries)} alerts)")
+
     return outputs
 
 
