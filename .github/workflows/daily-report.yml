@@ -60,3 +60,13 @@ jobs:
           publish_dir: ./published_reports
           force_orphan: true
           commit_message: "📊 Daily report: ${{ github.event.head_commit.timestamp }}"
+
+      - name: Deploy to Cloudflare Pages
+        # 仅在配置了 Cloudflare 凭据时执行；缺少密钥则自动跳过，不影响 GitHub Pages 部署
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npm install -g wrangler
+          wrangler pages deploy published_reports --project-name earth-bench --commit-dirty=true
