@@ -1,2 +1,0 @@
-[console_scripts]
-earthbench-eval = earthbench.__main__:main

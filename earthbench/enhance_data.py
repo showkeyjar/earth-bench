@@ -567,21 +567,23 @@ def generate_history(decisions: list[dict], days: int = 7) -> list[dict[str, Any
 
     # 当前日期的验证结果
     current_alerts = []
+    # 修正：confidence 字段是"风险评分"(0=安全,1=极危,阈值0.4)，并非决策把握度，
+    # 不能用 confidence>=0.7 来判定是否为警报（低风险日会漏掉全部记录）。
+    # 正确口径：以 AI 决策(llm_decision)为准，统计所有被判为风险的场景作为"警报"。
     for d in decisions:
-        if d.get("confidence", 0) >= 0.7:
-            hit = d.get("llm_decision") == d.get("ground_truth")
-            cat = d.get("category", "")
-            hit_reason = d.get("verification_reason") or _build_hit_reason(
-                d.get("llm_decision", False), d.get("ground_truth", False), hit, cat
-            )
-            current_alerts.append({
-                "region": d.get("region_cn", d.get("region", "")),
-                "category": cat,
-                "predicted": d.get("llm_decision", False),
-                "actual": d.get("ground_truth", False),
-                "hit": hit,
-                "hit_reason": hit_reason,
-            })
+        predicted = bool(d.get("llm_decision", False))
+        actual = bool(d.get("ground_truth", False))
+        hit = predicted == actual
+        cat = d.get("category", "")
+        hit_reason = d.get("verification_reason") or _build_hit_reason(predicted, actual, hit, cat)
+        current_alerts.append({
+            "region": d.get("region_cn", d.get("region", "")),
+            "category": cat,
+            "predicted": predicted,
+            "actual": actual,
+            "hit": hit,
+            "hit_reason": hit_reason,
+        })
 
     current_hits = sum(1 for a in current_alerts if a["hit"])
     current_total = len(current_alerts)

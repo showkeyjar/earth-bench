@@ -459,11 +459,13 @@ function renderToday(data) {
     const confPercent = Math.round(d.confidence * 100);
     const isWarning = d.llm_decision;
 
-    if (confPercent < 70) { lowConfCount++; return; }
+    // confidence 字段是"风险评分"(0=安全,1=极危,阈值0.4)，不是决策把握度。
+    // 展示全部场景，风险评分仅用于风险程度着色，不再作为过滤门槛。
     shownCount++;
 
     const cat = categoryIcons[d.category] || {};
-    const barCls = confPercent >= 85 ? 'bar-green' : confPercent >= 75 ? 'bar-yellow' : 'bar-red';
+    // 风险评分越高越危险：>=40(预警阈值)红, >=25黄, 其余绿
+    const barCls = confPercent >= 40 ? 'bar-red' : confPercent >= 25 ? 'bar-yellow' : 'bar-green';
 
     // 关键信号（取详细证据中的 danger 项）
     let signals = '-';
@@ -512,15 +514,13 @@ function renderToday(data) {
   });
 
   if (shownCount === 0) {
-    html += '<tr><td colspan="7" style="text-align:center;color:#975a16;padding:20px;">今天所有场景把握度均低于70%，暂不公布</td></tr>';
+    html += '<tr><td colspan="7" style="text-align:center;color:#a0aec0;padding:20px;">今日暂无环境风险预警，所有监测区域均处于安全状态</td></tr>';
   }
 
   tbody.innerHTML = html;
 
-  if (lowConfCount > 0) {
-    document.getElementById('low-conf-bar').style.display = 'block';
-    document.getElementById('low-conf-bar').textContent = `ℹ️ 还有 ${lowConfCount} 个地点把握度 <70%，AI 也不太确定，暂不公布`;
-  }
+  // 已移除把握度过滤：所有场景均展示，不再有 lowConf 提示
+  document.getElementById('low-conf-bar').style.display = 'none';
 
   // 自动展开第一条记录（如果有）
   if (shownCount > 0) {
