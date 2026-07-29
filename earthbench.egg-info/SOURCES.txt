@@ -1,0 +1,16 @@
+README.md
+pyproject.toml
+earthbench/__init__.py
+earthbench/__main__.py
+earthbench/agents.py
+earthbench/eval.py
+earthbench/models.py
+earthbench/scenarios.py
+earthbench/templates.py
+earthbench.egg-info/PKG-INFO
+earthbench.egg-info/SOURCES.txt
+earthbench.egg-info/dependency_links.txt
+earthbench.egg-info/entry_points.txt
+earthbench.egg-info/requires.txt
+earthbench.egg-info/top_level.txt
+tests/test_evaluation.py

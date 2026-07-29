@@ -236,6 +236,15 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
 }
   .toggle-safe-btn { width:100%; text-align:left; background:#f7fafc; border:1px dashed #cbd5e0; color:#2d3748; padding:12px 16px; font-size:0.92em; cursor:pointer; border-radius:0 0 8px 8px; }
   .toggle-safe-btn:hover { background:#edf2f7; color:#1a202c; }
+  .recent-alerts-card { background: white; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .recent-alerts-card .section-title-bar { background: linear-gradient(90deg,#ed8936,#dd6b20); }
+  .ra-date { font-size: 0.8em; color: #718096; font-weight: 600; margin: 10px 0 4px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 2px; }
+  .ra-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 2px; border-bottom: 1px solid #f7fafc; }
+  .ra-region { color: #4a5568; font-size: 0.92em; }
+  .ra-result { font-weight: 600; font-size: 0.85em; }
+  .ra-result.hit { color: #38a169; }
+  .ra-result.miss { color: #e53e3e; }
+  .ra-reason { font-size: 0.72em; color: #a0aec0; margin: -2px 0 6px 2px; }
 </style>
 </head>
 <body>
@@ -294,6 +303,12 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
           <tbody id="alert-body"></tbody>
         </table>
       </div>
+    </div>
+
+    <!-- 近期预警（今日无预警时回看历史时间范围） -->
+    <div class="recent-alerts-card" id="recent-alerts-card" style="display:none;margin-top:14px;">
+      <div class="section-title-bar">📡 近期环境风险预警（近 14 天）</div>
+      <div id="recent-alerts-body"></div>
     </div>
 
     <div class="side-panel">
@@ -398,6 +413,7 @@ function copyToClipboard(platform) {
 }
 
 let historyData = [];
+let recentAlertsData = [];
 // 存储每行的内联小地图实例（已废弃，改用侧栏联动）
 
 async function fetchJSON(url) {
@@ -422,12 +438,16 @@ async function loadData() {
     }
   }
 
-  // 加载历史数据
-  try { historyData = await fetchJSON('history.json') || []; } catch(e) { historyData = []; }
+  // 加载历史数据（兼容新旧结构：旧为数组，新为 {days, recent_alerts}）
+  let rawHistory = [];
+  try { rawHistory = await fetchJSON('history.json') || []; } catch(e) { rawHistory = []; }
+  historyData = Array.isArray(rawHistory) ? rawHistory : (rawHistory.days || []);
+  recentAlertsData = Array.isArray(rawHistory) ? [] : (rawHistory.recent_alerts || []);
 
   if (data) {
     renderToday(data);
     renderHistory();
+    renderRecentAlerts(data);
   } else {
     document.getElementById('alert-body').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#e53e3e;padding:30px;">暂时无法加载数据，请稍后刷新页面重试</td></tr>';
   }
@@ -813,13 +833,14 @@ function showSideMap(d, idx) {
 
 // ===================== History =====================
 function renderHistory() {
-  if (!historyData || historyData.length === 0) {
+  const days = Array.isArray(historyData) ? historyData : (historyData.days || []);
+  if (!days || days.length === 0) {
     document.getElementById('history-chart').innerHTML = '<div style="font-size:0.8em;color:#a0aec0;text-align:center;padding:20px;">暂无历史数据</div>';
     return;
   }
 
   // 图表
-  const chartHtml = historyData.slice().reverse().map(h => {
+  const chartHtml = days.slice().reverse().map(h => {
     const accPercent = Math.round(h.accuracy * 100);
     const barHeight = Math.max(4, accPercent * 0.7);
     const barColor = accPercent >= 95 ? '#48bb78' : accPercent >= 85 ? '#ecc94b' : '#f56565';
@@ -832,9 +853,9 @@ function renderHistory() {
   document.getElementById('history-chart').innerHTML = chartHtml;
 
   // 汇总统计 — 按"总决策数"计算准确率，更清晰
-  const totalDecisions = historyData.reduce((s,h) => s + h.total, 0);
-  const totalHits = historyData.reduce((s,h) => s + h.hits, 0);
-  const totalErrors = historyData.reduce((s,h) => s + h.misses, 0);
+  const totalDecisions = days.reduce((s,h) => s + h.total, 0);
+  const totalHits = days.reduce((s,h) => s + h.hits, 0);
+  const totalErrors = days.reduce((s,h) => s + h.misses, 0);
   const overallAcc = totalDecisions > 0 ? Math.round(totalHits / totalDecisions * 100) : 0;
 
   document.getElementById('history-summary').innerHTML = `
@@ -844,7 +865,7 @@ function renderHistory() {
   `;
 
   // 今日详情
-  const today = historyData.find(h => h.is_today) || historyData[0];
+  const today = days.find(h => h.is_today) || days[0];
   if (today && today.details) {
     const detailHtml = today.details.map(d => {
       const catIcon = categoryIcons[d.category] || { label: '' };
@@ -862,6 +883,40 @@ function renderHistory() {
     }).join('');
     document.getElementById('history-detail-list').innerHTML = detailHtml;
   }
+}
+
+// 今日无预警时，回看近 14 天的真实风险预警（扩展时间范围）
+function renderRecentAlerts(latestData) {
+  const card = document.getElementById('recent-alerts-card');
+  const body = document.getElementById('recent-alerts-body');
+  if (!card || !body) return;
+  // 今天已有预警：主表已展示，无需重复
+  if (latestData && latestData.alert_count > 0) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+  const alerts = recentAlertsData || [];
+  if (alerts.length === 0) {
+    body.innerHTML = '<div style="text-align:center;color:#a0aec0;padding:18px;">近 14 天无环境风险预警记录，系统持续监测中。</div>';
+    return;
+  }
+  const byDate = {};
+  alerts.forEach(a => { (byDate[a.date] = byDate[a.date] || []).push(a); });
+  const dates = Object.keys(byDate).sort().reverse();
+  let html = '';
+  dates.forEach(date => {
+    html += '<div class="ra-date">' + date + '</div>';
+    byDate[date].forEach(a => {
+      const icon = (categoryIcons[a.category] && categoryIcons[a.category].label) || '';
+      const res = a.hit ? (a.predicted ? '✅ 正确预警' : '✅ 正确排除') : (a.predicted ? '❌ 误报' : '❌ 漏报');
+      const resCls = a.hit ? 'hit' : 'miss';
+      const reason = a.hit_reason ? '<div class="ra-reason">' + a.hit_reason + '</div>' : '';
+      html += '<div class="ra-row"><span class="ra-region">' + icon + ' ' + a.region + '</span>' +
+              '<span class="ra-result ' + resCls + '">' + res + '</span></div>' + reason;
+    });
+  });
+  body.innerHTML = html;
 }
 
 loadData();

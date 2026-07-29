@@ -556,7 +556,7 @@ def enhance_decision(
 # 历史数据生成
 # ===========================================================================
 
-def generate_history(decisions: list[dict], days: int = 7) -> list[dict[str, Any]]:
+def generate_history(decisions: list[dict], days: int = 7, output_dir=None, window_days: int = 14) -> dict[str, Any]:
     """生成历史预警追踪数据。
 
     基于 decisions 中的 ground_truth 和 llm_decision 字段，
@@ -644,7 +644,65 @@ def generate_history(decisions: list[dict], days: int = 7) -> list[dict[str, Any
 
     # 按日期降序排列
     history.sort(key=lambda x: x["date"], reverse=True)
-    return history
+
+    # 真实近期预警（扩展时间范围）：当“今天无预警”时，回看过去 window_days 天里
+    # 真实触发过的风险预警。数据来自已保留的 decisions_YYYYMMDD.json
+    # （由 daily-report.yml 从 gh-pages 拉回历史文件）。
+    recent_alerts = _collect_recent_alerts(output_dir, today, window_days)
+
+    return {
+        "days": history,
+        "recent_alerts": recent_alerts,
+        "recent_window_days": window_days,
+    }
+
+
+def _collect_recent_alerts(output_dir, today: datetime, window_days: int) -> list[dict[str, Any]]:
+    """扫描已保留的 decisions_YYYYMMDD.json，收集真实近期预警（llm_decision=True）。
+
+    仅用于“今天无预警”时回看历史；今天文件与超出窗口的文件均跳过。
+    """
+    alerts: list[dict[str, Any]] = []
+    if not output_dir:
+        return alerts
+    out = Path(output_dir)
+    if not out.exists():
+        return alerts
+    cutoff = today - timedelta(days=window_days)
+    for fp in out.glob("decisions_*.json"):
+        tag = fp.stem.replace("decisions_", "")
+        try:
+            dt = datetime.strptime(tag, "%Y%m%d")
+        except ValueError:
+            continue
+        if dt.date() >= today.date():
+            continue  # 跳过今天（今天已在主表展示）
+        if dt < cutoff:
+            continue
+        try:
+            with open(fp, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            continue
+        decs = data.get("decisions", []) if isinstance(data, dict) else data
+        for d in decs:
+            if not bool(d.get("llm_decision", False)):
+                continue
+            predicted = True
+            actual = bool(d.get("ground_truth", False))
+            hit = predicted == actual
+            cat = d.get("category", "")
+            alerts.append({
+                "date": dt.strftime("%Y-%m-%d"),
+                "region": d.get("region_cn", d.get("region", "")),
+                "category": cat,
+                "predicted": predicted,
+                "actual": actual,
+                "hit": hit,
+                "hit_reason": d.get("verification_reason") or _build_hit_reason(predicted, actual, hit, cat),
+            })
+    alerts.sort(key=lambda x: x["date"], reverse=True)
+    return alerts[:20]
 
 
 # ===========================================================================
@@ -681,13 +739,13 @@ def enhance_latest_json(json_path: str | Path, suite: list[dict] | None = None) 
         json.dump(data, f, ensure_ascii=False, indent=2)
 
     # 生成历史数据
-    history = generate_history(data.get("decisions", []))
+    history = generate_history(data.get("decisions", []), output_dir=output_dir, window_days=14)
     history_path = output_dir / "history.json"
     with open(history_path, "w", encoding="utf-8") as f:
         json.dump(history, f, ensure_ascii=False, indent=2)
 
     print(f"Enhanced {json_path.name} with {len(data.get('decisions', []))} decisions")
-    print(f"Generated {history_path.name} with {len(history)} days of history")
+    print(f"Generated {history_path.name} with {len(history['days'])} days of history")
 
 
 if __name__ == "__main__":

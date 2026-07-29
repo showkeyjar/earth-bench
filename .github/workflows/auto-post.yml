@@ -1,0 +1,64 @@
+name: Auto Post Content
+
+on:
+  schedule:
+    # 北京时间每天 09:00 - 生成微信草稿 + GitHub release
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  auto-post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -e .
+
+      - name: Generate weekly summary
+        run: |
+          python -c "
+          import json, os
+          from datetime import datetime
+
+          # Load history
+          history_path = 'published_reports/history.json'
+          if os.path.exists(history_path):
+              with open(history_path) as f:
+                  history = json.load(f)
+
+              # Calculate weekly stats
+              total_scenarios = sum(h['total'] for h in history)
+              total_hits = sum(h['hits'] for h in history)
+              avg_acc = total_hits / total_scenarios if total_scenarios > 0 else 0
+
+              print(f'📊 Weekly Summary:')
+              print(f'  Total scenarios evaluated: {total_scenarios}')
+              print(f'  Total correct decisions: {total_hits}')
+              print(f'  Overall accuracy: {avg_acc*100:.1f}%')
+              print(f'  Days reporting: {len(history)}')
+
+          else:
+              print('No history data found.')
+          "
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TODAY=$(date +%Y-%m-%d)
+          gh release create "daily-$TODAY" \
+            --title "Daily Report $TODAY" \
+            --generate-notes \
+            published_reports/decisions_*.json || echo "Release may already exist"
