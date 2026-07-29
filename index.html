@@ -33,7 +33,7 @@
 
 <!-- Feeds & Discovery -->
 <link rel="alternate" type="application/rss+xml" title="EarthBench RSS Feed" href="feed.xml">
-<link rel="alternate" type="application/json" title="EarthBench JSON API" href="latest.json">
+<link rel="alternate" type="application/json" title="EarthBench JSON API" href="https://showkeyjar.github.io/earth-bench/latest.json">
 
 <!-- Favicon -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
@@ -414,11 +414,16 @@ function copyToClipboard(platform) {
 
 let historyData = [];
 let recentAlertsData = [];
+// 数据源：GitHub Pages（gh-pages 分支，由每日工作流自动更新；CORS 开放、仅 ~10 分钟缓存）
+// 说明：相对路径 history.json 来自 Cloudflare Pages(main 分支根目录) 且长期未更新，
+// 因此前端改为直接读取 gh-pages 实时数据；bust() 追加时间戳查询参数以绕过 CDN/浏览器缓存。
+const DATA_BASE = 'https://showkeyjar.github.io/earth-bench/';
+function bust(u) { return u + (u.indexOf('?') >= 0 ? '&' : '?') + '_=' + Date.now(); }
 // 存储每行的内联小地图实例（已废弃，改用侧栏联动）
 
 async function fetchJSON(url) {
-  // 关键：禁用 CDN/浏览器缓存，避免 Cloudflare 对数据 JSON 的 s-maxage=604800 缓存导致站点长时间不更新
-  const resp = await fetch(url, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
+  // 不使用自定义请求头，避免触发跨域(CORS)预检；新鲜度由调用方追加的时间戳查询参数保证
+  const resp = await fetch(url);
   if (!resp.ok) return null;
   const ct = resp.headers.get('content-type') || '';
   if (!ct.includes('application/json') && !ct.includes('text/plain')) return null;
@@ -429,19 +434,27 @@ async function fetchJSON(url) {
 
 async function loadData() {
   let data = null;
-  try { data = await fetchJSON('latest.json'); } catch(e) {}
+  // 优先从 gh-pages 读取实时数据（带时间戳绕过缓存），失败再回退到同站相对路径
+  try { data = await fetchJSON(bust(DATA_BASE + 'latest.json')); } catch(e) {}
+  if (!data) {
+    try { data = await fetchJSON('latest.json'); } catch(e) {}
+  }
   if (!data) {
     const today = new Date();
     for (let i = 0; i < 30; i++) {
       const d = new Date(today); d.setDate(d.getDate() - i);
       const dateStr = d.getFullYear() + '' + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
-      try { data = await fetchJSON('decisions_' + dateStr + '.json'); if (data) break; } catch(e) {}
+      try { data = await fetchJSON(bust(DATA_BASE + 'decisions_' + dateStr + '.json')); if (data) break; } catch(e) {}
+      if (!data) { try { data = await fetchJSON('decisions_' + dateStr + '.json'); if (data) break; } catch(e) {} }
     }
   }
 
   // 加载历史数据（兼容新旧结构：旧为数组，新为 {days, recent_alerts}）
   let rawHistory = [];
-  try { rawHistory = await fetchJSON('history.json') || []; } catch(e) { rawHistory = []; }
+  try { rawHistory = await fetchJSON(bust(DATA_BASE + 'history.json')) || []; } catch(e) { rawHistory = []; }
+  if (!rawHistory || (Array.isArray(rawHistory) && rawHistory.length === 0)) {
+    try { rawHistory = await fetchJSON('history.json') || []; } catch(e) { rawHistory = []; }
+  }
   historyData = Array.isArray(rawHistory) ? rawHistory : (rawHistory.days || []);
   recentAlertsData = Array.isArray(rawHistory) ? [] : (rawHistory.recent_alerts || []);
 
