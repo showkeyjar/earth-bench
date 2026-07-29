@@ -417,7 +417,8 @@ let recentAlertsData = [];
 // 存储每行的内联小地图实例（已废弃，改用侧栏联动）
 
 async function fetchJSON(url) {
-  const resp = await fetch(url);
+  // 关键：禁用 CDN/浏览器缓存，避免 Cloudflare 对数据 JSON 的 s-maxage=604800 缓存导致站点长时间不更新
+  const resp = await fetch(url, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
   if (!resp.ok) return null;
   const ct = resp.headers.get('content-type') || '';
   if (!ct.includes('application/json') && !ct.includes('text/plain')) return null;
