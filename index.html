@@ -234,6 +234,8 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
   .main-grid { grid-template-columns: 1fr; }
   .evidence-grid { grid-template-columns: 1fr; }
 }
+  .toggle-safe-btn { width:100%; text-align:left; background:#f7fafc; border:1px dashed #cbd5e0; color:#2d3748; padding:12px 16px; font-size:0.92em; cursor:pointer; border-radius:0 0 8px 8px; }
+  .toggle-safe-btn:hover { background:#edf2f7; color:#1a202c; }
 </style>
 </head>
 <body>
@@ -266,7 +268,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
     <div class="mini-stat"><div class="num" style="color:#667eea;" id="s-total">-</div><div class="label">监测区域</div></div>
     <div class="mini-stat"><div class="num" style="color:#e53e3e;" id="s-alert">-</div><div class="label">有风险</div></div>
     <div class="mini-stat"><div class="num" style="color:#38a169;" id="s-safe">-</div><div class="label">安全</div></div>
-    <div class="mini-stat"><div class="num" style="color:#dd6b20;" id="s-conf">-</div><div class="label">平均把握</div></div>
+    <div class="mini-stat"><div class="num" style="color:#dd6b20;" id="s-conf">-</div><div class="label">平均风险</div></div>
     <div class="mini-stat"><div class="num" style="color:#38a169;" id="s-acc">-</div><div class="label">7天准确率</div></div>
   </div>
 
@@ -284,7 +286,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
               <th>地点</th>
               <th>类型</th>
               <th>状态</th>
-              <th>把握</th>
+              <th>风险</th>
               <th>关键信号</th>
               <th>验证</th>
             </tr>
@@ -330,7 +332,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
         <h3>💡 快速了解</h3>
         <div class="info-item"><strong>这是什么？</strong><br>AI 帮您提前知道哪里可能有火灾、洪水、干旱或高温热浪。</div>
         <div class="info-item"><strong>怎么判断的？</strong><br>多源数据融合：卫星+气象站+传感器，AI 综合分析各指标是否超过国标阈值。</div>
-        <div class="info-item"><strong>为什么有时不报？</strong><br>把握度低于70%就不显示——AI 自己都不确定的事，不误导您。</div>
+        <div class="info-item"><strong>为什么只显示部分区域？</strong><br>默认只展示有风险的预警；安全区域可点下方按钮展开查看全部监测状态。</div>
         <div class="info-item"><strong>准不准？</strong><br>过去7天平均准确率见右侧战绩面板，每条预警都标注是否命中。</div>
       </div>
 
@@ -449,8 +451,10 @@ function renderToday(data) {
 
   const tbody = document.getElementById('alert-body');
   let html = '';
-  let lowConfCount = 0;
-  let shownCount = 0;
+  let alertHtml = '';
+  let safeHtml = '';
+  let alertCount = 0;
+  let safeCount = 0;
 
   // 存储决策数据供联动地图使用
   window._decisionData = data.decisions;
@@ -460,8 +464,7 @@ function renderToday(data) {
     const isWarning = d.llm_decision;
 
     // confidence 字段是"风险评分"(0=安全,1=极危,阈值0.4)，不是决策把握度。
-    // 展示全部场景，风险评分仅用于风险程度着色，不再作为过滤门槛。
-    shownCount++;
+    // 风险评分仅用于风险程度着色；预警优先，安全区域折叠在"全部区域"中。
 
     const cat = categoryIcons[d.category] || {};
     // 风险评分越高越危险：>=40(预警阈值)红, >=25黄, 其余绿
@@ -497,7 +500,8 @@ function renderToday(data) {
     // 统一显示"今日"而不是原始观测日期（所有场景都是今天评估的）
     const obsTime = '今日';
 
-    html += `<tr id="row-${idx}" onclick="toggleDetail(${idx})" style="cursor:pointer;">
+    const rowCls = isWarning ? 'alert-row' : 'safe-row';
+    let rowHtml = `<tr id="row-${idx}" onclick="toggleDetail(${idx})" style="cursor:pointer;" class="${rowCls}">
       <td><span class="expand-icon" id="icon-${idx}">▶</span></td>
       <td><strong>${regionCn}</strong><br><span style="font-size:0.8em;color:#a0aec0;">预计: ${obsTime}</span></td>
       <td><span class="cat-pill ${cat.cls}">${cat.label}</span></td>
@@ -508,23 +512,59 @@ function renderToday(data) {
     </tr>`;
 
     // 展开行
-    html += `<tr class="detail-row" id="detail-${idx}" data-expanded="false" style="display:none;"><td colspan="7"><div class="detail-panel" id="panel-${idx}">`;
-    html += buildDetailPanel(d, idx);
-    html += `</div></td></tr>`;
+    let detailHtml = `<tr class="detail-row ${rowCls}" id="detail-${idx}" data-expanded="false" style="display:none;"><td colspan="7"><div class="detail-panel" id="panel-${idx}">`;
+    detailHtml += buildDetailPanel(d, idx);
+    detailHtml += `</div></td></tr>`;
+    if (isWarning) { alertHtml += rowHtml + detailHtml; alertCount++; }
+    else { safeHtml += rowHtml + detailHtml; safeCount++; }
   });
 
-  if (shownCount === 0) {
-    html += '<tr><td colspan="7" style="text-align:center;color:#a0aec0;padding:20px;">今日暂无环境风险预警，所有监测区域均处于安全状态</td></tr>';
+  // 预警优先：先列有风险的预警，再提供可折叠的"全部区域"
+  if (alertCount > 0) {
+    html += alertHtml;
+    if (safeCount > 0) html += safeToggleRow(safeCount);
+  } else {
+    html += '<tr><td colspan="7" style="text-align:center;color:#38a169;padding:24px;font-size:1.05em;">✅ 今日暂无环境风险预警，所有监测区域均处于安全状态</td></tr>';
+    if (safeCount > 0) html += safeToggleRow(safeCount);
   }
 
   tbody.innerHTML = html;
 
-  // 已移除把握度过滤：所有场景均展示，不再有 lowConf 提示
-  document.getElementById('low-conf-bar').style.display = 'none';
+  // 默认仅显示预警；安全行折叠隐藏（无预警时也已隐藏，待用户展开）
+  setSafeRowsVisible(false);
+  updateToggleBtn();
 
-  // 自动展开第一条记录（如果有）
-  if (shownCount > 0) {
-    setTimeout(() => toggleDetail(0), 200);
+  // 自动展开第一条预警（若有）
+  if (alertCount > 0) {
+    const firstAlertIdx = data.decisions.findIndex(d => d.llm_decision);
+    if (firstAlertIdx >= 0) setTimeout(() => toggleDetail(firstAlertIdx), 200);
+  }
+}
+
+// —— 安全区域折叠/展开 ——
+function safeToggleRow(safeCount) {
+  return `<tr id="safe-toggle-row"><td colspan="7" style="padding:0;">`
+    + `<button id="toggle-safe-btn" class="toggle-safe-btn" onclick="toggleSafeRows()">`
+    + `▸ 展开全部 ${safeCount} 个监测区域</button></td></tr>`;
+}
+let _safeVisible = false;
+function setSafeRowsVisible(v) {
+  _safeVisible = v;
+  document.querySelectorAll('.safe-row').forEach(el => { el.style.display = v ? '' : 'none'; });
+}
+function toggleSafeRows() {
+  setSafeRowsVisible(!_safeVisible);
+  updateToggleBtn();
+}
+function updateToggleBtn() {
+  const btn = document.getElementById('toggle-safe-btn');
+  if (!btn) return;
+  const safeCount = document.querySelectorAll('.safe-row').length;
+  const alertCount = document.querySelectorAll('.alert-row').length;
+  if (_safeVisible) {
+    btn.textContent = `▾ 收起${alertCount > 0 ? '其余' : '全部'} ${safeCount} 个监测区域`;
+  } else {
+    btn.textContent = `▸ 展开${alertCount > 0 ? '其余' : '全部'} ${safeCount} 个监测区域${alertCount > 0 ? '（当前均安全）' : '状态'}`;
   }
 }
 
