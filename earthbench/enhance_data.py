@@ -661,46 +661,66 @@ def _collect_recent_alerts(output_dir, today: datetime, window_days: int) -> lis
     """扫描已保留的 decisions_YYYYMMDD.json，收集真实近期预警（llm_decision=True）。
 
     仅用于“今天无预警”时回看历史；今天文件与超出窗口的文件均跳过。
+
+    扫描两个位置（合并去重）：
+      1. output_dir（published_reports，CI 每次 fresh checkout + gh-pages force_orphan
+         导致通常只保留 1-2 天历史）；
+      2. 仓库根目录的 decisions_*.json（已提交到 main，CI checkout 后稳定可用）。
+    若无 output_dir 或根目录均无文件，则回退到仅 output_dir。
     """
     alerts: list[dict[str, Any]] = []
-    if not output_dir:
-        return alerts
-    out = Path(output_dir)
-    if not out.exists():
-        return alerts
     cutoff = today - timedelta(days=window_days)
-    for fp in out.glob("decisions_*.json"):
-        tag = fp.stem.replace("decisions_", "")
-        try:
-            dt = datetime.strptime(tag, "%Y%m%d")
-        except ValueError:
-            continue
-        if dt.date() >= today.date():
-            continue  # 跳过今天（今天已在主表展示）
-        if dt < cutoff:
-            continue
-        try:
-            with open(fp, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except Exception:
-            continue
-        decs = data.get("decisions", []) if isinstance(data, dict) else data
-        for d in decs:
-            if not bool(d.get("llm_decision", False)):
+
+    # 收集候选目录：output_dir + 仓库根目录（enhance_data.py 的上上级）
+    candidates: list[Path] = []
+    if output_dir:
+        out = Path(output_dir)
+        if out.exists():
+            candidates.append(out)
+    root = Path(__file__).resolve().parent.parent
+    if root.exists() and root not in candidates:
+        candidates.append(root)
+
+    seen_dates: set[str] = set()
+    for base in candidates:
+        for fp in base.glob("decisions_*.json"):
+            tag = fp.stem.replace("decisions_", "")
+            try:
+                dt = datetime.strptime(tag, "%Y%m%d")
+            except ValueError:
                 continue
-            predicted = True
-            actual = bool(d.get("ground_truth", False))
-            hit = predicted == actual
-            cat = d.get("category", "")
-            alerts.append({
-                "date": dt.strftime("%Y-%m-%d"),
-                "region": d.get("region_cn", d.get("region", "")),
-                "category": cat,
-                "predicted": predicted,
-                "actual": actual,
-                "hit": hit,
-                "hit_reason": d.get("verification_reason") or _build_hit_reason(predicted, actual, hit, cat),
-            })
+            if dt.date() >= today.date():
+                continue  # 跳过今天（今天已在主表展示）
+            if dt < cutoff:
+                continue
+            try:
+                with open(fp, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception:
+                continue
+            decs = data.get("decisions", []) if isinstance(data, dict) else data
+            for d in decs:
+                if not bool(d.get("llm_decision", False)):
+                    continue
+                predicted = True
+                actual = bool(d.get("ground_truth", False))
+                hit = predicted == actual
+                cat = d.get("category", "")
+                date_str = dt.strftime("%Y-%m-%d")
+                # 同一天同一 region 去重，避免根目录与 output_dir 重复
+                key = (date_str, d.get("region", ""), cat)
+                if key in seen_dates:
+                    continue
+                seen_dates.add(key)
+                alerts.append({
+                    "date": date_str,
+                    "region": d.get("region_cn", d.get("region", "")),
+                    "category": cat,
+                    "predicted": predicted,
+                    "actual": actual,
+                    "hit": hit,
+                    "hit_reason": d.get("verification_reason") or _build_hit_reason(predicted, actual, hit, cat),
+                })
     alerts.sort(key=lambda x: x["date"], reverse=True)
     return alerts[:20]
 

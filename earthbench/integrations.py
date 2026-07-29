@@ -194,53 +194,94 @@ class CARMBridge:
             traceback.print_exc()
             return False
 
+    # 规则引擎权威决策实例（跨调用复用，避免每次重建）
+    _rule_agent = None
+
+    @classmethod
+    def _get_rule_agent(cls):
+        """返回权威规则引擎（MultiAlertAgent），用于兜底与防漏报。"""
+        if cls._rule_agent is None:
+            from .agents import MultiAlertAgent
+            cls._rule_agent = MultiAlertAgent()
+        return cls._rule_agent
+
     def decide(self, context: ScenarioContext) -> DecisionOutput:
-        """通过 CARM 或直接规则做出决策。"""
-        if self._loaded:
-            return self._decide_via_carml(context)
-        return self._decide_heuristic(context)
+        """做出决策。
 
-    def _decide_via_carml(self, context: ScenarioContext) -> DecisionOutput:
-        """使用 CARM 推理框架做决策。
+        权威决策由规则引擎（MultiAlertAgent）给出，确保 evidence_summary 与
+        decision/confidence 自洽、且真实气象数据（如 rainfall_24h 等带下划线变量）
+        不会被漏提取导致系统性漏报（见 0727-0729 连续 0 预警事故）。
 
-        关键设计：EarthBench 场景不需要走通用工具路由（search/calculator/code），
-        而是需要 LLM 进行领域知识推理。所以我们绕过 CARM 的语义意图编码器，
-        直接构造一个 BigModelProxy 调用请求。
+        LLM（CARM/Ollama）仅在“规则判定为安全但证据已逼近阈值”时作为参考升级，
+        绝不反向把高危证据判成安全。
+        """
+        rule_output = self._get_rule_agent().decide(context)
+
+        # 若 CARM 不可用或 LLM 不可用，直接返回规则权威结果（已修复漏报）
+        if not self._loaded:
+            return rule_output
+
+        llm_decision = self._decide_via_carml_llm(context)
+        if llm_decision is None:
+            return rule_output
+
+        # 规则已判定为预警 → 直接采用（防漏报优先）
+        if rule_output.decision:
+            return rule_output
+
+        # 规则判定为安全，但 LLM 强烈预警且证据已逼近阈值 → 升级为预警
+        # 仅在风险评分 >= 0.35（接近 0.4 阈值）时允许 LLM 升级，避免误报
+        risk_score = rule_output.confidence
+        if llm_decision and risk_score >= 0.35:
+            return DecisionOutput(
+                context=context,
+                decision=True,
+                confidence=round(max(risk_score, 0.4), 3),
+                evidence_summary={**rule_output.evidence_summary, "llm_upgrade": True},
+                rationale=(
+                    f"规则评分={risk_score:.3f}（接近阈值），LLM 强烈预警，"
+                    f"升级为预警以优先保障安全。\n{rule_output.rationale}"
+                ),
+            )
+
+        # 规则与 LLM 一致为安全 → 规则结果
+        return rule_output
+
+    def _decide_via_carml_llm(self, context: ScenarioContext) -> bool | None:
+        """调用 CARM/LLM 仅做二元决策（YES/NO），不负责风险评分。
+
+        返回 None 表示 LLM 不可用或无法解析，此时调用方应依赖规则引擎权威结果。
         """
         try:
-            import sys
-            from carm.policy import OnlinePolicy
-            from carm.state import AgentState
-            from carm.memory import MemoryBoard, MemorySlot
+            from tools.bigmodel_tool import BigModelProxyTool
+            import os
+            os.environ.setdefault('OLLAMA_MODEL', 'qwen3:14b')
 
             prompt = _context_to_carm_prompt(context)
+            bigmodel_tool = BigModelProxyTool()
+            llm_result = bigmodel_tool.execute(prompt, {'mode': 'classify'})
+            if llm_result.ok and llm_result.result:
+                return self._parse_llm_response(llm_result.result)
+        except Exception as e:
+            print(f'[CARMBridge] LLM call failed (ignored): {e}')
+        return None
 
+    def _decide_via_carml(self, context: ScenarioContext) -> DecisionOutput:
+        """【已废弃】旧路径：LLM 直接裁决且 confidence 硬编码 0.85。
+
+        保留仅为向后兼容；新的 decide() 已改用规则引擎权威 + LLM 参考升级，
+        故本方法不再被 decide() 调用。
+        """
+        try:
+            prompt = _context_to_carm_prompt(context)
             heuristic_decision = self._decide_heuristic(context)
 
-            # ===== 策略选择: Ollama LLM > 启发式 fallback =====
-            llm_decision = None
-            llm_source = "heuristic"
-            
-            try:
-                from tools.bigmodel_tool import BigModelProxyTool
-                import os
-                # 确保使用 qwen3:14b（在EarthBench测试中表现更准确）
-                os.environ.setdefault('OLLAMA_MODEL', 'qwen3:14b')
-                
-                bigmodel_tool = BigModelProxyTool()
-                llm_result = bigmodel_tool.execute(prompt, {'mode': 'classify'})
-                
-                if llm_result.ok and llm_result.result:
-                    llm_decision = self._parse_llm_response(llm_result.result)
-                    if llm_decision is not None:
-                        llm_source = "ollama_llm"
-            except Exception as e:
-                print(f'[CARMBridge] LLM fallback (ignored): {e}')
+            llm_decision = self._decide_via_carml_llm(context)
+            llm_source = "ollama_llm" if llm_decision is not None else "heuristic"
 
-            # 构建最终决策
             if llm_decision is not None:
                 final_decision = llm_decision
-                confidence = 0.85 if llm_source == "ollama_llm" else heuristic_decision.confidence
+                confidence = heuristic_decision.confidence
                 evidence_summary = {
                     **heuristic_decision.evidence_summary,
                     "llm_source": llm_source,

@@ -74,6 +74,47 @@ def _prune_old_decision_files(output_dir: Path, keep_days: int = 14) -> None:
                 pass
 
 
+def _sync_root_decisions(json_path: Path, date_tag: str) -> None:
+    """将今日 decisions_*.json 复制到仓库根目录并提交 main。
+
+    作用：CI 每次 fresh checkout main，published_reports 是空的；
+    enhance_data._collect_recent_alerts 会回退扫描仓库根目录的
+    decisions_*.json，从而保证“今日无预警→回看近14天真实预警”始终有数据。
+    """
+    try:
+        repo_root = Path(__file__).resolve().parent.parent
+        dest = repo_root / f"decisions_{date_tag}.json"
+        import shutil
+        shutil.copy2(json_path, dest)
+        logger.info(f"  Synced decision file to repo root: {dest.name}")
+
+        import subprocess
+        # 仅当文件有变化时才提交，避免无谓的空提交
+        diff = subprocess.run(
+            ["git", "status", "--porcelain", dest.name],
+            cwd=repo_root, capture_output=True, text=True,
+        )
+        if not diff.stdout.strip():
+            logger.info("  Root decision file unchanged, skip commit")
+            return
+        subprocess.run(["git", "add", dest.name], cwd=repo_root, check=False)
+        subprocess.run(
+            ["git", "commit", "-m", f"data: 同步 {date_tag} 决策文件（供近14天回看）"],
+            cwd=repo_root, check=False,
+        )
+        # 推送到 main（CI 内 GITHUB_TOKEN 通常只读，故 best-effort，失败不影响发布）
+        push = subprocess.run(
+            ["git", "push", "origin", "main"],
+            cwd=repo_root, capture_output=True, text=True,
+        )
+        if push.returncode == 0:
+            logger.info("  Pushed root decision file to main")
+        else:
+            logger.warning("  Push root decision file skipped (no write token or non-CI env)")
+    except Exception as e:
+        logger.warning(f"  Sync root decisions failed (non-fatal): {e}")
+
+
 def collect_data() -> list[dict[str, Any]]:
     """从各数据源采集最新观测数据。
     
@@ -360,6 +401,10 @@ def generate_reports(decisions: list[dict], suite: list[dict] | None = None) -> 
         logger.info(f"  History tracking: history.json ({len(history['days'])} days)")
         # 清理超过窗口的历史决策文件
         _prune_old_decision_files(output_dir, keep_days=14)
+
+        # 将今日 decisions_*.json 同步回仓库根目录并提交 main，
+        # 保证 CI 的 fresh checkout 也能拿到近 14 天历史（用于“今日无预警→回看近14天”）。
+        _sync_root_decisions(json_path, date_tag)
     except Exception as e:
         logger.warning(f"  Data enhancement skipped: {e}")
     
