@@ -14,7 +14,7 @@ jobs:
   deploy:
     name: Deploy earth-ai.fun (Cloudflare Pages)
     runs-on: ubuntu-latest
-    # 仅当仓库配置了 CLOUDFLARE_API_TOKEN 才运行；未配置时安全跳过，不报错
+    # 仅当仓库配置了 CLOUDFLARE_API_TOKEN 才进入；否则整 job 跳过（不报错）
     if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
     steps:
       - name: Checkout
@@ -25,6 +25,17 @@ jobs:
         with:
           node-version: '22'
 
+      # 明确检查账号 ID：缺失时给出可读错误，而不是 wrangler 的晦涩报错
+      - name: Verify required secrets
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CF_ACCOUNT_ID" ]; then
+            echo "::error::缺少仓库密钥 CLOUDFLARE_ACCOUNT_ID，无法部署。请在 GitHub 仓库 Settings → Secrets and variables → Actions 中添加该密钥（值为 Cloudflare 控制台首页右侧的 Account ID）。添加后到 Actions 页面手动重跑本工作流即可。"
+            exit 1
+          fi
+          echo "CLOUDFLARE_ACCOUNT_ID 已配置 ✅"
+
       - name: Deploy with Wrangler
         uses: cloudflare/wrangler-action@v3
         with:
@@ -32,4 +43,4 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: '.'
           command: deploy
-          # wrangler.jsonc 已在 main 根目录（assets.directory='.'），无需额外参数
+          # wrangler.jsonc 已在 main 根目录（assets.directory='.'），.wranglerignore 限定只上传 UI 静态文件
