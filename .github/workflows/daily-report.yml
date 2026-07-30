@@ -62,6 +62,18 @@ jobs:
         run: |
           python -m earthbench.publish_pipeline
 
+      - name: Sync UI assets into publish bundle
+        # published_reports 是 gh-pages/Cloudflare 的发布目录；
+        # 每次发布前把 main 根最新的 index.html 与域名/SEO 文件同步进去，
+        # 避免线上 UI 一直停留在旧版本（之前 published_reports/index.html 是 7/26 旧版）。
+        run: |
+          cp index.html published_reports/index.html
+          cp CNAME published_reports/CNAME || true
+          cp robots.txt published_reports/robots.txt || true
+          cp sitemap.xml published_reports/sitemap.xml || true
+          echo "Synced UI assets:"
+          ls -l published_reports/index.html published_reports/CNAME
+
       - name: Deploy to GitHub Pages
         if: success()
         uses: peaceiris/actions-gh-pages@v4
@@ -70,3 +82,13 @@ jobs:
           publish_dir: ./published_reports
           force_orphan: true
           commit_message: "📊 Daily report: ${{ github.event.head_commit.timestamp }}"
+
+      - name: Deploy to Cloudflare Pages
+        # 恢复原有自动部署：与 GitHub Pages 同一份 published_reports 一起推到 earth-ai.fun
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npm install -g wrangler
+          wrangler pages deploy published_reports --project-name earth-bench --commit-dirty=true
