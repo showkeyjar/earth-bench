@@ -1,0 +1,35 @@
+name: Deploy UI to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 允许手动并发控制：避免多次推送叠加部署
+concurrency:
+  group: cf-pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy earth-ai.fun (Cloudflare Pages)
+    runs-on: ubuntu-latest
+    # 仅当仓库配置了 CLOUDFLARE_API_TOKEN 才运行；未配置时安全跳过，不报错
+    if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Deploy with Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: '.'
+          command: deploy
+          # wrangler.jsonc 已在 main 根目录（assets.directory='.'），无需额外参数
