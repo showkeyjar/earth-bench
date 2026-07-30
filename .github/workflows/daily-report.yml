@@ -85,7 +85,8 @@ jobs:
 
       - name: Deploy to Cloudflare Pages
         # 恢复原有自动部署：与 GitHub Pages 同一份 published_reports 一起推到 earth-ai.fun
-        if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
+        # 用 secrets 直接判断，避免 step env 在 if 中不可见的坑
+        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
