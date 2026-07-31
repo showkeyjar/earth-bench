@@ -85,10 +85,10 @@ jobs:
 
       - name: Deploy to Cloudflare Pages
         # 恢复原有自动部署：与 GitHub Pages 同一份 published_reports 一起推到 earth-ai.fun
-        # 用 secrets 直接判断，避免 step env 在 if 中不可见的坑
-        # continue-on-error：即使 Cloudflare 部署失败（如缺 CLOUDFLARE_ACCOUNT_ID），
-        # 也绝不让整个 job 变红、绝不阻断上面的 GitHub Pages 部署。
-        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+        # 注意：GitHub Actions 不允许在步骤 if 中使用 secrets 上下文，
+        # 因此这里始终运行，由下方 bash 检查 CLOUDFLARE_ACCOUNT_ID 是否存在；
+        # 缺失则给出清晰警告并正常退出（不部署），不会让 job 失败。
+        # continue-on-error：即使 Cloudflare 部署失败，也绝不阻断上面的 GitHub Pages 部署。
         continue-on-error: true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
