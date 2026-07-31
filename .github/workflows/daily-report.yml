@@ -95,10 +95,8 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            echo "::warning::CLOUDFLARE_ACCOUNT_ID 未配置，跳过 Cloudflare 部署。earth-ai.fun 将不会更新。"
-            echo "::warning::修复方法：Cloudflare 控制台首页右侧复制 Account ID，到仓库 Settings → Secrets and variables → Actions 添加名为 CLOUDFLARE_ACCOUNT_ID 的密钥，然后手动重跑本工作流。"
-            echo "::warning::GitHub Pages 镜像（https://showkeyjar.github.io/earth-bench/）仍会正常更新。"
-            exit 0
+            echo "::warning::CLOUDFLARE_ACCOUNT_ID 未配置；将尝试直接用 CLOUDFLARE_API_TOKEN 部署（若 token 为单账户作用域则可能成功）。"
+            echo "::warning::若失败，请在 Cloudflare 控制台首页复制 Account ID，到仓库 Settings → Secrets and variables → Actions 添加名为 CLOUDFLARE_ACCOUNT_ID 的密钥后重跑。"
           fi
           npm install -g wrangler
           wrangler pages deploy published_reports --project-name earth-bench --commit-dirty=true
