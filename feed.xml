@@ -4,15 +4,31 @@
   <subtitle>Environmental Risk Decision Intelligence</subtitle>
   <link href="https://earthbench.io/feed.xml" rel="self"/>
   <link href="https://earthbench.io"/>
-  <updated>2026-07-28T20:33:04+08:00</updated>
+  <updated>2026-08-08T09:50:53+08:00</updated>
   <id>tag:earthbench.io,2026:</id>
   <generator>EarthBench Pipeline v0.3.0</generator>
 
   <entry>
-    <title>No active environmental risk alerts</title>
-    <link href="https://earth-ai.fun" rel="alternate"/>
-    <id>tag:earthbench.io,no-alerts</id>
-    <published>2026-07-28T20:33:04+08:00</published>
-    <summary>当前所有监测区域均未触发环境风险预警。</summary>
+    <title>EarthBench Alert: Flood in Wuhan-Yangtze</title>
+    <link href="/reports/20260808/flood-l1-extreme-rainfall" rel="alternate"/>
+    <id>tag:earthbench.io,2026-08-08T01:43:32.770137+00:00</id>
+    <published>2026-08-08T01:43:32.770137+00:00</published>
+    <summary>FloodAlert: 24h=120.0mm, 6h=65.0mm, 土壤=0.90, 水位=12.5m, 风险分=0.963</summary>
+  </entry>
+
+  <entry>
+    <title>EarthBench Alert: Heat Wave in Nanjing-OvenCity</title>
+    <link href="/reports/20260808/heat-l3-borderline" rel="alternate"/>
+    <id>tag:earthbench.io,2026-08-08T01:50:21.441212+00:00</id>
+    <published>2026-08-08T01:50:21.441212+00:00</published>
+    <summary>HeatWaveAlert: 最高温=34.5°C, 湿球=27.5°C, 湿度=72.0%, 持续≈2天, 风险分=0.496</summary>
+  </entry>
+
+  <entry>
+    <title>EarthBench Alert: Heat Wave in Wuhan-Yangtze</title>
+    <link href="/reports/20260808/heat-l4-progressive-heat" rel="alternate"/>
+    <id>tag:earthbench.io,2026-08-08T01:50:53.486530+00:00</id>
+    <published>2026-08-08T01:50:53.486530+00:00</published>
+    <summary>HeatWaveAlert: 最高温=35.0°C, 湿球=26.8°C, 湿度=50.0%, 持续≈2天, 风险分=0.424</summary>
   </entry>
 </feed>
