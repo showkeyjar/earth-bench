@@ -491,6 +491,143 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
     .comparison-table { font-size: 0.82em; }
     .comparison-table th, .comparison-table td { padding: 6px 8px; }
   }
+
+/* === Global Overview Map === */
+.overview-map-section {
+  margin-bottom: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.overview-map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  font-size: 0.95em;
+  color: #2d3748;
+}
+#overview-map {
+  height: 380px;
+  width: 100%;
+  background: #e8f0fe;
+}
+.overview-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 16px;
+  background: #f7fafc;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.82em;
+  color: #4a5568;
+}
+.legend-item { display: flex; align-items: center; gap: 4px; }
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* === History Date Picker === */
+.history-picker-section {
+  margin-bottom: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.history-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  font-size: 0.95em;
+  color: #2d3748;
+}
+.history-date-list {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px;
+  flex-wrap: wrap;
+}
+.history-date-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-size: 0.82em;
+  cursor: pointer;
+  border: 2px solid #e2e8f0;
+  background: #fff;
+  color: #4a5568;
+  transition: all 0.2s;
+}
+.history-date-chip:hover { border-color: #667eea; color: #667eea; }
+.history-date-chip.active {
+  border-color: #667eea;
+  background: #667eea;
+  color: #fff;
+}
+.history-date-chip.today { font-weight: 600; }
+.history-date-chip .chip-acc { font-size: 0.85em; opacity: 0.7; }
+.history-report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: #edf2f7;
+  border-top: 1px solid #e2e8f0;
+  font-weight: 600;
+  font-size: 0.9em;
+}
+.history-close-btn {
+  background: #e2e8f0;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.82em;
+  color: #4a5568;
+}
+.history-close-btn:hover { background: #cbd5e0; }
+.history-report-body {
+  padding: 12px 16px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+.history-report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85em;
+}
+.history-report-table th {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 2px solid #e2e8f0;
+  color: #718096;
+  font-weight: 600;
+  font-size: 0.82em;
+}
+.history-report-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #edf2f7;
+  color: #2d3748;
+}
+@media (max-width: 768px) {
+  #overview-map { height: 280px; }
+  .history-date-list { gap: 4px; }
+  .history-date-chip { font-size: 0.78em; padding: 4px 8px; }
+}
 </style>
 </head>
 <body>
@@ -528,6 +665,37 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
   </div>
 
   <div id="low-conf-bar" class="low-conf-note" style="display:none;"></div>
+
+  <!-- Global Overview Map -->
+  <div class="overview-map-section">
+    <div class="overview-map-header">
+      <span>🗺️ 全局风险总览</span>
+      <span id="overview-update-time" style="font-size:0.8em;color:#a0aec0;font-weight:normal;"></span>
+    </div>
+    <div id="overview-map"></div>
+    <div class="overview-legend">
+      <span class="legend-item"><span class="legend-dot" style="background:#e53e3e;"></span> 有风险</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#ecc94b;"></span> 接近阈值</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#48bb78;"></span> 安全</span>
+      <span style="font-size:0.78em;color:#a0aec0;margin-left:auto;">点击标记跳转到详情</span>
+    </div>
+  </div>
+
+  <!-- History Date Picker -->
+  <div class="history-picker-section">
+    <div class="history-picker-header">
+      <span>📅 历史报告核查</span>
+      <span style="font-size:0.78em;color:#a0aec0;font-weight:normal;">点击日期查看该日完整决策记录</span>
+    </div>
+    <div id="history-date-list" class="history-date-list"></div>
+    <div id="history-report-container" style="display:none;">
+      <div class="history-report-header">
+        <span id="history-report-title"></span>
+        <button id="history-close-btn" class="history-close-btn" onclick="closeHistoryReport()">✕ 关闭</button>
+      </div>
+      <div id="history-report-body" class="history-report-body"></div>
+    </div>
+  </div>
 
   <!-- Main grid -->
   <div class="main-grid">
@@ -1054,6 +1222,16 @@ async function loadData() {
     renderToday(data);
     renderHistory();
     renderRecentAlerts(data);
+    // Initialize overview map after data is loaded
+    if (data.decisions) {
+      initOverviewMap(data.decisions);
+      const updateTime = data.published_at
+        ? new Date(data.published_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+        : '';
+      document.getElementById('overview-update-time').textContent = updateTime ? '更新于 ' + updateTime : '';
+    }
+    // Render history date list for date picker
+    renderHistoryDateList(historyData);
   } else {
     document.getElementById('alert-body').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#e53e3e;padding:30px;">暂时无法加载数据，请稍后刷新页面重试</td></tr>';
   }
@@ -1523,6 +1701,178 @@ function renderRecentAlerts(latestData) {
     });
   });
   body.innerHTML = html;
+}
+
+// ===================== Global Overview Map =====================
+let overviewMapInstance = null;
+
+function initOverviewMap(decisions) {
+  if (typeof L === 'undefined' || !decisions) return;
+  const mapEl = document.getElementById('overview-map');
+  if (!mapEl) return;
+
+  if (overviewMapInstance) {
+    overviewMapInstance.eachLayer(layer => {
+      if (layer instanceof L.Polygon || layer instanceof L.CircleMarker || layer instanceof L.Marker) {
+        overviewMapInstance.removeLayer(layer);
+      }
+    });
+  } else {
+    overviewMapInstance = L.map('overview-map', {
+      scrollWheelZoom: true,
+      zoomControl: true,
+      attributionControl: true,
+    }).setView([35.0, 108.0], 4);
+
+    L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+      subdomains: ['1', '2', '3', '4'],
+      maxZoom: 18,
+      attribution: '高德地图'
+    }).addTo(overviewMapInstance);
+  }
+
+  decisions.forEach((d, idx) => {
+    if (!d.coordinates) return;
+    const confPercent = Math.round((d.confidence || 0) * 100);
+    const isWarning = d.llm_decision;
+    const cat = categoryIcons[d.category] || { label: '' };
+
+    // Marker color: red for alert, yellow for >=25% risk, green for safe
+    const markerColor = isWarning ? '#e53e3e' : confPercent >= 25 ? '#ecc94b' : '#48bb78';
+
+    // Draw polygon if available
+    if (d.polygon && d.polygon.length > 0) {
+      const polygonPoints = d.polygon.map(p => [p.lat, p.lng]);
+      L.polygon(polygonPoints, {
+        color: markerColor,
+        fillColor: markerColor,
+        fillOpacity: 0.12,
+        weight: 1.5,
+        dashArray: '4,2'
+      }).addTo(overviewMapInstance).bindPopup(
+        `<strong>${cat.label} ${d.region_cn || d.region}</strong><br>` +
+        `状态: ${isWarning ? '⚠️ 有风险' : '✅ 安全'}<br>` +
+        `风险评分: ${confPercent}%<br>` +
+        `<a href="#row-${idx}" onclick="setTimeout(()=>toggleDetail(${idx}),100)">查看详情 →</a>`
+      );
+    }
+
+    // Circle marker at center
+    L.circleMarker([d.coordinates.lat, d.coordinates.lng], {
+      radius: isWarning ? 7 : 5,
+      color: markerColor,
+      fillColor: markerColor,
+      fillOpacity: 0.8,
+      weight: 2
+    }).addTo(overviewMapInstance).bindPopup(
+      `<strong>${cat.label} ${d.region_cn || d.region}</strong><br>` +
+      `状态: ${isWarning ? '⚠️ 有风险' : '✅ 安全'}<br>` +
+      `风险评分: ${confPercent}%<br>` +
+      `<a href="#row-${idx}" onclick="setTimeout(()=>toggleDetail(${idx}),100)">查看详情 →</a>`
+    );
+  });
+
+  // Fit bounds to show all markers
+  const bounds = L.latLngBounds(
+    decisions.filter(d => d.coordinates).map(d => [d.coordinates.lat, d.coordinates.lng])
+  );
+  if (bounds.isValid()) {
+    overviewMapInstance.fitBounds(bounds, { padding: [30, 30], maxZoom: 6 });
+  }
+}
+
+// ===================== History Date Picker =====================
+let historyReportData = null;
+
+function renderHistoryDateList(historyDays) {
+  const container = document.getElementById('history-date-list');
+  if (!container || !historyDays || historyDays.length === 0) {
+    if (container) container.innerHTML = '<span style="color:#a0aec0;font-size:0.82em;padding:4px;">暂无历史数据</span>';
+    return;
+  }
+
+  let html = '';
+  historyDays.forEach(h => {
+    const accPercent = Math.round(h.accuracy * 100);
+    const cls = h.is_today ? 'history-date-chip today' : 'history-date-chip';
+    const dateTag = h.date.replace(/-/g, '');
+    html += `<div class="${cls}" onclick="loadHistoryReport('${dateTag}', '${h.date_short}')">
+      <span>${h.date_short}</span>
+      <span class="chip-acc">${accPercent}%</span>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+async function loadHistoryReport(dateTag, dateLabel) {
+  // Highlight active chip
+  document.querySelectorAll('.history-date-chip').forEach(el => el.classList.remove('active'));
+  event && event.target && event.target.classList.add('active');
+
+  const container = document.getElementById('history-report-container');
+  const title = document.getElementById('history-report-title');
+  const body = document.getElementById('history-report-body');
+
+  title.textContent = `📅 ${dateLabel} 决策报告`;
+  body.innerHTML = '<div style="text-align:center;padding:20px;color:#a0aec0;">加载中...</div>';
+  container.style.display = 'block';
+
+  // Try loading from gh-pages
+  let data = null;
+  try { data = await fetchJSON(bust(DATA_BASE + 'decisions_' + dateTag + '.json')); } catch(e) {}
+  if (!data) {
+    try { data = await fetchJSON('decisions_' + dateTag + '.json'); } catch(e) {}
+  }
+
+  if (!data || !data.decisions) {
+    body.innerHTML = '<div style="text-align:center;padding:20px;color:#e53e3e;">该日期暂无报告数据</div>';
+    return;
+  }
+
+  // Render decision table
+  const decs = data.decisions;
+  const alertCount = decs.filter(d => d.llm_decision).length;
+  const hits = decs.filter(d => d.verification && d.verification.hit).length;
+  const totalCount = decs.length;
+  const publishedAt = data.published_at || '';
+
+  let html = `<div style="margin-bottom:10px;font-size:0.85em;color:#718096;">
+    发布时间: ${publishedAt ? new Date(publishedAt).toLocaleString('zh-CN', {timeZone:'Asia/Shanghai'}) : '-'}
+    · 共 ${totalCount} 个场景 · ${alertCount} 个预警 · 命中 ${hits}/${totalCount}
+  </div>`;
+
+  html += '<table class="history-report-table"><thead><tr>';
+  html += '<th>区域</th><th>类型</th><th>状态</th><th>风险</th><th>验证</th><th>理由</th>';
+  html += '</tr></thead><tbody>';
+
+  decs.forEach(d => {
+    const cat = categoryIcons[d.category] || {};
+    const confPercent = Math.round((d.confidence || 0) * 100);
+    const isWarning = d.llm_decision;
+    const verifyBadge = d.verification
+      ? (d.verification.hit ? '<span style="color:#38a169;">✅</span>' : '<span style="color:#e53e3e;">❌</span>')
+      : '-';
+    const reason = d.verification_reason || d.rationale || '';
+    const reasonShort = reason.length > 80 ? reason.substring(0, 80) + '...' : reason;
+
+    html += `<tr>
+      <td><strong>${d.region_cn || d.region}</strong></td>
+      <td>${cat.label || d.category}</td>
+      <td>${isWarning ? '<span style="color:#e53e3e;">⚠️ 有风险</span>' : '<span style="color:#38a169;">✅ 安全</span>'}</td>
+      <td>${confPercent}%</td>
+      <td>${verifyBadge}</td>
+      <td style="font-size:0.82em;color:#4a5568;">${reasonShort}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+
+  body.innerHTML = html;
+  container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeHistoryReport() {
+  document.getElementById('history-report-container').style.display = 'none';
+  document.querySelectorAll('.history-date-chip').forEach(el => el.classList.remove('active'));
 }
 
 loadData();

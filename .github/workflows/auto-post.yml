@@ -26,6 +26,16 @@ jobs:
       - name: Install dependencies
         run: pip install -e .
 
+      - name: Fetch history.json from gh-pages
+        run: |
+          mkdir -p published_reports
+          curl -s "https://raw.githubusercontent.com/showkeyjar/earth-bench/gh-pages/history.json" -o "published_reports/history.json" || true
+          if [ -f published_reports/history.json ]; then
+            echo "history.json fetched successfully"
+          else
+            echo "No history.json on gh-pages yet (first run or deploy failure)"
+          fi
+
       - name: Generate weekly summary
         run: |
           python -c "
@@ -38,16 +48,19 @@ jobs:
               with open(history_path) as f:
                   history = json.load(f)
 
+              # history is a dict with 'days' key containing daily records
+              days = history.get('days', []) if isinstance(history, dict) else history
+
               # Calculate weekly stats
-              total_scenarios = sum(h['total'] for h in history)
-              total_hits = sum(h['hits'] for h in history)
+              total_scenarios = sum(h.get('total', 0) for h in days)
+              total_hits = sum(h.get('hits', 0) for h in days)
               avg_acc = total_hits / total_scenarios if total_scenarios > 0 else 0
 
-              print(f'📊 Weekly Summary:')
+              print(f'Weekly Summary:')
               print(f'  Total scenarios evaluated: {total_scenarios}')
               print(f'  Total correct decisions: {total_hits}')
               print(f'  Overall accuracy: {avg_acc*100:.1f}%')
-              print(f'  Days reporting: {len(history)}')
+              print(f'  Days reporting: {len(days)}')
 
           else:
               print('No history data found.')

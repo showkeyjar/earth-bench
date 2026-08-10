@@ -56,11 +56,12 @@ jobs:
 
       - name: Generate daily report
         env:
+          QWEATHER_API_KEY: ${{ secrets.QWEATHER_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
           OLLAMA_BASE_URL: http://localhost:11434
         run: |
-          python -m earthbench.publish_pipeline
+          python -m earthbench.publish_pipeline --run
 
       - name: Sync UI assets into publish bundle
         # published_reports 是 gh-pages/Cloudflare 的发布目录；

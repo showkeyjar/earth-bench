@@ -4,12 +4,9 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 
 from earthbench.scenarios import ScenarioStore
-from earthbench.models import DecisionTemplate, ScenarioCategory, Observation
-from earthbench.agents import RuleBasedAgent, MultiAlertAgent, LLMDecisionAgent
-from earthbench.eval import BatchEvaluator
+from earthbench.agents import RuleBasedAgent, MultiAlertAgent
 from earthbench.benchmark import AlertBenchEvaluator
 from earthbench.integrations import CARMBridge
 
@@ -20,38 +17,50 @@ def main():
     )
     parser.add_argument("--demo", action="store_true", help="Run single-scenario demo")
     parser.add_argument(
-        "--benchmark", "--bench", action="store_true",
-        help="Run full AlertBench suite (fire+flood+drought+heat)"
+        "--benchmark",
+        "--bench",
+        action="store_true",
+        help="Run full AlertBench suite (fire+flood+drought+heat)",
     )
     parser.add_argument(
-        "--agent", choices=["rule", "carm"],
+        "--agent",
+        choices=["rule", "carm"],
         default="rule",
-        help="Agent type to evaluate (default: rule)"
+        help="Agent type to evaluate (default: rule)",
     )
     parser.add_argument(
-        "--carm-root", type=str, default=None,
-        help="Path to Mustard/CARM repository (for --agent carm)"
+        "--carm-root",
+        type=str,
+        default=None,
+        help="Path to Mustard/CARM repository (for --agent carm)",
     )
     parser.add_argument(
-        "--category", choices=["all", "fire", "flood", "drought", "heat"],
+        "--category",
+        choices=["all", "fire", "flood", "drought", "heat"],
         default="all",
-        help="Filter by category (default: all)"
+        help="Filter by category (default: all)",
     )
     parser.add_argument(
-        "--publish", action="store_true",
-        help="Run the publish pipeline (data collection → LLM decision → report generation → distribution)"
+        "--publish",
+        action="store_true",
+        help="Run the publish pipeline (data collection → LLM decision → report generation → distribution)",
     )
     parser.add_argument(
-        "--eval", action="store_true", help="Run standalone scenario evaluation from JSON input"
+        "--eval",
+        action="store_true",
+        help="Run standalone scenario evaluation from JSON input",
     )
     parser.add_argument(
-        "--eval-input", type=str, default=None,
-        help="Path to JSON file with observations for --eval mode"
+        "--eval-input",
+        type=str,
+        default=None,
+        help="Path to JSON file with observations for --eval mode",
     )
     args = parser.parse_args()
 
     if args.publish:
         from earthbench.publish_pipeline import run_full_pipeline
+
         result = run_full_pipeline()
         print(json.dumps(result, ensure_ascii=False, indent=2))
     elif args.demo:
@@ -74,18 +83,55 @@ def run_demo():
         region="Beijing-Xiangshan",
         horizon_hours=72,
         observations=[
-            {"source": "ECMWF", "variable": "FWI", "value": 42.0, "unit": "", "timestamp": "2026-07-11T12:00:00+08:00", "confidence": 0.95},
-            {"source": "ECMWF", "variable": "FWI", "value": 38.0, "unit": "", "timestamp": "2026-07-10T12:00:00+08:00", "confidence": 0.95},
-            {"source": "Station", "variable": "humidity", "value": 12.0, "unit": "%", "timestamp": "2026-07-11T12:00:00+08:00", "confidence": 0.98},
-            {"source": "Station", "variable": "wind_speed", "value": 16.0, "unit": "m/s", "timestamp": "2026-07-11T12:00:00+08:00", "confidence": 0.92},
-            {"source": "MODIS", "variable": "temperature", "value": 35.0, "unit": "°C", "timestamp": "2026-07-11T12:00:00+08:00", "confidence": 0.90},
+            {
+                "source": "ECMWF",
+                "variable": "FWI",
+                "value": 42.0,
+                "unit": "",
+                "timestamp": "2026-07-11T12:00:00+08:00",
+                "confidence": 0.95,
+            },
+            {
+                "source": "ECMWF",
+                "variable": "FWI",
+                "value": 38.0,
+                "unit": "",
+                "timestamp": "2026-07-10T12:00:00+08:00",
+                "confidence": 0.95,
+            },
+            {
+                "source": "Station",
+                "variable": "humidity",
+                "value": 12.0,
+                "unit": "%",
+                "timestamp": "2026-07-11T12:00:00+08:00",
+                "confidence": 0.98,
+            },
+            {
+                "source": "Station",
+                "variable": "wind_speed",
+                "value": 16.0,
+                "unit": "m/s",
+                "timestamp": "2026-07-11T12:00:00+08:00",
+                "confidence": 0.92,
+            },
+            {
+                "source": "MODIS",
+                "variable": "temperature",
+                "value": 35.0,
+                "unit": "°C",
+                "timestamp": "2026-07-11T12:00:00+08:00",
+                "confidence": 0.90,
+            },
         ],
     )
 
-    agent = RuleBasedAgent(fwi_threshold=38.0, humidity_threshold=15.0, wind_threshold=15.0)
+    agent = RuleBasedAgent(
+        fwi_threshold=38.0, humidity_threshold=15.0, wind_threshold=15.0
+    )
     output = agent.decide(context)
 
-    print(f"\n决策详情：")
+    print("\n决策详情：")
     print(f"  区域：{context.region}")
     print(f"  决策：{'需要预警 ✓' if output.decision else '无需预警'}")
     print(f"  置信度：{output.confidence:.2f}")
@@ -94,7 +140,9 @@ def run_demo():
     print("\n" + "=" * 60)
 
 
-def run_alert_benchmark(agent_type: str, carm_root: str | None, category_filter: str = "all"):
+def run_alert_benchmark(
+    agent_type: str, carm_root: str | None, category_filter: str = "all"
+):
     """运行 AlertBench 基准评测。"""
     print("=" * 60)
     print("AlertBench — Full Benchmark (Fire + Flood + Drought + Heat)")
@@ -102,13 +150,18 @@ def run_alert_benchmark(agent_type: str, carm_root: str | None, category_filter:
 
     # 选择 Agent
     if agent_type == "rule":
-        agent = MultiAlertAgent(fwi_threshold=40.0, humidity_threshold=20.0, wind_threshold=12.0, rainfall_suppress=10.0)
+        agent = MultiAlertAgent(
+            fwi_threshold=40.0,
+            humidity_threshold=20.0,
+            wind_threshold=12.0,
+            rainfall_suppress=10.0,
+        )
         agent_name = "MultiAlertAgent (4 categories)"
     elif agent_type == "carm":
         if not carm_root:
             print("[ERROR] --agent carm requires --carm-root to be set.")
             return
-        bridge = CARMBridge(carml_root=carm_root)
+        bridge = CARMBridge(carm_root=carm_root)
         agent = bridge
         agent_name = f"CARM ({'LLM' if bridge._loaded else 'heuristic-fallback'})"
     else:
@@ -124,14 +177,13 @@ def run_alert_benchmark(agent_type: str, carm_root: str | None, category_filter:
     if category_filter != "all":
         # 重新初始化 evaluator 并过滤 raw_suite
         bench_eval.raw_suite = [
-            item for item in bench_eval.raw_suite
-            if item["category"] == category_filter
+            item for item in bench_eval.raw_suite if item["category"] == category_filter
         ]
         bench_eval.test_cases = []
         bench_eval.results = []
         bench_eval._build_test_cases()
 
-    results = bench_eval.evaluate_agent(agent)
+    bench_eval.evaluate_agent(agent)
 
     # 输出汇总
     report = bench_eval.summary_report()
@@ -141,20 +193,28 @@ def run_alert_benchmark(agent_type: str, carm_root: str | None, category_filter:
     print(f"  总场景数：{report['total_cases']}")
     print(f"  整体准确率：{report['overall_accuracy']:.2%}")
 
-    print(f"\n  按场景类别：")
+    print("\n  按场景类别：")
     for cat, stats in report["by_category"].items():
         if stats["total"] > 0:
-            print(f"    {cat:10s}: {stats['accuracy']:.2%} ({stats['correct']}/{stats['total']})")
+            print(
+                f"    {cat:10s}: {stats['accuracy']:.2%} ({stats['correct']}/{stats['total']})"
+            )
 
-    print(f"\n  按难度分级：")
+    print("\n  按难度分级：")
     for dl, stats in report["by_difficulty"].items():
         if stats["total"] > 0:
-            label = {"L1": "Easy", "L2": "Medium", "L3": "Hard", "L4": "Beyond"}.get(dl, dl)
-            print(f"    {dl} ({label:7s}): {stats['accuracy']:.2%} ({stats['correct']}/{stats['total']})")
+            label = {"L1": "Easy", "L2": "Medium", "L3": "Hard", "L4": "Beyond"}.get(
+                dl, dl
+            )
+            print(
+                f"    {dl} ({label:7s}): {stats['accuracy']:.2%} ({stats['correct']}/{stats['total']})"
+            )
 
-    print(f"\n  各场景详情：")
+    print("\n  各场景详情：")
     for case in report["cases"]:
-        print(f"    {case['id']:35s} {case['difficulty']:4s} {case['category']:7s} GT={case['ground_truth']}")
+        print(
+            f"    {case['id']:35s} {case['difficulty']:4s} {case['category']:7s} GT={case['ground_truth']}"
+        )
 
     print(f"\n{'=' * 60}")
 
@@ -162,8 +222,7 @@ def run_alert_benchmark(agent_type: str, carm_root: str | None, category_filter:
 def run_eval_mode(eval_input: str | None):
     """独立评测模式：从文件或标准输入加载场景，运行评测。"""
     import sys
-    import json
-    from earthbench.models import Observation, ScenarioCategory, DecisionTemplate
+    from earthbench.models import Observation, ScenarioCategory
 
     # 读取输入
     if eval_input:
@@ -177,15 +236,8 @@ def run_eval_mode(eval_input: str | None):
     observations_raw = data.get("observations", [])
     obs_list = [Observation(**o) for o in observations_raw]
 
-    category_map = {
-        "fire": ScenarioCategory.FIRE,
-        "flood": ScenarioCategory.FLOOD,
-        "drought": ScenarioCategory.DROUGHT,
-        "ecology": ScenarioCategory.ECOLOGY,
-        "heat": ScenarioCategory.ECOLOGY,
-    }
     cat_str = data.get("category", "fire")
-    category = category_map.get(cat_str, ScenarioCategory.FIRE)
+    category = ScenarioCategory.from_string(cat_str)
 
     region = data.get("region", "unknown")
     horizon = data.get("horizon_hours", 72)
@@ -202,21 +254,27 @@ def run_eval_mode(eval_input: str | None):
     agent_type = data.get("agent", "multi")
     if agent_type == "fire":
         from earthbench.agents import FireAlertAgent
+
         agent = FireAlertAgent()
     elif agent_type == "flood":
         from earthbench.agents import FloodAlertAgent
+
         agent = FloodAlertAgent()
     elif agent_type == "drought":
         from earthbench.agents import DroughtAlertAgent
+
         agent = DroughtAlertAgent()
     elif agent_type == "heat":
         from earthbench.agents import HeatWaveAlertAgent
+
         agent = HeatWaveAlertAgent()
     elif agent_type == "llm":
         from earthbench.agents import LLMDecisionAgent
+
         agent = LLMDecisionAgent()
     else:
         from earthbench.agents import MultiAlertAgent
+
         agent = MultiAlertAgent()
 
     result = agent.decide(ctx)

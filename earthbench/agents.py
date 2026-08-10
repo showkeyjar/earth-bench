@@ -6,15 +6,17 @@ Phase 1 提供四类场景各自专用的规则引擎 baseline Agent。
 
 from __future__ import annotations
 
-from typing import Any
+import logging
 
 from .models import DecisionOutput, ScenarioContext
-from .templates import TemplateEngine
+
+logger = logging.getLogger(__name__)
 
 
 # ===========================================================================
 # 专用场景 Agent 接口
 # ===========================================================================
+
 
 class AlertAgent:
     """Alert Agent 基类 — 子类必须实现 decide()."""
@@ -29,6 +31,7 @@ class AlertAgent:
 # ===========================================================================
 # Fire Alert Agent
 # ===========================================================================
+
 
 class FireAlertAgent(AlertAgent):
     """森林火险预警 Agent（对标国家林草局 FWI 标准）。
@@ -66,40 +69,66 @@ class FireAlertAgent(AlertAgent):
         temp_vals = [o.value for o in obs if o.variable == "temperature"]
 
         evidence: dict[str, float] = {}
-        risk_score = 0.0
+        components: list[tuple[float, float, str]] = []
 
-        # FWI (主导)
-        avg_fwi = sum(fwi_vals) / len(fwi_vals) if fwi_vals else 0
-        fwi_risk = min(avg_fwi / 60.0, 1.0)
-        risk_score += fwi_risk * 0.40
-        evidence["FWI"] = round(fwi_risk, 3)
+        # FWI — 与 GT 推导公式对齐: min(fwi / 60, 1.0)
+        if fwi_vals:
+            avg_fwi = sum(fwi_vals) / len(fwi_vals)
+            fwi_risk = min(avg_fwi / 60.0, 1.0)
+            components.append((fwi_risk, 0.40, "FWI"))
+            evidence["FWI"] = round(fwi_risk, 3)
 
-        # 湿度
-        avg_hum = sum(hum_vals) / len(hum_vals) if hum_vals else 100
-        hum_risk = max(0, (100 - avg_hum) / 100)
-        risk_score += hum_risk * 0.20
-        evidence["humidity"] = round(hum_risk, 3)
+        # 湿度 — 与 GT 对齐: max(0, (100 - hum) / 100)
+        if hum_vals:
+            avg_hum = sum(hum_vals) / len(hum_vals)
+            hum_risk = max(0, (100 - avg_hum) / 100)
+            components.append((hum_risk, 0.20, "humidity"))
+            evidence["humidity"] = round(hum_risk, 3)
 
-        # 风速
-        avg_wind = sum(wind_vals) / len(wind_vals) if wind_vals else 0
-        wind_risk = min(avg_wind / 20.0, 1.0)
-        risk_score += wind_risk * 0.15
-        evidence["wind"] = round(wind_risk, 3)
+        # 风速 — 与 GT 对齐: min(wind / 20, 1.0)
+        if wind_vals:
+            avg_wind = sum(wind_vals) / len(wind_vals)
+            wind_risk = min(avg_wind / 20.0, 1.0)
+            components.append((wind_risk, 0.15, "wind_speed"))
+            evidence["wind_speed"] = round(wind_risk, 3)
+
+        # 温度 — 与 GT 对齐: max(0, (temp - 20) / 30)
+        if temp_vals:
+            avg_temp = sum(temp_vals) / len(temp_vals)
+            temp_risk = max(0, (avg_temp - 20) / 30.0)
+            components.append((temp_risk, 0.15, "temperature"))
+            evidence["temperature"] = round(temp_risk, 3)
 
         # 降雨（抑制因素）
-        avg_rain = sum(rain_vals) / len(rain_vals) if rain_vals else 0
-        if avg_rain > self.rainfall_suppress:
-            suppression = min(avg_rain / 30.0, 1.0)
-            risk_score *= (1.0 - suppression * 0.6)
-            evidence["rainfall_suppression"] = -round(suppression * 0.6, 3)
-        else:
-            evidence["rainfall_suppression"] = 0.0
+        avg_rain = 0.0
+        if rain_vals:
+            avg_rain = sum(rain_vals) / len(rain_vals)
+            if avg_rain > self.rainfall_suppress:
+                suppression = min(avg_rain / 30.0, 1.0)
+                evidence["rainfall_suppression"] = -round(suppression * 0.6, 3)
 
-        # 温度
-        avg_temp = sum(temp_vals) / len(temp_vals) if temp_vals else 20
-        temp_risk = max(0, (avg_temp - 20) / 30.0)
-        risk_score += temp_risk * 0.15
-        evidence["temperature"] = round(temp_risk, 3)
+        if not components:
+            return DecisionOutput(
+                context=context,
+                decision=False,
+                confidence=0.0,
+                evidence_summary={},
+                rationale="FireAlert: no relevant observations",
+            )
+
+        # 动态归一化权重
+        total_weight = sum(w for _, w, _ in components)
+        risk_score = sum(r * (w / total_weight) for r, w, _ in components)
+
+        # 降雨抑制（在归一化后应用）
+        if rain_vals and avg_rain > self.rainfall_suppress:
+            suppression = min(avg_rain / 30.0, 1.0)
+            risk_score *= 1.0 - suppression * 0.6
+
+        # 统计用于 rationale
+        avg_fwi_val = sum(fwi_vals) / len(fwi_vals) if fwi_vals else 0
+        avg_hum_val = sum(hum_vals) / len(hum_vals) if hum_vals else 0
+        avg_wind_val = sum(wind_vals) / len(wind_vals) if wind_vals else 0
 
         risk_score = max(0.0, min(risk_score, 1.0))
         decision = risk_score >= 0.4
@@ -110,8 +139,8 @@ class FireAlertAgent(AlertAgent):
             confidence=round(risk_score, 3),
             evidence_summary=evidence,
             rationale=(
-                f"FireAlert: FWI={avg_fwi:.1f}, 湿度={avg_hum:.1f}%, "
-                f"风速={avg_wind:.1f}m/s, 降雨={avg_rain:.1f}mm, "
+                f"FireAlert: FWI={avg_fwi_val:.1f}, 湿度={avg_hum_val:.1f}%, "
+                f"风速={avg_wind_val:.1f}m/s, 降雨={avg_rain:.1f}mm, "
                 f"风险分={risk_score:.3f}"
             ),
         )
@@ -120,6 +149,7 @@ class FireAlertAgent(AlertAgent):
 # ===========================================================================
 # Flood Alert Agent
 # ===========================================================================
+
 
 class FloodAlertAgent(AlertAgent):
     """洪涝预警 Agent（对标《国家防汛抗旱应急预案》暴雨标准）。
@@ -146,51 +176,78 @@ class FloodAlertAgent(AlertAgent):
         rain24_vals = [o.value for o in obs if "rainfall_24h" in o.variable]
         rain6_vals = [o.value for o in obs if "rainfall_6h" in o.variable]
         soil_vals = [o.value for o in obs if "soil_moisture" in o.variable]
-        level_vals = [o.value for o in obs if "water_level" in o.variable]
+        level_obs_list = [o for o in obs if "water_level" in o.variable]
 
         evidence: dict[str, float] = {}
-        risk_score = 0.0
+        components: list[tuple[float, float, str]] = []
 
         # 24h 降雨
-        avg_rain24 = sum(rain24_vals) / len(rain24_vals) if rain24_vals else 0
-        rain24_risk = min(avg_rain24 / 100.0, 1.0)
-        risk_score += rain24_risk * 0.35
-        evidence["rainfall_24h"] = round(rain24_risk, 3)
+        if rain24_vals:
+            avg_rain24 = sum(rain24_vals) / len(rain24_vals)
+            rain24_risk = min(avg_rain24 / 100.0, 1.0)
+            components.append((rain24_risk, 0.35, "rainfall_24h"))
+            evidence["rainfall_24h"] = round(rain24_risk, 3)
 
         # 6h 短时强降雨
-        avg_rain6 = sum(rain6_vals) / len(rain6_vals) if rain6_vals else 0
-        rain6_risk = min(avg_rain6 / 50.0, 1.0)
-        risk_score += rain6_risk * 0.25
-        evidence["rainfall_6h"] = round(rain6_risk, 3)
+        if rain6_vals:
+            avg_rain6 = sum(rain6_vals) / len(rain6_vals)
+            rain6_risk = min(avg_rain6 / 50.0, 1.0)
+            components.append((rain6_risk, 0.25, "rainfall_6h"))
+            evidence["rainfall_6h"] = round(rain6_risk, 3)
 
         # 土壤湿度
-        avg_soil = sum(soil_vals) / len(soil_vals) if soil_vals else 0.5
-        soil_sat_risk = max(0, (avg_soil - 0.6) / 0.4)
-        risk_score += soil_sat_risk * 0.15
-        evidence["soil_moisture"] = round(soil_sat_risk, 3)
+        if soil_vals:
+            avg_soil = sum(soil_vals) / len(soil_vals)
+            soil_sat_risk = max(0, (avg_soil - 0.6) / 0.4)
+            components.append((soil_sat_risk, 0.15, "soil_moisture"))
+            evidence["soil_moisture"] = round(soil_sat_risk, 3)
 
         # 水位
-        level_obs_list = [o for o in obs if "water_level" in o.variable]
-        avg_level = sum(lo.value for lo in level_obs_list) / len(level_obs_list) if level_obs_list else 0
-        
-        # --- 水位趋势检测（L4 关键能力） ---
+        if level_obs_list:
+            avg_level = sum(lo.value for lo in level_obs_list) / len(level_obs_list)
+            level_risk = min(avg_level / self.water_level_critical, 1.0)
+            components.append((level_risk, 0.25, "water_level"))
+            evidence["water_level"] = round(level_risk, 3)
+
+        if not components:
+            return DecisionOutput(
+                context=context,
+                decision=False,
+                confidence=0.0,
+                evidence_summary={},
+                rationale="FloodAlert: no relevant observations",
+            )
+
+        # 动态归一化权重
+        total_weight = sum(w for _, w, _ in components)
+        risk_score = sum(r * (w / total_weight) for r, w, _ in components)
+
+        # 水位趋势检测（与 GT 推导对齐：设风险下限而非加 bonus）
+        # 关键：必须按时间戳排序后再判断趋势，否则观测列表顺序可能不一致
         water_t_bonus = 0.0
         if len(level_obs_list) >= 3:
-            levels = [lo.value for lo in level_obs_list]
-            increasing = all(levels[i] < levels[i+1] for i in range(len(levels)-1))
+            sorted_levels = sorted(level_obs_list, key=lambda o: o.timestamp)
+            levels = [lo.value for lo in sorted_levels]
+            increasing = all(levels[i] < levels[i + 1] for i in range(len(levels) - 1))
             latest = levels[-1]
             if increasing and latest > 10.0:
-                water_t_bonus = 0.50  # 强制提升为高置信度
+                water_t_bonus = 0.75  # 与 GT 一致：设风险下限 0.75
             elif increasing and latest >= 9.0:
-                water_t_bonus = 0.25  # 接近警戒线且在上涨
-        
-        level_risk = min(avg_level / self.water_level_critical, 1.0)
-        risk_score += level_risk * 0.25
-        evidence["water_level"] = round(level_risk, 3)
-        
+                water_t_bonus = 0.50  # 与 GT 一致：设风险下限 0.50
+
         if water_t_bonus > 0:
-            risk_score += water_t_bonus
+            risk_score = max(risk_score, water_t_bonus)
             evidence["water_trend"] = water_t_bonus
+
+        # 统计用于 rationale
+        avg_rain24_val = sum(rain24_vals) / len(rain24_vals) if rain24_vals else 0
+        avg_rain6_val = sum(rain6_vals) / len(rain6_vals) if rain6_vals else 0
+        avg_soil_val = sum(soil_vals) / len(soil_vals) if soil_vals else 0
+        avg_level_val = (
+            sum(lo.value for lo in level_obs_list) / len(level_obs_list)
+            if level_obs_list
+            else 0
+        )
 
         risk_score = max(0.0, min(risk_score, 1.0))
         decision = risk_score >= 0.45
@@ -201,9 +258,9 @@ class FloodAlertAgent(AlertAgent):
             confidence=round(risk_score, 3),
             evidence_summary=evidence,
             rationale=(
-                f"FloodAlert: 24h={avg_rain24:.1f}mm, "
-                f"6h={avg_rain6:.1f}mm, 土壤={avg_soil:.2f}, "
-                f"水位={avg_level:.1f}m, 风险分={risk_score:.3f}"
+                f"FloodAlert: 24h={avg_rain24_val:.1f}mm, "
+                f"6h={avg_rain6_val:.1f}mm, 土壤={avg_soil_val:.2f}, "
+                f"水位={avg_level_val:.1f}m, 风险分={risk_score:.3f}"
             ),
         )
 
@@ -211,6 +268,7 @@ class FloodAlertAgent(AlertAgent):
 # ===========================================================================
 # Drought Alert Agent
 # ===========================================================================
+
 
 class DroughtAlertAgent(AlertAgent):
     """干旱预警 Agent（对标气象干旱标准）。
@@ -238,37 +296,62 @@ class DroughtAlertAgent(AlertAgent):
         ndvi_vals = [o.value for o in obs if o.variable == "NDVI"]
 
         evidence: dict[str, float] = {}
-        risk_score = 0.0
+        components: list[tuple[float, float, str]] = []
 
         # SPI
-        avg_spi = sum(spi_vals) / len(spi_vals) if spi_vals else 0
-        spi_risk = max(0, (-avg_spi - 0.5) / 2.0)
-        risk_score += spi_risk * 0.30
-        evidence["SPI"] = round(spi_risk, 3)
+        if spi_vals:
+            avg_spi = sum(spi_vals) / len(spi_vals)
+            spi_risk = max(0, (-avg_spi - 0.5) / 2.0)
+            components.append((spi_risk, 0.30, "SPI"))
+            evidence["SPI"] = round(spi_risk, 3)
 
         # Palmer
-        avg_palmer = sum(palm_vals) / len(palm_vals) if palm_vals else 0
-        palm_risk = max(0, (-avg_palmer - 0.25) / 1.5)
-        risk_score += palm_risk * 0.25
-        evidence["Palmer"] = round(palm_risk, 3)
+        if palm_vals:
+            avg_palmer = sum(palm_vals) / len(palm_vals)
+            palm_risk = max(0, (-avg_palmer - 0.25) / 1.5)
+            components.append((palm_risk, 0.25, "Palmer"))
+            evidence["Palmer"] = round(palm_risk, 3)
 
         # 湿度
-        avg_hum = sum(hum_vals) / len(hum_vals) if hum_vals else 50
-        hum_risk = max(0, (30 - avg_hum) / 30.0)
-        risk_score += hum_risk * 0.15
-        evidence["humidity"] = round(hum_risk, 3)
+        if hum_vals:
+            avg_hum = sum(hum_vals) / len(hum_vals)
+            hum_risk = max(0, (30 - avg_hum) / 30.0)
+            components.append((hum_risk, 0.15, "humidity"))
+            evidence["humidity"] = round(hum_risk, 3)
 
-        # 月降雨
-        avg_rain = sum(rain_vals) / len(rain_vals) if rain_vals else 100
-        rain_risk = max(0, (50 - avg_rain) / 50.0)
-        risk_score += rain_risk * 0.15
-        evidence["rainfall_monthly"] = round(rain_risk, 3)
+        # 月降雨 — 阈值与 GT 推导保持一致（30mm）
+        if rain_vals:
+            avg_rain = sum(rain_vals) / len(rain_vals)
+            rain_risk = max(0, (30 - avg_rain) / 30.0)
+            components.append((rain_risk, 0.15, "rainfall_monthly"))
+            evidence["rainfall_monthly"] = round(rain_risk, 3)
 
         # NDVI
-        avg_ndvi = sum(ndvi_vals) / len(ndvi_vals) if ndvi_vals else 0.6
-        ndvi_risk = max(0, (0.5 - avg_ndvi) / 0.3)
-        risk_score += ndvi_risk * 0.15
-        evidence["NDVI"] = round(ndvi_risk, 3)
+        if ndvi_vals:
+            avg_ndvi = sum(ndvi_vals) / len(ndvi_vals)
+            ndvi_risk = max(0, (0.5 - avg_ndvi) / 0.3)
+            components.append((ndvi_risk, 0.15, "NDVI"))
+            evidence["NDVI"] = round(ndvi_risk, 3)
+
+        if not components:
+            return DecisionOutput(
+                context=context,
+                decision=False,
+                confidence=0.0,
+                evidence_summary={},
+                rationale="DroughtAlert: no relevant observations",
+            )
+
+        # 动态归一化权重
+        total_weight = sum(w for _, w, _ in components)
+        risk_score = sum(r * (w / total_weight) for r, w, _ in components)
+
+        # 统计用于 rationale
+        avg_spi_val = sum(spi_vals) / len(spi_vals) if spi_vals else 0
+        avg_palmer_val = sum(palm_vals) / len(palm_vals) if palm_vals else 0
+        avg_hum_val = sum(hum_vals) / len(hum_vals) if hum_vals else 0
+        avg_rain_val = sum(rain_vals) / len(rain_vals) if rain_vals else 0
+        avg_ndvi_val = sum(ndvi_vals) / len(ndvi_vals) if ndvi_vals else 0
 
         risk_score = max(0.0, min(risk_score, 1.0))
         decision = risk_score >= 0.4
@@ -279,9 +362,9 @@ class DroughtAlertAgent(AlertAgent):
             confidence=round(risk_score, 3),
             evidence_summary=evidence,
             rationale=(
-                f"DroughtAlert: SPI={avg_spi:.2f}, Palmer={avg_palmer:.2f}, "
-                f"湿度={avg_hum:.1f}%, 月降雨={avg_rain:.1f}mm, "
-                f"NDVI={avg_ndvi:.2f}, 风险分={risk_score:.3f}"
+                f"DroughtAlert: SPI={avg_spi_val:.2f}, Palmer={avg_palmer_val:.2f}, "
+                f"湿度={avg_hum_val:.1f}%, 月降雨={avg_rain_val:.1f}mm, "
+                f"NDVI={avg_ndvi_val:.2f}, 风险分={risk_score:.3f}"
             ),
         )
 
@@ -289,6 +372,7 @@ class DroughtAlertAgent(AlertAgent):
 # ===========================================================================
 # HeatWave Alert Agent
 # ===========================================================================
+
 
 class HeatWaveAlertAgent(AlertAgent):
     """热浪预警 Agent（对标《中央气象台高温预警信号》）。
@@ -315,56 +399,94 @@ class HeatWaveAlertAgent(AlertAgent):
         temp_vals = [o.value for o in obs if o.variable == "temperature_max"]
         hum_vals = [o.value for o in obs if o.variable == "humidity"]
         wbt_vals = [o.value for o in obs if o.variable == "wet_bulb_temp"]
-        temp_ts = [(o.timestamp, o.value) for o in obs if o.variable == "temperature_max"]
-        wbt_ts = [(o.timestamp, o.value) for o in obs if o.variable == "wet_bulb_temp"]
+        duration_vals = [o.value for o in obs if o.variable == "heat_duration_days"]
+        temp_ts = [
+            (o.timestamp, o.value) for o in obs if o.variable == "temperature_max"
+        ]
 
         evidence: dict[str, float] = {}
-        risk_score = 0.0
+        components: list[tuple[float, float, str]] = []
 
-        # --- 最高温 ---
-        avg_temp = sum(temp_vals) / len(temp_vals) if temp_vals else 25
-        temp_risk = max(0, (avg_temp - 28) / 12.0)  # 28°C 以下无风险
-        risk_score += temp_risk * 0.35
-        evidence["temperature_max"] = round(temp_risk, 3)
+        # --- 最高温 — 与 GT 对齐: max(0, (temp - 28) / 12.0), 权重 0.35 ---
+        temp_candidates = (
+            temp_vals
+            if temp_vals
+            else [o.value for o in obs if o.variable == "temperature"]
+        )
+        if temp_candidates:
+            avg_temp = sum(temp_candidates) / len(temp_candidates)
+            temp_risk = max(0, (avg_temp - 28) / 12.0)
+            weight_key = "temperature_max" if temp_vals else "temperature"
+            components.append((temp_risk, 0.35, weight_key))
+            evidence[weight_key] = round(temp_risk, 3)
+        else:
+            avg_temp = 0
 
-        # --- 持续性检测：从多时间戳温度记录推断连续高温天数 ---
-        # 排序时间戳
-        temp_ts.sort(key=lambda x: x[0])
-        heat_duration_days = 0
-        if temp_ts:
-            # 统计温度 >= 35°C 的时间戳数量（作为至少多少天经历高温）
-            # L4 progressive 场景：如果趋势性升温到 ≥35°C，也算持续风险
+        # --- 持续天数 — 与 GT 对齐: min(duration / 5.0, 1.0), 权重 0.25 ---
+        # 优先使用观测中的 heat_duration_days，否则从时序温度推断
+        if duration_vals:
+            heat_duration_days = int(sum(duration_vals) / len(duration_vals))
+        elif temp_ts:
+            temp_ts.sort(key=lambda x: x[0])
             consecutive_high = 0
-            for _, tv in temp_ts:
+            prev_date = None
+            for ts, tv in temp_ts:
                 if tv >= 35.0:
-                    consecutive_high += 1
-            heat_duration_days = max(consecutive_high, len(temp_ts) - 1)  # 至少是间隔天数
+                    # 提取日期部分用于连续性检查
+                    cur_date = ts[:10] if len(ts) >= 10 else ts
+                    if prev_date is None or cur_date == prev_date:
+                        consecutive_high += 1
+                    elif cur_date > prev_date:
+                        # 日期递增，继续计数
+                        consecutive_high += 1
+                    else:
+                        # 日期回退，重置
+                        consecutive_high = 1
+                    prev_date = cur_date
+            heat_duration_days = max(consecutive_high, 1)
         elif context.horizon_hours >= 72:
-            # 如果没有多时间戳但有长 horizon，假设 >= 3 天
             heat_duration_days = min(context.horizon_hours // 24, 5)
+        else:
+            heat_duration_days = 1
 
-        # duration_factor: 3天=0.6, 5天=1.0
         duration_factor = min(heat_duration_days / 5.0, 1.0)
-        risk_score += duration_factor * 0.25
+        components.append((duration_factor, 0.25, "heat_duration_days"))
         evidence["heat_duration_days"] = round(heat_duration_days)
 
-        # --- 湿球温度 ---
+        # --- 湿球温度 — 与 GT 对齐: max(0, (wb - 23) / 8.0), 权重 0.25 ---
         if wbt_vals:
             avg_wbt = sum(wbt_vals) / len(wbt_vals)
-            wbt_risk = max(0, (avg_wbt - 23.0) / 8.0)  # 27°C 危险阈值
-            risk_score += wbt_risk * 0.25
+            wbt_risk = max(0, (avg_wbt - 23.0) / 8.0)
+            components.append((wbt_risk, 0.25, "wet_bulb_temp"))
             evidence["wet_bulb_temp"] = round(wbt_risk, 3)
+        else:
+            avg_wbt = None
 
-        # --- 湿度 ---
-        avg_hum = sum(hum_vals) / len(hum_vals) if hum_vals else 50
-        hum_risk = max(0, (avg_hum - 50) / 50.0)
-        risk_score += hum_risk * 0.15
-        evidence["humidity"] = round(hum_risk, 3)
+        # --- 湿度 — 与 GT 对齐: max(0, (hum - 50) / 50.0), 权重 0.15 ---
+        if hum_vals:
+            avg_hum = sum(hum_vals) / len(hum_vals)
+            hum_risk = max(0, (avg_hum - 50) / 50.0)
+            components.append((hum_risk, 0.15, "humidity"))
+            evidence["humidity"] = round(hum_risk, 3)
+        else:
+            avg_hum = 0
+
+        if not components:
+            return DecisionOutput(
+                context=context,
+                decision=False,
+                confidence=0.0,
+                evidence_summary={},
+                rationale="HeatWaveAlert: no relevant observations",
+            )
+
+        # 动态归一化权重
+        total_weight = sum(w for _, w, _ in components)
+        risk_score = sum(r * (w / total_weight) for r, w, _ in components)
 
         risk_score = max(0.0, min(risk_score, 1.0))
         decision = risk_score >= 0.4
 
-        avg_wbt_val = sum(wbt_vals) / len(wbt_vals) if wbt_vals else None
         return DecisionOutput(
             context=context,
             decision=decision,
@@ -372,7 +494,7 @@ class HeatWaveAlertAgent(AlertAgent):
             evidence_summary=evidence,
             rationale=(
                 f"HeatWaveAlert: 最高温={avg_temp:.1f}°C, "
-                f"湿球={'%.1f' % avg_wbt_val if avg_wbt_val is not None else 'N/A'}°C, "
+                f"湿球={'%.1f' % avg_wbt if avg_wbt is not None else 'N/A'}°C, "
                 f"湿度={avg_hum:.1f}%, 持续≈{heat_duration_days}天, "
                 f"风险分={risk_score:.3f}"
             ),
@@ -382,6 +504,7 @@ class HeatWaveAlertAgent(AlertAgent):
 # ===========================================================================
 # MultiAlertAgent — 场景路由
 # ===========================================================================
+
 
 class MultiAlertAgent(AlertAgent):
     """多场景 Alert Agent — 根据场景类别自动路由到专用引擎。
@@ -422,7 +545,11 @@ class MultiAlertAgent(AlertAgent):
             "heat": self.heat_agent,
         }
 
-        category = context.category.value if hasattr(context.category, "value") else str(context.category)
+        category = (
+            context.category.value
+            if hasattr(context.category, "value")
+            else str(context.category)
+        )
 
         agent = category_map.get(category, None)
         if agent is None:
@@ -435,6 +562,7 @@ class MultiAlertAgent(AlertAgent):
 # ===========================================================================
 # Legacy — RuleBasedAgent 保留以兼容旧代码
 # ===========================================================================
+
 
 class RuleBasedAgent(FireAlertAgent):
     """兼容别名：旧 RuleBasedAgent 现在是 FireAlertAgent 的子类。
@@ -462,7 +590,12 @@ class LLMDecisionAgent(AlertAgent):
     优先级: CARM/Mustard集成 > OpenAI兼容API > Ollama本地模型 > 启发式回退
     """
 
-    def __init__(self, model_name: str = "qwen3:14b", base_url: str | None = None, api_key: str | None = None):
+    def __init__(
+        self,
+        model_name: str = "qwen3:14b",
+        base_url: str | None = None,
+        api_key: str | None = None,
+    ):
         super().__init__("LLMDecisionAgent")
         self.model_name = model_name
         self.base_url = base_url
@@ -471,6 +604,7 @@ class LLMDecisionAgent(AlertAgent):
 
     def _detect_provider(self) -> str:
         import os as _os
+
         if self.api_key or _os.environ.get("OPENAI_API_KEY"):
             return "openai"
         if self.base_url or _os.environ.get("OLLAMA_BASE_URL"):
@@ -483,21 +617,28 @@ class LLMDecisionAgent(AlertAgent):
         valid, msg = TemplateEngine.validate_context(context)
         if not valid:
             return DecisionOutput(
-                context=context, decision=False, confidence=0.0,
+                context=context,
+                decision=False,
+                confidence=0.0,
                 evidence_summary={"error": msg},
                 rationale=f"验证失败: {msg}",
             )
 
         # 构建 prompt
         tmpl_labels = {
-            "alert": "是否预警", "dispatch": "是否调度", "upgrade": "是否升级",
-            "close": "是否关闭", "recover": "是否恢复",
+            "alert": "是否预警",
+            "dispatch": "是否调度",
+            "upgrade": "是否升级",
+            "close": "是否关闭",
+            "recover": "是否恢复",
         }
         tmpl_label = tmpl_labels.get(context.template.value, "未知")
 
         obs_lines = []
         for o in context.observations:
-            obs_lines.append(f"- [{o.source}] {o.variable}={o.value}{o.unit} (conf={o.confidence:.2f}) @ {o.timestamp}")
+            obs_lines.append(
+                f"- [{o.source}] {o.variable}={o.value}{o.unit} (conf={o.confidence:.2f}) @ {o.timestamp}"
+            )
         obs_text = "\n".join(obs_lines)
 
         prompt = (
@@ -520,20 +661,25 @@ class LLMDecisionAgent(AlertAgent):
             try:
                 llm_answer, llm_confidence, llm_rationale = self._call_openai(prompt)
             except Exception as e:
-                print(f"[LLMDecisionAgent] OpenAI call failed: {e}")
+                logger.warning(f"OpenAI call failed: {e}", exc_info=True)
 
         # 尝试 Ollama
         if llm_answer is None:
             try:
                 llm_answer, llm_confidence, llm_rationale = self._call_ollama(prompt)
             except Exception as e:
-                print(f"[LLMDecisionAgent] Ollama call failed: {e}")
+                logger.warning(f"Ollama call failed: {e}", exc_info=True)
 
         if llm_answer is not None:
             decision = llm_answer in ("yes", "是")
             return DecisionOutput(
-                context=context, decision=decision, confidence=llm_confidence,
-                evidence_summary={"llm_model": self.model_name, "provider": self._provider},
+                context=context,
+                decision=decision,
+                confidence=llm_confidence,
+                evidence_summary={
+                    "llm_model": self.model_name,
+                    "provider": self._provider,
+                },
                 rationale=f"LLM ({self.model_name}): {llm_answer}. {llm_rationale}",
             )
 
@@ -544,7 +690,9 @@ class LLMDecisionAgent(AlertAgent):
         import os
         from openai import OpenAI
 
-        base_url = self.base_url or os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1")
+        base_url = self.base_url or os.environ.get(
+            "OPENAI_API_BASE", "https://api.openai.com/v1"
+        )
         api_key = self.api_key or os.environ.get("OPENAI_API_KEY", "")
 
         client = OpenAI(base_url=base_url, api_key=api_key)
@@ -561,13 +709,18 @@ class LLMDecisionAgent(AlertAgent):
         import os
         import urllib.request
         import json
-        base_url = self.base_url or os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
 
-        payload = json.dumps({
-            "model": self.model_name,
-            "messages": [{"role": "user", "content": prompt}],
-            "stream": False,
-        }).encode("utf-8")
+        base_url = self.base_url or os.environ.get(
+            "OLLAMA_BASE_URL", "http://localhost:11434"
+        )
+
+        payload = json.dumps(
+            {
+                "model": self.model_name,
+                "messages": [{"role": "user", "content": prompt}],
+                "stream": False,
+            }
+        ).encode("utf-8")
 
         req = urllib.request.Request(
             f"{base_url}/api/chat",
@@ -592,7 +745,7 @@ class LLMDecisionAgent(AlertAgent):
 
         lower = content.lower()
 
-        dec_match = re.search(r'决策[:：]\s*(yes|no|是|否)', lower)
+        dec_match = re.search(r"决策[:：]\s*(yes|no|是|否)", lower)
         if dec_match:
             ans = dec_match.group(1)
             if ans in ("yes", "是"):
@@ -600,18 +753,32 @@ class LLMDecisionAgent(AlertAgent):
             else:
                 return "no", 0.85, content[:300]
 
-        first_line = lower.split('\n')[0].strip() if '\n' in content else lower[:100].strip()
-        if re.match(r'^(yes|no)\b', first_line):
-            return ("yes" if first_line.startswith('y') else "no"), 0.8, content[:300]
+        first_line = (
+            lower.split("\n")[0].strip() if "\n" in content else lower[:100].strip()
+        )
+        if re.match(r"^(yes|no)\b", first_line):
+            return ("yes" if first_line.startswith("y") else "no"), 0.8, content[:300]
 
-        if re.search(r'应.*预警|建议.*预警|必须.*预警|需要.*预警|激活.*响应', lower):
+        if re.search(r"应.*预警|建议.*预警|必须.*预警|需要.*预警|激活.*响应", lower):
             return "yes", 0.7, content[:300]
-        if re.search(r'不应.*预警|不建议.*预警|不需要.*预警|不.*发出.*预警', lower):
+        if re.search(r"不应.*预警|不建议.*预警|不需要.*预警|不.*发出.*预警", lower):
             return "no", 0.7, content[:300]
 
         return None, 0.5, content[:300]
 
     def _heuristic_fallback(self, context: ScenarioContext) -> DecisionOutput:
-        from earthbench.integrations import CARMBridge
-        bridge = CARMBridge()
-        return bridge._decide_heuristic(context)
+        """当 LLM 不可用时，使用启发式规则引擎作为兜底。"""
+        try:
+            from earthbench.integrations import CARMBridge
+
+            bridge = CARMBridge()
+            return bridge._decide_heuristic(context)
+        except Exception as e:
+            logger.warning(f"Heuristic fallback failed: {e}", exc_info=True)
+            return DecisionOutput(
+                context=context,
+                decision=False,
+                confidence=0.0,
+                evidence_summary={"fallback_error": str(e)},
+                rationale=f"Heuristic fallback failed: {e}",
+            )

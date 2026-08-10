@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from .models import DecisionTemplate, Observation, ScenarioContext
+from .models import DecisionTemplate, ScenarioContext
 
 
 class TemplateEngine:
@@ -50,14 +50,8 @@ class TemplateEngine:
             DecisionTemplate.DISPATCH: (
                 "基于当前态势，资源调度方案分析（{n} 条观测支持）："
             ),
-            DecisionTemplate.UPGRADE: (
-                "风险等级升级评估（最近 {h} 小时趋势）："
-            ),
-            DecisionTemplate.CLOSE: (
-                "封闭/暂停决策评估："
-            ),
-            DecisionTemplate.RECOVER: (
-                "恢复/解除评估："
-            ),
+            DecisionTemplate.UPGRADE: ("风险等级升级评估（最近 {h} 小时趋势）："),
+            DecisionTemplate.CLOSE: ("封闭/暂停决策评估："),
+            DecisionTemplate.RECOVER: ("恢复/解除评估："),
         }
         return templates.get(template, "决策分析：")

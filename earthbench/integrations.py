@@ -11,12 +11,11 @@ Phase 2 目标：让 EarthBench 的 Alert 决策场景通过 CARM 推理框架�
 
 from __future__ import annotations
 
-import json
+import logging
 import re
 from pathlib import Path
-from typing import Any
 
-from pydantic import BaseModel
+logger = logging.getLogger(__name__)
 
 from .models import DecisionOutput, ScenarioContext
 
@@ -25,26 +24,9 @@ from .models import DecisionOutput, ScenarioContext
 # 数据适配器：ScenarioContext → CARM prompt
 # ---------------------------------------------------------------------------
 
-class _CARMScenarioInput(BaseModel):
-    """CARM 可理解的场景输入格式。"""
-    task_type: str = "earth_decision"
-    decision_template: str
-    region: str
-    horizon_hours: int
-    evidence_items: list[dict[str, Any]]
-
 
 def _context_to_carm_prompt(ctx: ScenarioContext) -> str:
     """将场景上下文转为 CARM 友好的 prompt 文本。"""
-    tmpl_label = {
-        "alert": "是否预警",
-        "dispatch": "是否调度",
-        "upgrade": "是否升级",
-        "close": "是否关闭",
-        "recover": "是否恢复",
-    }
-    label = tmpl_label.get(ctx.template.value, "未知")
-
     evidence_lines: list[str] = []
     for obs in ctx.observations:
         evidence_lines.append(
@@ -85,12 +67,12 @@ def _context_to_carm_prompt(ctx: ScenarioContext) -> str:
             "- SPI和Palmer冲突时以Palmer为准。但即使SPI接近正常(>-1.0)，只要任一条件(月降雨<10mm, NDVI<0.3)成立，都是干旱信号。\n"
             "- SPI趋势性下降(如-0.5→-0.9→-1.6)也是重要预警信号，当前值<-1.5即严重干旱。\n"
         )
-    elif ctx.category.value == "ecology":
+    elif ctx.category.value == "heat":
         cat_hint = (
             "\n[领域知识提示] 这是高温/热浪预警场景。关键指标说明：\n"
             "- Wet Bulb Temperature (湿球温度): >27°C触发预警, >28°C为危险, >30°C为致命。\n"
             "- 干热 vs 湿热：高湿度（>70%）下人体排汗失效，湿球温度是最核心预警指标。\n"
-            "- 连续3天最高温≥34°C + 湿球>27°C = 典型湿热热浪环境（如南京\u706B\u704C\u7279\u6027）。\n"
+            "- 连续3天最高温≥34°C + 湿球>27°C = 典型湿热热浪环境（如南京火炉特性）。\n"
             "- 即使单次温度未达35°C极端线，湿热组合+持续性也构成预警条件。\n"
             "- Temperature >36°C + Humidity <20%: 干燥环境，风险中等。\n"
             "- 持续多日高温且夜间降温不足时，累积热应力更高。\n"
@@ -112,9 +94,6 @@ def _context_to_carm_prompt(ctx: ScenarioContext) -> str:
 # CARM Bridge — Phase 2 集成
 # ---------------------------------------------------------------------------
 
-class CARMIntegrationError(Exception):
-    """CARM 集成错误。"""
-
 
 class CARMBridge:
     """CARM 集成桥接器。
@@ -128,70 +107,70 @@ class CARMBridge:
 
     使用方式：
     ```python
-    bridge = CARMBridge(carml_root="D:/codes/Mustard")
+    bridge = CARMBridge(carm_root="D:/codes/Mustard")
     result = bridge.decide(context)
     ```
     """
 
-    def __init__(self, carml_root: str | Path | None = None):
+    def __init__(self, carm_root: str | Path | None = None):
         import os as _os
-        if carml_root:
-            path_str = str(carml_root)
+
+        if carm_root:
+            path_str = str(carm_root)
             # 统一为绝对路径，兼容 Windows 和 Git Bash 风格路径
             abs_path = _os.path.abspath(path_str)
-            self.carml_root = Path(abs_path)
+            self.carm_root = Path(abs_path)
         else:
-            self.carml_root = None
+            self.carm_root = None
         self._carm_loaded = False
         self._policy = None
         self._loaded = self._try_load_carm()
 
     def _try_load_carm(self) -> bool:
         """尝试加载 CARM 包（OnlinePolicy + BigModelProxyTool）。"""
-        if not self.carml_root:
+        if not self.carm_root:
             return False
         try:
             import sys
             import os as _os
-            
+
             # 统一路径格式：转换为纯正 Windows 绝对路径
-            must_str = str(self.carml_root)
+            must_str = str(self.carm_root)
             # 先处理 Linux 盘符路径 /d/xxx -> D:/xxx
             import re as _re
-            m = _re.match(r'^/([a-z])/(.*)$', must_str)
+
+            m = _re.match(r"^/([a-z])/(.*)$", must_str)
             if m:
-                must_str = f'{m.group(1).upper()}:{m.group(2)}'
-            must_str = must_str.replace('/', '\\')
+                must_str = f"{m.group(1).upper()}:{m.group(2)}"
+            must_str = must_str.replace("/", "\\")
             must_str = _os.path.abspath(must_str)
-            
-            print(f'[CARMBridge] Checking CARM at: {must_str}')
+
+            logger.info(f"Checking CARM at: {must_str}")
             if not _os.path.exists(must_str):
-                print(f'[CARMBridge] Path does not exist: {must_str}')
+                logger.warning(f"Path does not exist: {must_str}")
                 return False
 
             # Ensure Mustard root is at position 0
             if must_str in sys.path:
                 sys.path.remove(must_str)
             sys.path.insert(0, must_str)
-            
+
             # 清除可能被缓存的旧模块
             for mod_name in list(sys.modules.keys()):
-                if mod_name.startswith('carm.') or mod_name == 'carm':
+                if mod_name.startswith("carm.") or mod_name == "carm":
                     del sys.modules[mod_name]
-            
+
             from carm.policy import OnlinePolicy
-            from carm.state import AgentState
-            from carm.memory import MemoryBoard, MemorySlot
-            from carm.schemas import ToolCall, ActionDecision
             from tools.bigmodel_tool import BigModelProxyTool
-            
+
             self._carm_loaded = True
-            print(f'[CARMBridge] SUCCESS: CARM modules loaded: OnlinePolicy={OnlinePolicy.__name__}, BigModelProxyTool={BigModelProxyTool.__name__}')
+            logger.info(
+                f"CARM modules loaded: OnlinePolicy={OnlinePolicy.__name__}, "
+                f"BigModelProxyTool={BigModelProxyTool.__name__}"
+            )
             return True
         except ImportError as e:
-            import traceback
-            print(f'[CARMBridge] Failed to load CARM: {e}')
-            traceback.print_exc()
+            logger.warning(f"Failed to load CARM: {e}", exc_info=True)
             return False
 
     # 规则引擎权威决策实例（跨调用复用，避免每次重建）
@@ -202,6 +181,7 @@ class CARMBridge:
         """返回权威规则引擎（MultiAlertAgent），用于兜底与防漏报。"""
         if cls._rule_agent is None:
             from .agents import MultiAlertAgent
+
             cls._rule_agent = MultiAlertAgent()
         return cls._rule_agent
 
@@ -252,200 +232,96 @@ class CARMBridge:
 
         返回 None 表示 LLM 不可用或无法解析，此时调用方应依赖规则引擎权威结果。
         """
-        try:
+        import concurrent.futures
+        import os
+
+        def _call_llm() -> bool | None:
             from tools.bigmodel_tool import BigModelProxyTool
-            import os
-            os.environ.setdefault('OLLAMA_MODEL', 'qwen3:14b')
+
+            os.environ.setdefault("OLLAMA_MODEL", "qwen3:14b")
 
             prompt = _context_to_carm_prompt(context)
             bigmodel_tool = BigModelProxyTool()
-            llm_result = bigmodel_tool.execute(prompt, {'mode': 'classify'})
+            llm_result = bigmodel_tool.execute(prompt, {"mode": "classify"})
             if llm_result.ok and llm_result.result:
                 return self._parse_llm_response(llm_result.result)
-        except Exception as e:
-            print(f'[CARMBridge] LLM call failed (ignored): {e}')
-        return None
+            return None
 
-    def _decide_via_carml(self, context: ScenarioContext) -> DecisionOutput:
-        """【已废弃】旧路径：LLM 直接裁决且 confidence 硬编码 0.85。
-
-        保留仅为向后兼容；新的 decide() 已改用规则引擎权威 + LLM 参考升级，
-        故本方法不再被 decide() 调用。
-        """
         try:
-            prompt = _context_to_carm_prompt(context)
-            heuristic_decision = self._decide_heuristic(context)
-
-            llm_decision = self._decide_via_carml_llm(context)
-            llm_source = "ollama_llm" if llm_decision is not None else "heuristic"
-
-            if llm_decision is not None:
-                final_decision = llm_decision
-                confidence = heuristic_decision.confidence
-                evidence_summary = {
-                    **heuristic_decision.evidence_summary,
-                    "llm_source": llm_source,
-                    "llm_decision": llm_decision,
-                }
-                rationale = (
-                    f"LLM Decision (source={llm_source}): {llm_decision}\n"
-                    f"Heuristic Decision: {'YES' if heuristic_decision.decision else 'NO'}, "
-                    f"confidence={heuristic_decision.confidence:.3f}\n"
-                    f"{heuristic_decision.rationale}"
-                )
-            else:
-                final_decision = heuristic_decision.decision
-                confidence = heuristic_decision.confidence
-                evidence_summary = {
-                    **heuristic_decision.evidence_summary,
-                    "llm_unavailable": True,
-                }
-                rationale = (
-                    f"LLM unavailable, fallback to heuristic\n"
-                    f"Heuristic Decision: {'YES' if heuristic_decision.decision else 'NO'}, "
-                    f"confidence={confidence:.3f}\n"
-                    f"{heuristic_decision.rationale}"
-                )
-
-            return DecisionOutput(
-                context=context,
-                decision=final_decision,
-                confidence=confidence,
-                evidence_summary=evidence_summary,
-                rationale=rationale,
-            )
-
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(_call_llm)
+                return future.result(timeout=30)
+        except concurrent.futures.TimeoutError:
+            logger.warning("LLM call timed out after 30s (ignored)")
         except Exception as e:
-            # CARM 不可用时优雅降级
-            return self._decide_heuristic(context)
+            logger.warning(f"LLM call failed (ignored): {e}")
+        return None
 
     def _parse_llm_response(self, text: str) -> bool | None:
         """从 LLM 返回的自然语言响应中提取 YES/NO 决策。
-        
+
         解析逻辑：
         - 优先匹配明确的 YES/NO 指令（作为首答案）
         - 再匹配领域关键词
         - 否则返回 None（使用启发式 fallback）
         """
-        import re
+
         # 去除思考标签后的内容
         if "</think>" in text:
             text = text.split("</think>", 1)[1]
         elif "<antThinking>" in text:
             text = text.split("<antThinking>", 1)[1]
-        
+
         lower = text.lower().strip()
-        
+
         # 第1步：寻找明确的 "决策：YES/NO" 模式（LLM 最常使用的格式）
-        dec_match = re.search(r'决策[:：]\s*(yes|no)', lower, re.IGNORECASE)
+        dec_match = re.search(r"决策[:：]\s*(yes|no)", lower, re.IGNORECASE)
         if dec_match:
-            return dec_match.group(1).lower() in ('yes', '是')
-        
+            return dec_match.group(1).lower() in ("yes", "是")
+
         # 第2步：寻找明确的 "Decision: YES/NO" 模式
-        dec_match = re.search(r'decision[:：]\s*(yes|no)', lower, re.IGNORECASE)
+        dec_match = re.search(r"decision[:：]\s*(yes|no)", lower, re.IGNORECASE)
         if dec_match:
-            return dec_match.group(1).lower() in ('yes', '是')
-        
+            return dec_match.group(1).lower() in ("yes", "是")
+
         # 第3步：匹配首行的 YES/NO（作为最直接的指令）
-        first_line = lower.split('\n')[0].strip() if '\n' in text else lower[:100].strip()
-        if re.match(r'^(yes|no)\b', first_line, re.IGNORECASE):
-            return first_line.startswith('y')
-        
+        first_line = (
+            lower.split("\n")[0].strip() if "\n" in text else lower[:100].strip()
+        )
+        if re.match(r"^(yes|no)\b", first_line, re.IGNORECASE):
+            return first_line.startswith("y")
+
         # 第4步：寻找明确的领域动作模式
-        if re.search(r'激活.*响应|应.*发出.*预警|建议.*预警|必须.*预警|需要.*预警', lower, re.IGNORECASE):
+        if re.search(
+            r"激活.*响应|应.*发出.*预警|建议.*预警|必须.*预警|需要.*预警",
+            lower,
+            re.IGNORECASE,
+        ):
             return True
-        if re.search(r'不应.*预警|不建议.*预警|不需要.*预警|关闭.*响应|不.*发出.*预警', lower, re.IGNORECASE):
+        if re.search(
+            r"不应.*预警|不建议.*预警|不需要.*预警|关闭.*响应|不.*发出.*预警",
+            lower,
+            re.IGNORECASE,
+        ):
             return False
-        
+
         # 第5步：宽松匹配独立出现的关键词
-        yes_patterns = [r'\byes\b', r'是\b']
-        no_patterns = [r'\bno\b(?!\s*risk)', r'否\b']
-        
+        yes_patterns = [r"\byes\b", r"是\b"]
+        no_patterns = [r"\bno\b(?!\s*risk)", r"否\b"]
+
         for pat in yes_patterns:
             if re.search(pat, lower, re.IGNORECASE | re.MULTILINE):
                 return True
         for pat in no_patterns:
             if re.search(pat, lower, re.IGNORECASE | re.MULTILINE):
                 return False
-        
+
         return None
 
     def _decide_heuristic(self, context: ScenarioContext) -> DecisionOutput:
-        """当 CARM 不可用时，使用增强启发式规则引擎。
+        """当 CARM 不可用时，使用 MultiAlertAgent 规则引擎。
 
-        这比 RuleBasedAgent 支持更多变量类型，但仍然轻量。
+        此前此方法包含独立的重复权重计算逻辑，与主 Agent 不一致，
+        现统一为直接调用 MultiAlertAgent，确保逻辑自洽。
         """
-        evidence: dict[str, float] = {}
-        risk_score = 0.0
-
-        # 按变量类型分别处理
-        fwi_vals = [o.value for o in context.observations if o.variable == "FWI"]
-        humidity_vals = [o.value for o in context.observations if o.variable == "humidity"]
-        wind_vals = [o.value for o in context.observations if o.variable == "wind_speed"]
-        rain_vals = [o.value for o in context.observations if o.variable == "rainfall"]
-        temp_vals = [o.value for o in context.observations if o.variable == "temperature"]
-        ndvi_vals = [o.value for o in context.observations if o.variable == "NDVI"]
-
-        # 加权评分模型（每类证据权重可调）
-        w = {
-            "FWI": 0.35,
-            "humidity": 0.20,
-            "wind_speed": 0.15,
-            "rainfall": 0.10,
-            "temperature": 0.10,
-            "NDVI": 0.10,
-        }
-
-        # FWI: 越高越危险
-        if fwi_vals:
-            avg = sum(fwi_vals) / len(fwi_vals)
-            risk_score += w["FWI"] * min(avg / 50.0, 1.0)
-            evidence["FWI"] = round(min(avg / 50.0, 1.0), 3)
-
-        # 湿度: 越低越危险
-        if humidity_vals:
-            avg = sum(humidity_vals) / len(humidity_vals)
-            inv_risk = max(0, (100 - avg) / 100)
-            risk_score += w["humidity"] * inv_risk
-            evidence["humidity"] = round(inv_risk, 3)
-
-        # 风速: 越高越危险
-        if wind_vals:
-            avg = sum(wind_vals) / len(wind_vals)
-            risk_score += w["wind_speed"] * min(avg / 20.0, 1.0)
-            evidence["wind"] = round(min(avg / 20.0, 1.0), 3)
-
-        # 降雨: 越多越安全
-        if rain_vals:
-            avg = sum(rain_vals) / len(rain_vals)
-            risk_score -= w["rainfall"] * min(avg / 20.0, 1.0)  # 负贡献 = 降低风险
-            evidence["rainfall"] = round(min(-avg / 20.0, 0), 3)
-
-        # 温度: 越高越危险
-        if temp_vals:
-            avg = sum(temp_vals) / len(temp_vals)
-            risk_score += w["temperature"] * min(max(0, (avg - 20) / 30.0), 1.0)
-            evidence["temp"] = round(min(max(0, (avg - 20) / 30.0), 1.0), 3)
-
-        # 湿球温度: 越高越危险
-        wbt_vals = [o.value for o in context.observations if o.variable == "wet_bulb_temp"]
-        if wbt_vals:
-            avg_wbt = sum(wbt_vals) / len(wbt_vals)
-            wbt_risk = max(0, (avg_wbt - 23.0) / 8.0)
-            risk_score += wbt_risk * 0.25
-            evidence["wet_bulb_temp"] = round(wbt_risk, 3)
-
-        # 截断到 [0, 1]
-        risk_score = max(0.0, min(risk_score, 1.0))
-        decision = risk_score >= 0.4  # 阈值略低于 RuleBasedAgent
-
-        return DecisionOutput(
-            context=context,
-            decision=bool(decision),
-            confidence=round(risk_score, 3),
-            evidence_summary=evidence,
-            rationale=(
-                f"多变量加权风险评分: {risk_score:.3f}, "
-                f"证据权重: {json.dumps(evidence, ensure_ascii=False)}"
-            ),
-        )
+        return self._get_rule_agent().decide(context)

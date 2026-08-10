@@ -7,11 +7,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any
 
 from .models import (
-    ScenarioContext, DecisionOutput, DecisionTemplate, Observation, ScenarioCategory
+    ScenarioContext,
+    DecisionTemplate,
+    Observation,
+    ScenarioCategory,
 )
 from .scenarios import ScenarioStore, get_alert_benchmark_suite, DifficultyLevel
 from .eval import BatchEvaluator
@@ -20,6 +22,7 @@ from .eval import BatchEvaluator
 @dataclass
 class AlertTestCase:
     """Alert 测试用例（泛化自原来的 fire-only TestCase）。"""
+
     case_id: str
     difficulty: str
     category: str  # "fire" | "flood" | "drought" | "heat"
@@ -35,13 +38,7 @@ class AlertTestCase:
 
         obs_list = [Observation(**o) for o in self.observations]
 
-        category_map = {
-            "fire": ScenarioCategory.FIRE,
-            "flood": ScenarioCategory.FLOOD,
-            "drought": ScenarioCategory.DROUGHT,
-            "heat": ScenarioCategory.ECOLOGY,
-        }
-        cat = category_map.get(self.category, ScenarioCategory.FIRE)
+        cat = ScenarioCategory.from_string(self.category)
 
         return store.load_scenario_from_dict(
             scenario_id=self.case_id,
@@ -67,7 +64,7 @@ class AlertBenchEvaluator:
         for item in self.raw_suite:
             # 提取 Ground Truth（不会修改原始数据）
             ground_truth = item.get("ground_truth", False)
-            
+
             tc = AlertTestCase(
                 case_id=item["case_id"],
                 difficulty=item["difficulty"],
@@ -81,10 +78,10 @@ class AlertBenchEvaluator:
     def evaluate_agent(self, agent) -> list[dict[str, Any]]:
         """
         评测任意决策 Agent。
-        
+
         Args:
             agent: 必须有 `decide(context: ScenarioContext) -> DecisionOutput` 方法
-            
+
         Returns:
             评测结果列表
         """
@@ -109,10 +106,12 @@ class AlertBenchEvaluator:
 
     def category_breakdown(self) -> dict[str, dict[str, float]]:
         """按场景类别分组的准确率。"""
-        categories = {"fire": {"correct": 0, "total": 0},
-                      "flood": {"correct": 0, "total": 0},
-                      "drought": {"correct": 0, "total": 0},
-                      "heat": {"correct": 0, "total": 0}}
+        categories: dict[str, dict[str, float]] = {
+            "fire": {"correct": 0.0, "total": 0.0},
+            "flood": {"correct": 0.0, "total": 0.0},
+            "drought": {"correct": 0.0, "total": 0.0},
+            "heat": {"correct": 0.0, "total": 0.0},
+        }
 
         for r in self.results:
             if "error" in r:
@@ -134,9 +133,13 @@ class AlertBenchEvaluator:
     def difficulty_breakdown(self) -> dict[str, dict[str, float]]:
         """按难度分组的准确率。"""
         breakdown: dict[str, dict[str, float]] = {
-            dl: {"correct": 0, "total": 0}
-            for dl in [DifficultyLevel.L1_EASY, DifficultyLevel.L2_MEDIUM,
-                        DifficultyLevel.L3_HARD, DifficultyLevel.L4_BEYOND]
+            dl: {"correct": 0.0, "total": 0.0}
+            for dl in [
+                DifficultyLevel.L1_EASY,
+                DifficultyLevel.L2_MEDIUM,
+                DifficultyLevel.L3_HARD,
+                DifficultyLevel.L4_BEYOND,
+            ]
         }
 
         for r in self.results:
@@ -162,9 +165,7 @@ class AlertBenchEvaluator:
             r.get("accuracy", 0) for r in self.results if "accuracy" in r
         ]
         overall_acc = (
-            sum(accuracy_values) / len(accuracy_values)
-            if accuracy_values
-            else 0.0
+            sum(accuracy_values) / len(accuracy_values) if accuracy_values else 0.0
         )
 
         cat_bd = self.category_breakdown()

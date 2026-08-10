@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Any, Protocol
 
 from .models import ScenarioContext, DecisionOutput
 from .templates import TemplateEngine
@@ -28,7 +28,7 @@ class BaseEvaluator:
     def __init__(self, ground_truth: bool):
         self.ground_truth = ground_truth  # 正确答案（YES/NO）
 
-    def evaluate(self, prediction: DecisionOutput) -> dict[str, float]:
+    def evaluate(self, prediction: DecisionOutput) -> dict[str, Any]:
         """评估一次决策，返回度量指标。"""
         pred_label = 1.0 if prediction.decision else 0.0
         gt_label = 1.0 if self.ground_truth else 0.0
@@ -52,18 +52,18 @@ class BatchEvaluator:
     """
 
     def __init__(self):
-        self._results: list[dict] = []
+        self._results: list[dict[str, Any]] = []
 
     def run(
         self,
         agent: DecisionAgent,
         contexts: list[ScenarioContext],
         ground_truths: list[bool],
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """运行批量评测。"""
         assert len(contexts) == len(ground_truths), "场景数量与真值数量不匹配"
 
-        results = []
+        results: list[dict[str, Any]] = []
         for ctx, gt in zip(contexts, ground_truths):
             # 验证场景上下文
             valid, msg = TemplateEngine.validate_context(ctx)
@@ -99,10 +99,16 @@ class BatchEvaluator:
         """返回汇总统计。"""
         if not self._results:
             return {
-                "accuracy": 0.0, "avg_confidence": 0.0, "total_scenarios": 0,
-                "precision": 0.0, "recall": 0.0, "f1_score": 0.0,
-                "true_positives": 0, "false_positives": 0,
-                "true_negatives": 0, "false_negatives": 0,
+                "accuracy": 0.0,
+                "avg_confidence": 0.0,
+                "total_scenarios": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1_score": 0.0,
+                "true_positives": 0,
+                "false_positives": 0,
+                "true_negatives": 0,
+                "false_negatives": 0,
             }
 
         accuracies = [r["accuracy"] for r in self._results if "accuracy" in r]
@@ -115,11 +121,17 @@ class BatchEvaluator:
 
         precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
         recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-        f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
+        f1 = (
+            2 * precision * recall / (precision + recall)
+            if (precision + recall) > 0
+            else 0.0
+        )
 
         return {
             "accuracy": sum(accuracies) / len(accuracies) if accuracies else 0.0,
-            "avg_confidence": sum(confidences) / len(confidences) if confidences else 0.0,
+            "avg_confidence": sum(confidences) / len(confidences)
+            if confidences
+            else 0.0,
             "total_scenarios": len(accuracies),
             "precision": precision,
             "recall": recall,

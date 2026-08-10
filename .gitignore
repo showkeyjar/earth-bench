@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing & linting caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# IDE & editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Environment variables & secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Generated runtime data (CI 产物，不纳入版本控制)
+decisions_*.json
+report_*.md
+latest.json
+history.json
+feed.xml
+sitemap.xml
+published_reports/
+
+# Workbuddy memory (本地 AI 助手记忆，非项目代码)
+.workbuddy/
