@@ -86,14 +86,22 @@ def fetch_historical_weather(location_id: str, date_str: str) -> dict[str, Any]:
         return {"error": "QWEATHER_API_KEY not set"}
 
     # QWeather 历史天气 API: /v7/historical/weather
-    # 参数: location=城市ID, date=YYYYMMDD
+    # 参数: location=城市ID或坐标, date=YYYYMMDD
     params = {"location": location_id, "date": date_str}
     result = qweather_request("/v7/historical/weather", params)
 
     if result is None:
         return {"error": "API request failed"}
 
-    return result
+    # 统一解析数据结构 (QWeather 返回 weatherDaily/weatherHourly)
+    weather_daily = result.get("weatherDaily", {})
+    weather_hourly = result.get("weatherHourly", [])
+
+    # 转换为统一格式 {daily: [...], hourly: [...]}
+    return {
+        "daily": [weather_daily] if weather_daily else [],
+        "hourly": weather_hourly,
+    }
 
 
 def fetch_firms_fire_data(region_id: str) -> list[dict]:
@@ -315,13 +323,15 @@ def verify_prediction(
         - status: verified / insufficient_data
     """
     category = prediction.get("category", "")
-    region_id = prediction.get("region_id", "")
+    region_id = prediction.get("region_id", "") or prediction.get("region", "")
     predicted = bool(prediction.get("llm_decision", False))
 
     result: dict[str, Any] = {
         "category": category,
         "region_id": region_id,
-        "region_name": prediction.get("region_name", region_id),
+        "region_name": prediction.get("region_name", "")
+        or prediction.get("region_cn", "")
+        or region_id,
         "predicted": predicted,
         "hit": None,
         "actual": None,
@@ -416,12 +426,20 @@ def verify_date_predictions(
     tp = fp = fn = tn = 0
 
     for pred in decisions:
-        region_id = pred.get("region_id", "")
+        region_id = pred.get("region_id", "") or pred.get("region", "")
         category = pred.get("category", "")
 
-        # 获取该区域的 location_id
+        # 获取该区域的 location_id (优先从 REGION_LOCATION_MAP, 退化用坐标查城市)
         loc_info = REGION_LOCATION_MAP.get(region_id, {})
         location_id = loc_info.get("location_id", "")
+
+        # 如果没有 location_id, 尝试用坐标查 QWeather 城市搜索
+        if not location_id:
+            coords = pred.get("coordinates") or REGION_COORDS.get(region_id, {})
+            lat = coords.get("lat") if coords else None
+            lng = coords.get("lng") if coords else None
+            if lat and lng:
+                location_id = f"{lng:.2f},{lat:.2f}"
 
         hist_weather = None
         if category in ("flood", "drought", "heat") and location_id:
