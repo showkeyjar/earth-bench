@@ -67,6 +67,11 @@ jobs:
           OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
           OLLAMA_BASE_URL: http://localhost:11434
         run: |
+          # Remove today's verification file so it gets regenerated with latest fixes
+          TODAY=$(date -u -d "+8 hours" +%Y%m%d)
+          TARGET=$(date -u -d "+8 hours -2 days" +%Y%m%d)
+          rm -f "published_reports/verification_${TARGET}.json" 2>/dev/null || true
+          echo "Removed verification_${TARGET}.json for re-generation"
           python -m earthbench.publish_pipeline --run
 
       - name: Sync UI assets into publish bundle
