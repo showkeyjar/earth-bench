@@ -44,15 +44,21 @@ jobs:
           pip install --upgrade pip
           pip install -e .
 
-      - name: Fetch prior daily decisions from gh-pages (for recent-alerts history)
+      - name: Fetch prior data from gh-pages (decisions + verification + accuracy)
         continue-on-error: true
         run: |
           mkdir -p published_reports
+          # Fetch historical decision files (for history tracking)
           for f in $(curl -s "https://api.github.com/repos/showkeyjar/earth-bench/contents/?ref=gh-pages" | python3 -c "import sys,json; [print(x['name']) for x in json.load(sys.stdin) if x['name'].startswith('decisions_') and x['name'].endswith('.json')]" 2>/dev/null); do
             curl -s "https://raw.githubusercontent.com/showkeyjar/earth-bench/gh-pages/$f" -o "published_reports/$f" || true
           done
-          echo "prior decisions ready:"
-          ls -1 published_reports/decisions_*.json 2>/dev/null || echo "(none yet)"
+          # Fetch prior verification files (so accuracy_trend can accumulate)
+          for f in $(curl -s "https://api.github.com/repos/showkeyjar/earth-bench/contents/?ref=gh-pages" | python3 -c "import sys,json; [print(x['name']) for x in json.load(sys.stdin) if x['name'].startswith('verification_') and x['name'].endswith('.json')]" 2>/dev/null); do
+            curl -s "https://raw.githubusercontent.com/showkeyjar/earth-bench/gh-pages/$f" -o "published_reports/$f" || true
+          done
+          echo "Prior data ready:"
+          ls -1 published_reports/decisions_*.json 2>/dev/null || echo "(no decisions)"
+          ls -1 published_reports/verification_*.json 2>/dev/null || echo "(no verifications)"
 
       - name: Generate daily report
         env:

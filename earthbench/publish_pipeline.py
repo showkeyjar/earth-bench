@@ -84,7 +84,7 @@ def collect_data() -> list[dict[str, Any]]:
     优先使用和风天气 QWeather API 获取实时气象数据；
     如果 API 失败，回退到 AlertBench 内置场景作为 fallback。
     """
-    logger.info("[Stage 1/4] Collecting observation data...")
+    logger.info("[Stage 1/5] Collecting observation data...")
 
     from earthbench.data_collectors import collect_region_weather
     from earthbench.scenarios import get_alert_benchmark_suite
@@ -157,7 +157,7 @@ def collect_data() -> list[dict[str, Any]]:
 
 def run_llm_decisions(suite: list[dict]) -> list[dict]:
     """对每个场景执行 LLM 决策推理。"""
-    logger.info("[Stage 2/4] Running LLM decision inference...")
+    logger.info("[Stage 2/5] Running LLM decision inference...")
 
     import sys
     import os
@@ -252,7 +252,7 @@ def generate_reports(
         decisions: LLM 决策结果列表
         suite: 原始场景数据（用于增强证据链和坐标信息）
     """
-    logger.info("[Stage 3/4] Generating published reports...")
+    logger.info("[Stage 3/5] Generating published reports...")
 
     output_dir = Path(PUBLISH_CONFIG["output_dir"])
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -496,7 +496,7 @@ def distribute_reports(
         decisions: 决策列表
         test_mode: 为 True 时只记录日志不实际发布
     """
-    logger.info("[Stage 4/4] Distributing reports to channels...")
+    logger.info("[Stage 4/5] Distributing reports to channels...")
 
     distribution_status = {}
 
@@ -540,8 +540,38 @@ def distribute_reports(
 # ============================================================================
 
 
+def run_verification_stage(output_dir: Path) -> dict[str, Any]:
+    """Stage 5: 闭环验证 -- 用网上真实数据验证 T-2 的历史预测。
+
+    在每日发布完成后自动执行, 独立于预测流程。
+    """
+    logger.info("[Stage 5/5] Running delayed verification (T-2)...")
+
+    try:
+        from earthbench.verification import (
+            run_delayed_verification,
+            build_accuracy_trend,
+        )
+
+        result = run_delayed_verification(output_dir, delay_days=2)
+
+        # 更新精度趋势
+        build_accuracy_trend(output_dir, keep_days=14)
+
+        logger.info(
+            f"  Verification: {result.get('status', 'unknown')} "
+            f"for {result.get('date', '?')} -- "
+            f"verified {result.get('verified', 0)}/{result.get('total', 0)}, "
+            f"accuracy={result.get('accuracy', 'N/A')}"
+        )
+        return result
+    except Exception as e:
+        logger.warning(f"  Verification stage failed: {e}")
+        return {"status": "error", "error": str(e)}
+
+
 def run_full_pipeline(test_mode: bool = False) -> dict[str, Any]:
-    """执行完整的四阶段流水线。"""
+    """执行完整的五阶段流水线 (采集 -> 决策 -> 报告 -> 发布 -> 验证)。"""
     mode_label = "[DRY-RUN] " if test_mode else ""
     logger.info("=" * 60)
     logger.info(f"EarthBench Publish Pipeline — Starting {mode_label}")
@@ -561,6 +591,10 @@ def run_full_pipeline(test_mode: bool = False) -> dict[str, Any]:
     # Stage 4
     distribution = distribute_reports(outputs, decisions, test_mode=test_mode)
 
+    # Stage 5: 闭环验证 (验证 T-2 的历史预测, 用网上真实数据)
+    output_dir = Path(PUBLISH_CONFIG["output_dir"])
+    verification = run_verification_stage(output_dir)
+
     elapsed = (datetime.now(CST) - start_time).total_seconds()
 
     result = {
@@ -569,6 +603,7 @@ def run_full_pipeline(test_mode: bool = False) -> dict[str, Any]:
         "elapsed_seconds": round(elapsed, 2),
         "outputs": outputs,
         "distribution": distribution,
+        "verification": verification,
         "decisions_count": len(decisions),
         "alerts_triggered": sum(1 for d in decisions if d["llm_decision"]),
     }
@@ -579,6 +614,7 @@ def run_full_pipeline(test_mode: bool = False) -> dict[str, Any]:
     logger.info(f"  Alerts: {result['alerts_triggered']}")
     logger.info(f"  Outputs: {list(outputs.keys())}")
     logger.info(f"  Distribution: {distribution}")
+    logger.info(f"  Verification: {verification.get('status', 'N/A')}")
     logger.info("=" * 60)
 
     return result

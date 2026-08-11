@@ -1758,3 +1758,233 @@ class TestRegionPolygons:
         expected_poly = REGION_POLYGONS["Xiangshan-Beijing"]
         assert decision["polygon"] == expected_poly
         assert len(decision["polygon"]) == len(expected_poly)
+
+
+# ============================================================================
+# Verification Module Tests
+# ============================================================================
+
+
+class TestVerificationModule:
+    """Test the closed-loop verification system."""
+
+    def test_wet_bulb_calculation(self):
+        """Test Stull 2011 wet bulb temperature formula."""
+        from earthbench.verification import _wet_bulb
+
+        # 35degC, 50% RH -> approximately 25-27degC wet bulb
+        tw = _wet_bulb(35.0, 50.0)
+        assert 24.0 < tw < 28.0, f"Expected ~25-27degC, got {tw}"
+
+        # 40degC, 30% RH -> approximately 24-26degC wet bulb (dry heat)
+        tw = _wet_bulb(40.0, 30.0)
+        assert 23.0 < tw < 27.0, f"Expected ~24-26degC, got {tw}"
+
+        # 30degC, 80% RH -> high humidity, wet bulb close to dry bulb
+        tw = _wet_bulb(30.0, 80.0)
+        assert 27.0 < tw < 30.0, f"Expected ~27-29degC, got {tw}"
+
+    def test_verify_prediction_structure(self):
+        """Test that verify_prediction returns expected structure."""
+        from earthbench.verification import verify_prediction
+
+        prediction = {
+            "category": "flood",
+            "region_id": "Xiangshan-Beijing",
+            "region_name": "北京",
+            "llm_decision": True,
+        }
+
+        # Mock insufficient weather data
+        result = verify_prediction(prediction, {"error": "no data"})
+
+        assert result["category"] == "flood"
+        assert result["region_id"] == "Xiangshan-Beijing"
+        assert result["predicted"] is True
+        assert result["verification_status"] == "insufficient_data"
+        assert result["hit"] is None
+
+    def test_verify_prediction_unknown_region(self):
+        """Test verify_prediction with unknown region for fire."""
+        from earthbench.verification import verify_prediction
+
+        prediction = {
+            "category": "fire",
+            "region_id": "NonexistentRegion",
+            "region_name": "Unknown",
+            "llm_decision": False,
+        }
+
+        result = verify_prediction(prediction)
+
+        assert result["category"] == "fire"
+        assert result["verification_status"] == "verified"
+        # FIRMS will return empty list for unknown region -> actual=False
+        assert result["actual"] is False
+        assert result["hit"] is True  # predicted=False, actual=False -> hit
+
+    def test_build_accuracy_trend(self, tmp_path):
+        """Test build_accuracy_trend accumulates verification files correctly."""
+        from earthbench.verification import build_accuracy_trend
+
+        # Create mock verification files
+        import json
+        from datetime import datetime, timezone, timedelta
+
+        CST = timezone(timedelta(hours=8))
+        now = datetime.now(CST)
+
+        # File 1: T-1, 2 TP, 1 TN
+        v1 = {
+            "date": (now - timedelta(days=1)).strftime("%Y-%m-%d"),
+            "generated_at": now.isoformat(),
+            "total_predictions": 3,
+            "verified": 3,
+            "unverified": 0,
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "tn": 1,
+            "accuracy": 1.0,
+            "verifications": [
+                {
+                    "category": "fire",
+                    "region_id": "A",
+                    "predicted": True,
+                    "hit": True,
+                    "verification_status": "verified",
+                    "actual": True,
+                },
+                {
+                    "category": "flood",
+                    "region_id": "B",
+                    "predicted": True,
+                    "hit": True,
+                    "verification_status": "verified",
+                    "actual": True,
+                },
+                {
+                    "category": "drought",
+                    "region_id": "C",
+                    "predicted": False,
+                    "hit": True,
+                    "verification_status": "verified",
+                    "actual": False,
+                },
+            ],
+        }
+
+        # File 2: T-2, 1 TP, 1 FP, 1 FN, 1 TN
+        v2 = {
+            "date": (now - timedelta(days=2)).strftime("%Y-%m-%d"),
+            "generated_at": now.isoformat(),
+            "total_predictions": 4,
+            "verified": 4,
+            "unverified": 0,
+            "tp": 1,
+            "fp": 1,
+            "fn": 1,
+            "tn": 1,
+            "accuracy": 0.5,
+            "verifications": [
+                {
+                    "category": "fire",
+                    "region_id": "A",
+                    "predicted": True,
+                    "hit": True,
+                    "verification_status": "verified",
+                    "actual": True,
+                },
+                {
+                    "category": "flood",
+                    "region_id": "B",
+                    "predicted": True,
+                    "hit": False,
+                    "verification_status": "verified",
+                    "actual": False,
+                },
+                {
+                    "category": "drought",
+                    "region_id": "C",
+                    "predicted": False,
+                    "hit": False,
+                    "verification_status": "verified",
+                    "actual": True,
+                },
+                {
+                    "category": "heat",
+                    "region_id": "D",
+                    "predicted": False,
+                    "hit": True,
+                    "verification_status": "verified",
+                    "actual": False,
+                },
+            ],
+        }
+
+        date1_str = (now - timedelta(days=1)).strftime("%Y%m%d")
+        date2_str = (now - timedelta(days=2)).strftime("%Y%m%d")
+
+        with open(tmp_path / f"verification_{date1_str}.json", "w") as f:
+            json.dump(v1, f)
+        with open(tmp_path / f"verification_{date2_str}.json", "w") as f:
+            json.dump(v2, f)
+
+        trend = build_accuracy_trend(tmp_path, keep_days=14)
+
+        # Total: tp=3, fp=1, fn=1, tn=2 -> verified=7, correct=5
+        assert trend["tp"] == 3
+        assert trend["fp"] == 1
+        assert trend["fn"] == 1
+        assert trend["tn"] == 2
+        assert trend["total_verified"] == 7
+        assert trend["accuracy"] == round(5 / 7, 4)
+        # precision = tp / (tp + fp) = 3/4
+        assert trend["precision"] == round(3 / 4, 4)
+        # recall = tp / (tp + fn) = 3/4
+        assert trend["recall"] == round(3 / 4, 4)
+
+        # Check daily trend has 2 entries
+        assert len(trend["daily_trend"]) == 2
+
+        # Check by_category
+        assert "fire" in trend["by_category"]
+        assert trend["by_category"]["fire"]["tp"] == 2
+
+    def test_run_delayed_verification_no_data(self, tmp_path):
+        """Test run_delayed_verification when no decisions file exists."""
+        from earthbench.verification import run_delayed_verification
+
+        result = run_delayed_verification(tmp_path, delay_days=2)
+
+        assert result["status"] == "no_data"
+        assert result["total"] == 0
+
+    def test_run_delayed_verification_skip_existing(self, tmp_path):
+        """Test run_delayed_verification skips when verification file exists."""
+        import json
+        from earthbench.verification import run_delayed_verification
+
+        from datetime import datetime, timezone, timedelta
+
+        CST = timezone(timedelta(hours=8))
+        now = datetime.now(CST)
+        target_date = now - timedelta(days=2)
+        date_str = target_date.strftime("%Y%m%d")
+
+        # Create existing verification file
+        existing = {
+            "date": target_date.strftime("%Y-%m-%d"),
+            "status": "completed",
+            "total": 20,
+            "verified": 20,
+            "accuracy": 0.95,
+        }
+        with open(tmp_path / f"verification_{date_str}.json", "w") as f:
+            json.dump(existing, f)
+
+        result = run_delayed_verification(tmp_path, delay_days=2)
+
+        # Should return existing data without re-running
+        assert result["status"] == "completed"
+        assert result["accuracy"] == 0.95

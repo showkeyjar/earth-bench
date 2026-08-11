@@ -41,6 +41,8 @@ Thumbs.db
 
 # Generated runtime data (CI 产物，不纳入版本控制)
 decisions_*.json
+verification_*.json
+accuracy_trend.json
 report_*.md
 latest.json
 history.json

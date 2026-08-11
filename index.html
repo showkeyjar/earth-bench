@@ -628,6 +628,132 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
   .history-date-list { gap: 4px; }
   .history-date-chip { font-size: 0.78em; padding: 4px 8px; }
 }
+
+/* === Verification / Accuracy Panel === */
+.verification-section {
+  margin-bottom: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.verification-header {
+  padding: 10px 14px;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  font-size: 0.95em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.verification-stats {
+  padding: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.verif-stat {
+  flex: 1;
+  min-width: 100px;
+  text-align: center;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+}
+.verif-stat .verif-val {
+  font-size: 1.6em;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 2px;
+}
+.verif-stat .verif-label {
+  font-size: 0.78em;
+  color: #718096;
+}
+.verif-stat.acc .verif-val { color: #3182ce; }
+.verif-stat.prec .verif-val { color: #38a169; }
+.verif-stat.rec .verif-val { color: #d69e2e; }
+.verif-stat.f1 .verif-val { color: #805ad5; }
+.verif-stat.tot .verif-val { color: #4a5568; }
+.verif-category-row {
+  padding: 0 14px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.verif-cat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.82em;
+  font-weight: 500;
+}
+.verif-cat-badge.fire { background: #fed7d7; color: #742a2a; }
+.verif-cat-badge.flood { background: #bee3f8; color: #2a4365; }
+.verif-cat-badge.drought { background: #fefcbf; color: #744210; }
+.verif-cat-badge.heat { background: #feebc8; color: #7b341e; }
+.verif-trend-section {
+  padding: 0 14px 14px;
+}
+.verif-trend-title {
+  font-size: 0.82em;
+  color: #718096;
+  margin-bottom: 6px;
+}
+.verif-trend-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 60px;
+}
+.verif-trend-bar {
+  flex: 1;
+  min-width: 18px;
+  border-radius: 3px 3px 0 0;
+  position: relative;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.verif-trend-bar:hover { opacity: 0.7; }
+.verif-trend-bar .tooltip {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2d3748;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.72em;
+  white-space: nowrap;
+  z-index: 10;
+}
+.verif-trend-bar:hover .tooltip { display: block; }
+.verif-trend-bar.good { background: #48bb78; }
+.verif-trend-bar.mid { background: #ecc94b; }
+.verif-trend-bar.low { background: #e53e3e; }
+.verif-trend-bar.nodata { background: #e2e8f0; }
+.verif-note {
+  padding: 0 14px 12px;
+  font-size: 0.78em;
+  color: #a0aec0;
+  line-height: 1.5;
+}
+.verification-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.75em;
+  font-weight: 600;
+  margin-left: 6px;
+}
+.verification-badge.hit { background: #c6f6d5; color: #22543d; }
+.verification-badge.miss { background: #fed7d7; color: #742a2a; }
 </style>
 </head>
 <body>
@@ -695,6 +821,27 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
       </div>
       <div id="history-report-body" class="history-report-body"></div>
     </div>
+  </div>
+
+  <!-- Verification / Accuracy Panel -->
+  <div class="verification-section">
+    <div class="verification-header">
+      <span>🎯 预测精度验证</span>
+      <span style="font-size:0.78em;color:#a0aec0;font-weight:normal;" id="verification-update-time"></span>
+    </div>
+    <div class="verification-stats" id="verification-stats">
+      <div class="verif-stat tot"><span class="verif-val" id="verif-total">-</span><span class="verif-label">累计验证</span></div>
+      <div class="verif-stat acc"><span class="verif-val" id="verif-accuracy">-</span><span class="verif-label">准确率</span></div>
+      <div class="verif-stat prec"><span class="verif-val" id="verif-precision">-</span><span class="verif-label">精确率</span></div>
+      <div class="verif-stat rec"><span class="verif-val" id="verif-recall">-</span><span class="verif-label">召回率</span></div>
+      <div class="verif-stat f1"><span class="verif-val" id="verif-f1">-</span><span class="verif-label">F1 分数</span></div>
+    </div>
+    <div class="verif-category-row" id="verif-category-row"></div>
+    <div class="verif-trend-section" id="verif-trend-section" style="display:none;">
+      <div class="verif-trend-title">每日准确率趋势 (近14天)</div>
+      <div class="verif-trend-bars" id="verif-trend-bars"></div>
+    </div>
+    <div class="verif-note" id="verif-note">验证数据在预测发布 T+2 后自动生成, 使用 NASA FIRMS 卫星火点 + QWeather 历史天气独立验证</div>
   </div>
 
   <!-- Main grid -->
@@ -1232,6 +1379,8 @@ async function loadData() {
     }
     // Render history date list for date picker
     renderHistoryDateList(historyData);
+    // Load and render verification / accuracy trend data
+    loadVerificationData();
   } else {
     document.getElementById('alert-body').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#e53e3e;padding:30px;">暂时无法加载数据，请稍后刷新页面重试</td></tr>';
   }
@@ -1829,8 +1978,33 @@ async function loadHistoryReport(dateTag, dateLabel) {
     return;
   }
 
-  // Render decision table
+  // Try loading verification data for this date
+  let verifData = null;
+  try { verifData = await fetchJSON(bust(DATA_BASE + 'verification_' + dateTag + '.json')); } catch(e) {}
+  if (!verifData) {
+    try { verifData = await fetchJSON('verification_' + dateTag + '.json'); } catch(e) {}
+  }
+
+  // Merge verification results into decisions
   const decs = data.decisions;
+  if (verifData && verifData.verifications) {
+    const verifMap = {};
+    verifData.verifications.forEach(v => {
+      verifMap[v.region_id + ':' + v.category] = v;
+    });
+    decs.forEach(d => {
+      const key = (d.region_id || d.region || '') + ':' + (d.category || '');
+      if (verifMap[key]) {
+        d.verification = {
+          hit: verifMap[key].hit,
+          actual: verifMap[key].actual,
+          source: verifMap[key].verification_source,
+          evidence: verifMap[key].verification_evidence,
+          status: verifMap[key].verification_status,
+        };
+      }
+    });
+  }
   const alertCount = decs.filter(d => d.llm_decision).length;
   const hits = decs.filter(d => d.verification && d.verification.hit).length;
   const totalCount = decs.length;
@@ -1850,8 +2024,12 @@ async function loadHistoryReport(dateTag, dateLabel) {
     const confPercent = Math.round((d.confidence || 0) * 100);
     const isWarning = d.llm_decision;
     const verifyBadge = d.verification
-      ? (d.verification.hit ? '<span style="color:#38a169;">✅</span>' : '<span style="color:#e53e3e;">❌</span>')
-      : '-';
+      ? (d.verification.hit === true
+          ? '<span class="verification-badge hit">✅ 命中</span>'
+          : d.verification.hit === false
+            ? '<span class="verification-badge miss">❌ 误报</span>'
+            : '<span style="color:#a0aec0;font-size:0.78em;">数据不足</span>')
+      : '<span style="color:#a0aec0;font-size:0.78em;">待验证</span>';
     const reason = d.verification_reason || d.rationale || '';
     const reasonShort = reason.length > 80 ? reason.substring(0, 80) + '...' : reason;
 
@@ -1873,6 +2051,77 @@ async function loadHistoryReport(dateTag, dateLabel) {
 function closeHistoryReport() {
   document.getElementById('history-report-container').style.display = 'none';
   document.querySelectorAll('.history-date-chip').forEach(el => el.classList.remove('active'));
+}
+
+// ============================================================================
+// Verification / Accuracy Trend
+// ============================================================================
+
+async function loadVerificationData() {
+  let trend = null;
+  try { trend = await fetchJSON(bust(DATA_BASE + 'accuracy_trend.json')); } catch(e) {}
+  if (!trend) {
+    try { trend = await fetchJSON('accuracy_trend.json'); } catch(e) {}
+  }
+
+  if (!trend) {
+    document.getElementById('verification-update-time').textContent = '暂无验证数据 (T+2后自动生成)';
+    return;
+  }
+
+  const genAt = trend.generated_at
+    ? new Date(trend.generated_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+    : '';
+  document.getElementById('verification-update-time').textContent = genAt ? '更新于 ' + genAt : '';
+
+  // Stats
+  document.getElementById('verif-total').textContent = trend.total_verified || 0;
+  document.getElementById('verif-accuracy').textContent = trend.accuracy != null ? Math.round(trend.accuracy * 100) + '%' : '-';
+  document.getElementById('verif-precision').textContent = trend.precision != null ? Math.round(trend.precision * 100) + '%' : '-';
+  document.getElementById('verif-recall').textContent = trend.recall != null ? Math.round(trend.recall * 100) + '%' : '-';
+  document.getElementById('verif-f1').textContent = trend.f1 != null ? Math.round(trend.f1 * 100) + '%' : '-';
+
+  // Category badges
+  const catRow = document.getElementById('verif-category-row');
+  catRow.innerHTML = '';
+  const catNames = { fire: '火灾', flood: '洪水', drought: '干旱', heat: '热浪' };
+  if (trend.by_category) {
+    for (const [cat, stats] of Object.entries(trend.by_category)) {
+      const badge = document.createElement('span');
+      badge.className = 'verif-cat-badge ' + cat;
+      const accStr = stats.accuracy != null ? Math.round(stats.accuracy * 100) + '%' : '?';
+      badge.textContent = (catNames[cat] || cat) + ': ' + accStr + ' (' + stats.verified + '/' + stats.total + ')';
+      catRow.appendChild(badge);
+    }
+  }
+
+  // Trend bar chart
+  if (trend.daily_trend && trend.daily_trend.length > 0) {
+    const trendSection = document.getElementById('verif-trend-section');
+    trendSection.style.display = 'block';
+    const bars = document.getElementById('verif-trend-bars');
+    bars.innerHTML = '';
+    trend.daily_trend.forEach(day => {
+      const bar = document.createElement('div');
+      bar.className = 'verif-trend-bar';
+      let accPct = day.accuracy;
+      if (accPct == null) {
+        bar.classList.add('nodata');
+        bar.style.height = '4px';
+      } else {
+        if (accPct >= 0.8) bar.classList.add('good');
+        else if (accPct >= 0.5) bar.classList.add('mid');
+        else bar.classList.add('low');
+        bar.style.height = Math.max(4, accPct * 60) + 'px';
+      }
+      const tooltip = document.createElement('span');
+      tooltip.className = 'tooltip';
+      const accStr = accPct != null ? Math.round(accPct * 100) + '%' : '无数据';
+      tooltip.textContent = day.date + ': ' + accStr + ' (' + day.verified + '条验证)';
+      bar.appendChild(tooltip);
+      bars.appendChild(bar);
+    });
+  }
 }
 
 loadData();
