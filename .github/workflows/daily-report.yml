@@ -44,7 +44,7 @@ jobs:
           pip install --upgrade pip
           pip install -e .
 
-      - name: Fetch prior data from gh-pages (decisions + verification + accuracy)
+      - name: Fetch prior data from gh-pages (decisions + verification + accuracy + thresholds)
         continue-on-error: true
         run: |
           mkdir -p published_reports
@@ -56,9 +56,15 @@ jobs:
           for f in $(curl -s "https://api.github.com/repos/showkeyjar/earth-bench/contents/?ref=gh-pages" | python3 -c "import sys,json; [print(x['name']) for x in json.load(sys.stdin) if x['name'].startswith('verification_') and x['name'].endswith('.json')]" 2>/dev/null); do
             curl -s "https://raw.githubusercontent.com/showkeyjar/earth-bench/gh-pages/$f" -o "published_reports/$f" || true
           done
+          # Fetch prior calibration data (thresholds + log + status)
+          for f in thresholds.json calibration_log.json calibration_status.json accuracy_trend.json; do
+            curl -s "https://raw.githubusercontent.com/showkeyjar/earth-bench/gh-pages/$f" -o "published_reports/$f" || true
+          done
           echo "Prior data ready:"
           ls -1 published_reports/decisions_*.json 2>/dev/null || echo "(no decisions)"
           ls -1 published_reports/verification_*.json 2>/dev/null || echo "(no verifications)"
+          ls -1 published_reports/thresholds.json 2>/dev/null || echo "(no thresholds)"
+          ls -1 published_reports/calibration_log.json 2>/dev/null || echo "(no calibration log)"
 
       - name: Generate daily report
         env:

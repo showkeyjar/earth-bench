@@ -84,7 +84,7 @@ def collect_data() -> list[dict[str, Any]]:
     优先使用和风天气 QWeather API 获取实时气象数据；
     如果 API 失败，回退到 AlertBench 内置场景作为 fallback。
     """
-    logger.info("[Stage 1/5] Collecting observation data...")
+    logger.info("[Stage 1/6] Collecting observation data...")
 
     from earthbench.data_collectors import collect_region_weather
     from earthbench.scenarios import get_alert_benchmark_suite
@@ -157,7 +157,7 @@ def collect_data() -> list[dict[str, Any]]:
 
 def run_llm_decisions(suite: list[dict]) -> list[dict]:
     """对每个场景执行 LLM 决策推理。"""
-    logger.info("[Stage 2/5] Running LLM decision inference...")
+    logger.info("[Stage 2/6] Running LLM decision inference...")
 
     import sys
     import os
@@ -252,7 +252,7 @@ def generate_reports(
         decisions: LLM 决策结果列表
         suite: 原始场景数据（用于增强证据链和坐标信息）
     """
-    logger.info("[Stage 3/5] Generating published reports...")
+    logger.info("[Stage 3/6] Generating published reports...")
 
     output_dir = Path(PUBLISH_CONFIG["output_dir"])
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -496,7 +496,7 @@ def distribute_reports(
         decisions: 决策列表
         test_mode: 为 True 时只记录日志不实际发布
     """
-    logger.info("[Stage 4/5] Distributing reports to channels...")
+    logger.info("[Stage 4/6] Distributing reports to channels...")
 
     distribution_status = {}
 
@@ -545,7 +545,7 @@ def run_verification_stage(output_dir: Path) -> dict[str, Any]:
 
     在每日发布完成后自动执行, 独立于预测流程。
     """
-    logger.info("[Stage 5/5] Running delayed verification (T-2)...")
+    logger.info("[Stage 5/6] Running delayed verification (T-2)...")
 
     try:
         from earthbench.verification import (
@@ -570,14 +570,56 @@ def run_verification_stage(output_dir: Path) -> dict[str, Any]:
         return {"status": "error", "error": str(e)}
 
 
+def run_calibration_stage(output_dir: Path) -> dict[str, Any]:
+    """Stage 6: 阈值自校准 -- 基于验证反馈自动调优决策阈值。
+
+    在闭环验证完成后自动执行。读取近期验证结果 (FP/FN),
+    用 EWMA 平滑算法微调四灾种的决策阈值, 使模型越来越准。
+
+    安全机制:
+    - 阈值被限制在 [0.25, 0.65] 安全边界内
+    - 单次调整幅度不超过 0.03
+    - 最少 3 个验证样本才触发调优
+    - 所有调整记录在 calibration_log.json 中可追溯
+    """
+    logger.info("[Stage 6/6] Running threshold self-calibration...")
+
+    try:
+        from earthbench.calibration import run_calibration
+
+        result = run_calibration(output_dir)
+
+        adjusted = sum(
+            1 for a in result.get("adjustments", []) if a.get("adjustment", 0) != 0
+        )
+        logger.info(
+            f"  Calibration: {result.get('status', 'unknown')} -- "
+            f"{adjusted} thresholds adjusted, "
+            f"used {result.get('files_used', 0)} verification files"
+        )
+        return result
+    except Exception as e:
+        logger.warning(f"  Calibration stage failed: {e}")
+        return {"status": "error", "error": str(e)}
+
+
 def run_full_pipeline(test_mode: bool = False) -> dict[str, Any]:
-    """执行完整的五阶段流水线 (采集 -> 决策 -> 报告 -> 发布 -> 验证)。"""
+    """执行完整的六阶段流水线 (采集 -> 决策 -> 报告 -> 发布 -> 验证 -> 校准)。"""
     mode_label = "[DRY-RUN] " if test_mode else ""
     logger.info("=" * 60)
     logger.info(f"EarthBench Publish Pipeline — Starting {mode_label}")
     logger.info("=" * 60)
 
     start_time = datetime.now(CST)
+
+    # 确保校准阈值在 agent 初始化前被加载
+    output_dir = Path(PUBLISH_CONFIG["output_dir"])
+    thresholds_file = output_dir / "thresholds.json"
+    if thresholds_file.exists():
+        os.environ["EARTHBENCH_THRESHOLDS_JSON"] = str(thresholds_file)
+        logger.info(f"  Loaded calibrated thresholds from {thresholds_file}")
+    else:
+        logger.info("  No calibrated thresholds file, using defaults")
 
     # Stage 1
     suite = collect_data()
@@ -592,8 +634,10 @@ def run_full_pipeline(test_mode: bool = False) -> dict[str, Any]:
     distribution = distribute_reports(outputs, decisions, test_mode=test_mode)
 
     # Stage 5: 闭环验证 (验证 T-2 的历史预测, 用网上真实数据)
-    output_dir = Path(PUBLISH_CONFIG["output_dir"])
     verification = run_verification_stage(output_dir)
+
+    # Stage 6: 阈值自校准 (基于验证反馈调优决策阈值)
+    calibration = run_calibration_stage(output_dir)
 
     elapsed = (datetime.now(CST) - start_time).total_seconds()
 
@@ -604,6 +648,7 @@ def run_full_pipeline(test_mode: bool = False) -> dict[str, Any]:
         "outputs": outputs,
         "distribution": distribution,
         "verification": verification,
+        "calibration": calibration,
         "decisions_count": len(decisions),
         "alerts_triggered": sum(1 for d in decisions if d["llm_decision"]),
     }
@@ -615,6 +660,7 @@ def run_full_pipeline(test_mode: bool = False) -> dict[str, Any]:
     logger.info(f"  Outputs: {list(outputs.keys())}")
     logger.info(f"  Distribution: {distribution}")
     logger.info(f"  Verification: {verification.get('status', 'N/A')}")
+    logger.info(f"  Calibration: {calibration.get('status', 'N/A')}")
     logger.info("=" * 60)
 
     return result

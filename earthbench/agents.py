@@ -2,15 +2,53 @@
 
 Phase 1 提供四类场景各自专用的规则引擎 baseline Agent。
 每类场景都有自己的 Ground Truth 推导逻辑，作为 LLM Agent 的对标基准。
+
+阈值校准: agents.py 的决策阈值可被 calibration 模块动态调整。
+通过环境变量 EARTHBENCH_THRESHOLDS_JSON 指定 thresholds.json 路径,
+agent 初始化时自动读取对应的校准阈值。
 """
 
 from __future__ import annotations
 
+import json
 import logging
+import os
+from pathlib import Path
 
 from .models import DecisionOutput, ScenarioContext
 
 logger = logging.getLogger(__name__)
+
+
+# ============================================================================
+# 阈值校准: 从 calibration 模块的 thresholds.json 读取动态阈值
+# ============================================================================
+
+
+def _load_calibrated_threshold(category: str, default: float) -> float:
+    """从 thresholds.json 读取校准后的阈值。
+
+    通过环境变量 EARTHBENCH_THRESHOLDS_JSON 指定文件路径。
+    如果文件不存在或读取失败, 返回 default。
+    """
+    threshold_file = os.environ.get("EARTHBENCH_THRESHOLDS_JSON", "")
+    if not threshold_file:
+        return default
+
+    try:
+        p = Path(threshold_file)
+        if not p.exists():
+            return default
+        with open(p, encoding="utf-8") as f:
+            data = json.load(f)
+        thresholds = data.get("thresholds", {})
+        val = thresholds.get(category)
+        if val is not None:
+            return float(val)
+    except (json.JSONDecodeError, ValueError, OSError) as e:
+        logger.debug(f"Failed to load calibrated threshold for {category}: {e}")
+
+    return default
 
 
 # ===========================================================================
@@ -43,7 +81,12 @@ class FireAlertAgent(AlertAgent):
     - 降雨（权重 -0.15 抑制）：降雨抵消风险
     - 温度（权重 0.15）：高温干燥
 
-    决策阈值: risk_score >= 0.4 → YES
+    决策阈值: risk_score >= 0.4 → YES (可被 calibration 模块动态调整)
+
+    阈值优先级:
+    1. 构造函数显式传入的 threshold 参数
+    2. 环境变量 EARTHBENCH_THRESHOLDS_JSON 指定的 JSON 文件中的值
+    3. 默认硬编码值 0.4
     """
 
     def __init__(
@@ -52,12 +95,19 @@ class FireAlertAgent(AlertAgent):
         humidity_threshold: float = 20.0,
         wind_threshold: float = 12.0,
         rainfall_suppress: float = 10.0,
+        decision_threshold: float | None = None,
     ):
         super().__init__("FireAlertAgent")
         self.fwi_threshold = fwi_threshold
         self.humidity_threshold = humidity_threshold
         self.wind_threshold = wind_threshold
         self.rainfall_suppress = rainfall_suppress
+        # 阈值: 显式参数 > calibration 文件 > 默认 0.4
+        self.decision_threshold = (
+            decision_threshold
+            if decision_threshold is not None
+            else _load_calibrated_threshold("fire", 0.4)
+        )
 
     def decide(self, context: ScenarioContext) -> DecisionOutput:
         obs = context.observations
@@ -131,7 +181,7 @@ class FireAlertAgent(AlertAgent):
         avg_wind_val = sum(wind_vals) / len(wind_vals) if wind_vals else 0
 
         risk_score = max(0.0, min(risk_score, 1.0))
-        decision = risk_score >= 0.4
+        decision = risk_score >= self.decision_threshold
 
         return DecisionOutput(
             context=context,
@@ -160,15 +210,21 @@ class FloodAlertAgent(AlertAgent):
     - 土壤湿度饱和（权重 0.15）：>0.85 放大效应
     - 水位超警戒（权重 0.25）：>警戒水位
 
-    决策阈值: risk_score >= 0.45 → YES
+    决策阈值: risk_score >= 0.45 → YES (可被 calibration 模块动态调整)
     """
 
     def __init__(
         self,
         water_level_critical: float = 10.0,
+        decision_threshold: float | None = None,
     ):
         super().__init__("FloodAlertAgent")
         self.water_level_critical = water_level_critical
+        self.decision_threshold = (
+            decision_threshold
+            if decision_threshold is not None
+            else _load_calibrated_threshold("flood", 0.45)
+        )
 
     def decide(self, context: ScenarioContext) -> DecisionOutput:
         obs = context.observations
@@ -250,7 +306,7 @@ class FloodAlertAgent(AlertAgent):
         )
 
         risk_score = max(0.0, min(risk_score, 1.0))
-        decision = risk_score >= 0.45
+        decision = risk_score >= self.decision_threshold
 
         return DecisionOutput(
             context=context,
@@ -280,11 +336,16 @@ class DroughtAlertAgent(AlertAgent):
     - 月降雨严重不足（权重 0.15）：< 50mm
     - NDVI 植被胁迫（权重 0.15）：< 0.3
 
-    决策阈值: risk_score >= 0.4 → YES
+    决策阈值: risk_score >= 0.4 → YES (可被 calibration 模块动态调整)
     """
 
-    def __init__(self):
+    def __init__(self, decision_threshold: float | None = None):
         super().__init__("DroughtAlertAgent")
+        self.decision_threshold = (
+            decision_threshold
+            if decision_threshold is not None
+            else _load_calibrated_threshold("drought", 0.4)
+        )
 
     def decide(self, context: ScenarioContext) -> DecisionOutput:
         obs = context.observations
@@ -354,7 +415,7 @@ class DroughtAlertAgent(AlertAgent):
         avg_ndvi_val = sum(ndvi_vals) / len(ndvi_vals) if ndvi_vals else 0
 
         risk_score = max(0.0, min(risk_score, 1.0))
-        decision = risk_score >= 0.4
+        decision = risk_score >= self.decision_threshold
 
         return DecisionOutput(
             context=context,
@@ -383,15 +444,20 @@ class HeatWaveAlertAgent(AlertAgent):
     - 湿球温度（权重 0.25）：>27°C 致死阈值
     - 湿度（权重 0.15）：高湿加剧闷热
 
-    决策阈值: risk_score >= 0.4 → YES
+    决策阈值: risk_score >= 0.4 → YES (可被 calibration 模块动态调整)
 
     关键改进：从多时间戳温度观测中推断"连续高温天数"，
     替代外部 heat_duration_days 参数，使 Agent 能在真实场景中
     仅凭时序温度数据做出热浪预警判断。
     """
 
-    def __init__(self):
+    def __init__(self, decision_threshold: float | None = None):
         super().__init__("HeatWaveAlertAgent")
+        self.decision_threshold = (
+            decision_threshold
+            if decision_threshold is not None
+            else _load_calibrated_threshold("heat", 0.4)
+        )
 
     def decide(self, context: ScenarioContext) -> DecisionOutput:
         obs = context.observations
@@ -485,7 +551,7 @@ class HeatWaveAlertAgent(AlertAgent):
         risk_score = sum(r * (w / total_weight) for r, w, _ in components)
 
         risk_score = max(0.0, min(risk_score, 1.0))
-        decision = risk_score >= 0.4
+        decision = risk_score >= self.decision_threshold
 
         return DecisionOutput(
             context=context,
@@ -523,6 +589,10 @@ class MultiAlertAgent(AlertAgent):
         humidity_threshold: float = 20.0,
         wind_threshold: float = 12.0,
         rainfall_suppress: float = 10.0,
+        fire_threshold: float | None = None,
+        flood_threshold: float | None = None,
+        drought_threshold: float | None = None,
+        heat_threshold: float | None = None,
     ):
         super().__init__("MultiAlertAgent")
         self.fire_agent = FireAlertAgent(
@@ -530,10 +600,11 @@ class MultiAlertAgent(AlertAgent):
             humidity_threshold=humidity_threshold,
             wind_threshold=wind_threshold,
             rainfall_suppress=rainfall_suppress,
+            decision_threshold=fire_threshold,
         )
-        self.flood_agent = FloodAlertAgent()
-        self.drought_agent = DroughtAlertAgent()
-        self.heat_agent = HeatWaveAlertAgent()
+        self.flood_agent = FloodAlertAgent(decision_threshold=flood_threshold)
+        self.drought_agent = DroughtAlertAgent(decision_threshold=drought_threshold)
+        self.heat_agent = HeatWaveAlertAgent(decision_threshold=heat_threshold)
 
     def decide(self, context: ScenarioContext) -> DecisionOutput:
         """根据场景类别路由到对应的专用 Agent。"""

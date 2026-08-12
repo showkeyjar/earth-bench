@@ -1988,3 +1988,343 @@ class TestVerificationModule:
         # Should return existing data without re-running
         assert result["status"] == "completed"
         assert result["accuracy"] == 0.95
+
+
+# ============================================================================
+# Calibration 模块测试
+# ============================================================================
+
+
+class TestCalibrationModule:
+    """Test the threshold self-calibration module."""
+
+    def test_default_thresholds(self):
+        """Test DEFAULT_THRESHOLDS has all 4 categories."""
+        from earthbench.calibration import DEFAULT_THRESHOLDS
+
+        assert "fire" in DEFAULT_THRESHOLDS
+        assert "flood" in DEFAULT_THRESHOLDS
+        assert "drought" in DEFAULT_THRESHOLDS
+        assert "heat" in DEFAULT_THRESHOLDS
+
+    def test_load_thresholds_default(self, tmp_path):
+        """Test load_thresholds returns defaults when no file exists."""
+        from earthbench.calibration import load_thresholds, DEFAULT_THRESHOLDS
+
+        result = load_thresholds(tmp_path)
+        assert result == DEFAULT_THRESHOLDS
+
+    def test_load_thresholds_from_file(self, tmp_path):
+        """Test load_thresholds reads from existing file."""
+        import json
+        from earthbench.calibration import load_thresholds
+
+        data = {
+            "thresholds": {"fire": 0.35, "flood": 0.50},
+            "updated_at": "2026-01-01T00:00:00+08:00",
+            "version": 1,
+        }
+        with open(tmp_path / "thresholds.json", "w") as f:
+            json.dump(data, f)
+
+        result = load_thresholds(tmp_path)
+        assert result["fire"] == 0.35
+        assert result["flood"] == 0.50
+        # Missing categories should use defaults
+        assert result["drought"] == 0.40
+        assert result["heat"] == 0.40
+
+    def test_save_and_load_roundtrip(self, tmp_path):
+        """Test save then load returns same values."""
+        from earthbench.calibration import save_thresholds, load_thresholds
+
+        thresholds = {"fire": 0.38, "flood": 0.47, "drought": 0.42, "heat": 0.39}
+        save_thresholds(tmp_path, thresholds)
+
+        loaded = load_thresholds(tmp_path)
+        assert loaded["fire"] == 0.38
+        assert loaded["flood"] == 0.47
+        assert loaded["drought"] == 0.42
+        assert loaded["heat"] == 0.39
+
+    def test_compute_adjustment_no_errors(self):
+        """Test adjustment is skip when no FP/FN."""
+        from earthbench.calibration import compute_adjustment
+
+        result = compute_adjustment("fire", fp=0, fn=0, tn=5, tp=5)
+        assert result["action"] == "skip"
+        assert result["adjustment"] == 0.0
+
+    def test_compute_adjustment_insufficient_samples(self):
+        """Test adjustment is skip with too few samples."""
+        from earthbench.calibration import compute_adjustment
+
+        result = compute_adjustment("fire", fp=1, fn=0, tn=0, tp=0)
+        assert result["action"] == "skip"
+        assert "insufficient" in result["reason"]
+
+    def test_compute_adjustment_fp_dominant(self):
+        """Test adjustment goes up when FP > FN."""
+        from earthbench.calibration import compute_adjustment
+
+        result = compute_adjustment("fire", fp=3, fn=1, tn=5, tp=5)
+        assert result["action"] == "adjust"
+        assert result["adjustment"] > 0  # threshold should go up
+
+    def test_compute_adjustment_fn_dominant(self):
+        """Test adjustment goes down when FN > FP."""
+        from earthbench.calibration import compute_adjustment
+
+        result = compute_adjustment("fire", fp=1, fn=3, tn=5, tp=5)
+        assert result["action"] == "adjust"
+        assert result["adjustment"] < 0  # threshold should go down
+
+    def test_compute_adjustment_max_step(self):
+        """Test adjustment is capped at MAX_STEP."""
+        from earthbench.calibration import compute_adjustment, MAX_STEP
+
+        # Extreme FP vs FN ratio
+        result = compute_adjustment("fire", fp=10, fn=0, tn=0, tp=0)
+        assert result["action"] == "adjust"
+        assert abs(result["adjustment"]) <= MAX_STEP
+
+    def test_run_calibration_no_data(self, tmp_path):
+        """Test run_calibration with no verification files."""
+        from earthbench.calibration import run_calibration
+
+        result = run_calibration(tmp_path)
+        assert result["status"] == "no_change"
+        assert all(a["adjustment"] == 0.0 for a in result["adjustments"])
+
+    def test_run_calibration_with_fp(self, tmp_path):
+        """Test run_calibration adjusts thresholds based on FP-heavy verification."""
+        import json
+        from earthbench.calibration import run_calibration, load_thresholds
+        from datetime import datetime, timezone, timedelta
+
+        CST = timezone(timedelta(hours=8))
+        now = datetime.now(CST)
+
+        # Create verification file with FP-heavy results
+        verif_data = {
+            "date": now.strftime("%Y-%m-%d"),
+            "status": "completed",
+            "verifications": [
+                {
+                    "category": "fire",
+                    "verification_status": "verified",
+                    "predicted": True,
+                    "hit": False,  # FP
+                },
+                {
+                    "category": "fire",
+                    "verification_status": "verified",
+                    "predicted": True,
+                    "hit": False,  # FP
+                },
+                {
+                    "category": "fire",
+                    "verification_status": "verified",
+                    "predicted": True,
+                    "hit": True,  # TP
+                },
+            ],
+        }
+        with open(tmp_path / f"verification_{now.strftime('%Y%m%d')}.json", "w") as f:
+            json.dump(verif_data, f)
+
+        result = run_calibration(tmp_path)
+        assert result["status"] == "calibrated"
+
+        # Fire threshold should have increased (FP dominant)
+        fire_adj = [a for a in result["adjustments"] if a["category"] == "fire"][0]
+        assert fire_adj["adjustment"] > 0
+        assert fire_adj["new_value"] > fire_adj["old_value"]
+
+        # Check thresholds.json was saved
+        loaded = load_thresholds(tmp_path)
+        assert loaded["fire"] > 0.40  # should have gone up from default
+
+    def test_run_calibration_safety_bounds(self, tmp_path):
+        """Test that calibration respects MIN/MAX thresholds."""
+        import json
+        from datetime import datetime, timezone, timedelta
+        from earthbench.calibration import (
+            run_calibration,
+            save_thresholds,
+            load_thresholds,
+            MAX_THRESHOLD,
+        )
+
+        # Set fire threshold near max
+        save_thresholds(
+            tmp_path,
+            {
+                "fire": MAX_THRESHOLD - 0.01,
+                "flood": 0.45,
+                "drought": 0.40,
+                "heat": 0.40,
+            },
+        )
+
+        # Create verification with lots of FP (should push fire up, but bounded)
+        CST = timezone(timedelta(hours=8))
+        now = datetime.now(CST)
+        verif_data = {
+            "date": now.strftime("%Y-%m-%d"),
+            "status": "completed",
+            "verifications": [
+                {
+                    "category": "fire",
+                    "verification_status": "verified",
+                    "predicted": True,
+                    "hit": False,
+                },
+            ]
+            * 5,
+        }
+        with open(tmp_path / f"verification_{now.strftime('%Y%m%d')}.json", "w") as f:
+            json.dump(verif_data, f)
+
+        run_calibration(tmp_path)
+
+        loaded = load_thresholds(tmp_path)
+        assert loaded["fire"] <= MAX_THRESHOLD
+
+    def test_run_calibration_writes_status_file(self, tmp_path):
+        """Test that calibration_status.json is written."""
+        from earthbench.calibration import run_calibration
+        import json
+
+        run_calibration(tmp_path)
+
+        status_file = tmp_path / "calibration_status.json"
+        assert status_file.exists()
+
+        with open(status_file) as f:
+            status = json.load(f)
+        assert "status" in status
+        assert "adjustments" in status
+        assert "calibrated_at" in status
+
+    def test_run_calibration_writes_log(self, tmp_path):
+        """Test that calibration_log.json is written when adjustment occurs."""
+        import json
+        from earthbench.calibration import run_calibration
+        from datetime import datetime, timezone, timedelta
+
+        CST = timezone(timedelta(hours=8))
+        now = datetime.now(CST)
+
+        # Create FP-heavy verification
+        verif_data = {
+            "date": now.strftime("%Y-%m-%d"),
+            "status": "completed",
+            "verifications": [
+                {
+                    "category": "fire",
+                    "verification_status": "verified",
+                    "predicted": True,
+                    "hit": False,
+                },
+            ]
+            * 5,
+        }
+        with open(tmp_path / f"verification_{now.strftime('%Y%m%d')}.json", "w") as f:
+            json.dump(verif_data, f)
+
+        run_calibration(tmp_path)
+
+        log_file = tmp_path / "calibration_log.json"
+        assert log_file.exists()
+
+        with open(log_file) as f:
+            logs = json.load(f)
+        assert isinstance(logs, list)
+        assert len(logs) > 0
+        assert logs[-1]["category"] == "fire"
+        assert logs[-1]["old_value"] < logs[-1]["new_value"]
+
+
+class TestAgentDynamicThreshold:
+    """Test that agents properly use dynamic thresholds from calibration."""
+
+    def test_fire_agent_default_threshold(self):
+        """Test FireAlertAgent uses default 0.4 when no calibration file."""
+        from earthbench.agents import FireAlertAgent
+
+        agent = FireAlertAgent()
+        assert agent.decision_threshold == 0.4
+
+    def test_fire_agent_explicit_threshold(self):
+        """Test FireAlertAgent respects explicit threshold parameter."""
+        from earthbench.agents import FireAlertAgent
+
+        agent = FireAlertAgent(decision_threshold=0.35)
+        assert agent.decision_threshold == 0.35
+
+    def test_flood_agent_default_threshold(self):
+        """Test FloodAlertAgent uses default 0.45."""
+        from earthbench.agents import FloodAlertAgent
+
+        agent = FloodAlertAgent()
+        assert agent.decision_threshold == 0.45
+
+    def test_drought_agent_default_threshold(self):
+        """Test DroughtAlertAgent uses default 0.4."""
+        from earthbench.agents import DroughtAlertAgent
+
+        agent = DroughtAlertAgent()
+        assert agent.decision_threshold == 0.4
+
+    def test_heat_agent_default_threshold(self):
+        """Test HeatWaveAlertAgent uses default 0.4."""
+        from earthbench.agents import HeatWaveAlertAgent
+
+        agent = HeatWaveAlertAgent()
+        assert agent.decision_threshold == 0.4
+
+    def test_agents_load_from_env(self, tmp_path):
+        """Test agents read calibrated thresholds from EARTHBENCH_THRESHOLDS_JSON."""
+        import json
+        import os
+        from earthbench.agents import FireAlertAgent
+
+        # Write a thresholds.json
+        data = {
+            "thresholds": {"fire": 0.38},
+            "updated_at": "2026-01-01T00:00:00+08:00",
+            "version": 1,
+        }
+        threshold_file = tmp_path / "thresholds.json"
+        with open(threshold_file, "w") as f:
+            json.dump(data, f)
+
+        # Set env var
+        old_val = os.environ.get("EARTHBENCH_THRESHOLDS_JSON")
+        os.environ["EARTHBENCH_THRESHOLDS_JSON"] = str(threshold_file)
+
+        try:
+            agent = FireAlertAgent()
+            assert agent.decision_threshold == 0.38
+        finally:
+            if old_val is not None:
+                os.environ["EARTHBENCH_THRESHOLDS_JSON"] = old_val
+            else:
+                del os.environ["EARTHBENCH_THRESHOLDS_JSON"]
+
+    def test_multi_alert_agent_passes_thresholds(self):
+        """Test MultiAlertAgent can pass thresholds to sub-agents."""
+        from earthbench.agents import MultiAlertAgent
+
+        agent = MultiAlertAgent(
+            fire_threshold=0.35,
+            flood_threshold=0.50,
+            drought_threshold=0.42,
+            heat_threshold=0.38,
+        )
+
+        assert agent.fire_agent.decision_threshold == 0.35
+        assert agent.flood_agent.decision_threshold == 0.50
+        assert agent.drought_agent.decision_threshold == 0.42
+        assert agent.heat_agent.decision_threshold == 0.38

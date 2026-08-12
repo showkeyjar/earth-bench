@@ -754,6 +754,88 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
 }
 .verification-badge.hit { background: #c6f6d5; color: #22543d; }
 .verification-badge.miss { background: #fed7d7; color: #742a2a; }
+
+/* === Calibration / Threshold Panel === */
+.calibration-section {
+  margin-bottom: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.calibration-header {
+  padding: 10px 14px;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  font-size: 0.95em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.calibration-body {
+  padding: 14px;
+}
+.cal-threshold-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.cal-threshold-card {
+  flex: 1;
+  min-width: 120px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #f7fafc;
+  text-align: center;
+}
+.cal-threshold-card .cal-cat {
+  font-size: 0.78em;
+  color: #718096;
+  margin-bottom: 4px;
+}
+.cal-threshold-card .cal-val {
+  font-size: 1.4em;
+  font-weight: 700;
+  display: block;
+}
+.cal-threshold-card .cal-delta {
+  font-size: 0.72em;
+  margin-top: 2px;
+}
+.cal-threshold-card .cal-delta.up { color: #e53e3e; }
+.cal-threshold-card .cal-delta.down { color: #3182ce; }
+.cal-threshold-card .cal-delta.none { color: #a0aec0; }
+.cal-threshold-card.fire { border-left: 3px solid #e53e3e; }
+.cal-threshold-card.flood { border-left: 3px solid #3182ce; }
+.cal-threshold-card.drought { border-left: 3px solid #d69e2e; }
+.cal-threshold-card.heat { border-left: 3px solid #ed8936; }
+.cal-log-section {
+  margin-top: 10px;
+  font-size: 0.82em;
+}
+.cal-log-title {
+  color: #718096;
+  margin-bottom: 4px;
+}
+.cal-log-entry {
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #f7fafc;
+  margin-bottom: 3px;
+  border-left: 2px solid #cbd5e0;
+}
+.cal-log-entry.adjust { border-left-color: #d69e2e; }
+.cal-log-entry .cal-log-time { color: #a0aec0; font-size: 0.9em; }
+.cal-log-entry .cal-log-detail { color: #4a5568; }
+.cal-note {
+  padding: 0 14px 12px;
+  font-size: 0.78em;
+  color: #a0aec0;
+  line-height: 1.5;
+}
 </style>
 </head>
 <body>
@@ -842,6 +924,22 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
       <div class="verif-trend-bars" id="verif-trend-bars"></div>
     </div>
     <div class="verif-note" id="verif-note">验证数据在预测发布 T+2 后自动生成, 使用 NASA FIRMS 卫星火点 + QWeather 历史天气独立验证</div>
+  </div>
+
+  <!-- Calibration / Threshold Panel -->
+  <div class="calibration-section" id="calibration-panel" style="display:none;">
+    <div class="calibration-header">
+      <span>🔧 模型自校准</span>
+      <span style="font-size:0.78em;color:#a0aec0;font-weight:normal;" id="calibration-update-time"></span>
+    </div>
+    <div class="calibration-body">
+      <div class="cal-threshold-row" id="cal-threshold-row"></div>
+      <div class="cal-log-section" id="cal-log-section" style="display:none;">
+        <div class="cal-log-title">最近调优记录</div>
+        <div id="cal-log-list"></div>
+      </div>
+    </div>
+    <div class="cal-note">每次验证后自动微调决策阈值: 误报多则上调, 漏报多则下调. 单次调整幅度不超过 0.03, 阈值锁定在 [0.25, 0.65] 安全边界内.</div>
   </div>
 
   <!-- Main grid -->
@@ -1381,6 +1479,8 @@ async function loadData() {
     renderHistoryDateList(historyData);
     // Load and render verification / accuracy trend data
     loadVerificationData();
+    // Load and render calibration data
+    loadCalibrationData();
   } else {
     document.getElementById('alert-body').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#e53e3e;padding:30px;">暂时无法加载数据，请稍后刷新页面重试</td></tr>';
   }
@@ -2120,6 +2220,88 @@ async function loadVerificationData() {
       tooltip.textContent = day.date + ': ' + accStr + ' (' + day.verified + '条验证)';
       bar.appendChild(tooltip);
       bars.appendChild(bar);
+    });
+  }
+}
+
+// ============================================================================
+// Calibration / Threshold Auto-Tuning
+// ============================================================================
+
+async function loadCalibrationData() {
+  let status = null;
+  try { status = await fetchJSON(bust(DATA_BASE + 'calibration_status.json')); } catch(e) {}
+  if (!status) {
+    try { status = await fetchJSON('calibration_status.json'); } catch(e) {}
+  }
+
+  if (!status) {
+    return; // Panel stays hidden
+  }
+
+  // Show panel
+  document.getElementById('calibration-panel').style.display = 'block';
+
+  const calAt = status.calibrated_at
+    ? new Date(status.calibrated_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+    : '';
+  document.getElementById('calibration-update-time').textContent = calAt ? '更新于 ' + calAt : '';
+
+  // Render threshold cards
+  const catNames = { fire: '火灾', flood: '洪水', drought: '干旱', heat: '热浪' };
+  const defaultThresholds = { fire: 0.40, flood: 0.45, drought: 0.40, heat: 0.40 };
+  const newThresholds = status.new_thresholds || status.current_thresholds || defaultThresholds;
+  const adjustments = status.adjustments || [];
+
+  const row = document.getElementById('cal-threshold-row');
+  row.innerHTML = '';
+
+  for (const cat of ['fire', 'flood', 'drought', 'heat']) {
+    const val = newThresholds[cat] != null ? newThresholds[cat] : defaultThresholds[cat];
+    const adj = adjustments.find(a => a.category === cat);
+    const defaultVal = defaultThresholds[cat];
+    const delta = val - defaultVal;
+    const deltaClass = delta > 0.001 ? 'up' : delta < -0.001 ? 'down' : 'none';
+    const deltaSign = delta > 0.001 ? '+' : '';
+    const deltaStr = deltaClass !== 'none' ? `${deltaSign}${delta.toFixed(4)}` : 'default';
+
+    const card = document.createElement('div');
+    card.className = 'cal-threshold-card ' + cat;
+    card.innerHTML = `
+      <div class="cal-cat">${catNames[cat] || cat}</div>
+      <span class="cal-val">${val.toFixed(2)}</span>
+      <div class="cal-delta ${deltaClass}">${deltaStr}</div>
+    `;
+    row.appendChild(card);
+  }
+
+  // Render calibration log (if exists)
+  let logData = null;
+  try { logData = await fetchJSON(bust(DATA_BASE + 'calibration_log.json')); } catch(e) {}
+  if (!logData) {
+    try { logData = await fetchJSON('calibration_log.json'); } catch(e) {}
+  }
+
+  if (logData && Array.isArray(logData) && logData.length > 0) {
+    const logSection = document.getElementById('cal-log-section');
+    logSection.style.display = 'block';
+    const logList = document.getElementById('cal-log-list');
+    logList.innerHTML = '';
+    // Show last 5 entries (most recent first)
+    const recent = logData.slice(-5).reverse();
+    recent.forEach(entry => {
+      const div = document.createElement('div');
+      div.className = 'cal-log-entry ' + (entry.action === 'adjust' ? 'adjust' : '');
+      const time = entry.timestamp
+        ? new Date(entry.timestamp).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+        : '';
+      const cat = catNames[entry.category] || entry.category;
+      const oldV = entry.old_value != null ? entry.old_value.toFixed(4) : '?';
+      const newV = entry.new_value != null ? entry.new_value.toFixed(4) : '?';
+      const adj = entry.adjustment != null ? (entry.adjustment > 0 ? '+' : '') + entry.adjustment.toFixed(4) : '0';
+      const reason = entry.reason || '';
+      div.innerHTML = `<span class="cal-log-time">${time}</span> <strong>${cat}</strong>: ${oldV} -> ${newV} (${adj}) <span class="cal-log-detail">${reason}</span>`;
+      logList.appendChild(div);
     });
   }
 }
