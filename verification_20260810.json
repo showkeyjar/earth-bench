@@ -1,0 +1,264 @@
+{
+  "date": "2026-08-10",
+  "generated_at": "2026-08-12T08:00:16.863918+08:00",
+  "total_predictions": 20,
+  "verified": 5,
+  "unverified": 15,
+  "tp": 0,
+  "fp": 4,
+  "fn": 0,
+  "tn": 1,
+  "accuracy": 0.2,
+  "verifications": [
+    {
+      "category": "fire",
+      "region_id": "Xiangshan-Beijing",
+      "region_name": "北京·香山",
+      "predicted": true,
+      "hit": false,
+      "actual": false,
+      "verification_source": "NASA FIRMS",
+      "verification_evidence": "NASA FIRMS 卫星未检测到火点",
+      "verification_status": "verified",
+      "verification_details": {
+        "fire_count": 0
+      }
+    },
+    {
+      "category": "fire",
+      "region_id": "WestLake-Hangzhou",
+      "region_name": "杭州·西湖",
+      "predicted": false,
+      "hit": true,
+      "actual": false,
+      "verification_source": "NASA FIRMS",
+      "verification_evidence": "NASA FIRMS 卫星未检测到火点",
+      "verification_status": "verified",
+      "verification_details": {
+        "fire_count": 0
+      }
+    },
+    {
+      "category": "fire",
+      "region_id": "ChangbaiMountain",
+      "region_name": "长白山",
+      "predicted": true,
+      "hit": false,
+      "actual": false,
+      "verification_source": "NASA FIRMS",
+      "verification_evidence": "NASA FIRMS 卫星未检测到火点",
+      "verification_status": "verified",
+      "verification_details": {
+        "fire_count": 0
+      }
+    },
+    {
+      "category": "fire",
+      "region_id": "Shenzhen-Coast",
+      "region_name": "深圳·海岸",
+      "predicted": true,
+      "hit": false,
+      "actual": false,
+      "verification_source": "NASA FIRMS",
+      "verification_evidence": "NASA FIRMS 卫星未检测到火点",
+      "verification_status": "verified",
+      "verification_details": {
+        "fire_count": 0
+      }
+    },
+    {
+      "category": "fire",
+      "region_id": "GreaterKhingan",
+      "region_name": "大兴安岭",
+      "predicted": true,
+      "hit": false,
+      "actual": false,
+      "verification_source": "NASA FIRMS",
+      "verification_evidence": "NASA FIRMS 卫星未检测到火点",
+      "verification_status": "verified",
+      "verification_details": {
+        "fire_count": 0
+      }
+    },
+    {
+      "category": "flood",
+      "region_id": "Wuhan-Yangtze",
+      "region_name": "武汉·长江",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    },
+    {
+      "category": "flood",
+      "region_id": "Lhasa-Tibet",
+      "region_name": "拉萨·西藏",
+      "predicted": false,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    },
+    {
+      "category": "flood",
+      "region_id": "Guangzhou-PearlR",
+      "region_name": "广州·珠江",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    },
+    {
+      "category": "flood",
+      "region_id": "Guilin-Guangxi",
+      "region_name": "桂林·广西",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    },
+    {
+      "category": "flood",
+      "region_id": "Nanjing-Yangtze",
+      "region_name": "南京·长江",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    },
+    {
+      "category": "drought",
+      "region_id": "Kunming-Yunnan",
+      "region_name": "昆明·云南",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    },
+    {
+      "category": "drought",
+      "region_id": "Hangzhou-Zhejiang",
+      "region_name": "杭州·浙江",
+      "predicted": false,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    },
+    {
+      "category": "drought",
+      "region_id": "Harbin-Heilongjiang",
+      "region_name": "哈尔滨·黑龙江",
+      "predicted": false,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    },
+    {
+      "category": "drought",
+      "region_id": "Urumqi-Xinjiang",
+      "region_name": "乌鲁木齐·新疆",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    },
+    {
+      "category": "drought",
+      "region_id": "Taiyuan-Shanxi",
+      "region_name": "太原·山西",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    },
+    {
+      "category": "heat",
+      "region_id": "Chongqing-HotPotato",
+      "region_name": "重庆",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    },
+    {
+      "category": "heat",
+      "region_id": "Kunming-SpringCity",
+      "region_name": "昆明·春城",
+      "predicted": false,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    },
+    {
+      "category": "heat",
+      "region_id": "Urumqi-Xinjiang",
+      "region_name": "乌鲁木齐·新疆",
+      "predicted": false,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    },
+    {
+      "category": "heat",
+      "region_id": "Nanjing-OvenCity",
+      "region_name": "南京",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    },
+    {
+      "category": "heat",
+      "region_id": "Wuhan-Yangtze",
+      "region_name": "武汉·长江",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    }
+  ]
+}
