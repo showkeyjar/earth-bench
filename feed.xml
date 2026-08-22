@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>EarthBench Alerts</title>
+  <subtitle>Environmental Risk Decision Intelligence</subtitle>
+  <link href="https://earthbench.io/feed.xml" rel="self"/>
+  <link href="https://earthbench.io"/>
+  <updated>2026-08-22T20:28:51+08:00</updated>
+  <id>tag:earthbench.io,2026:</id>
+  <generator>EarthBench Pipeline v0.3.0</generator>
+
+  <entry>
+    <title>EarthBench Alert: Drought in Urumqi-Xinjiang</title>
+    <link href="/reports/20260822/drought-l3-palmerspi-conflict" rel="alternate"/>
+    <id>tag:earthbench.io,2026-08-22T12:28:51.559263+00:00</id>
+    <published>2026-08-22T12:28:51.559263+00:00</published>
+    <summary>DroughtAlert: SPI=0.00, Palmer=0.00, 湿度=25.0%, 月降雨=2.1mm, NDVI=0.00, 风险分=0.548</summary>
+  </entry>
+
+  <entry>
+    <title>EarthBench Alert: Heat Wave in Chongqing-HotPotato</title>
+    <link href="/reports/20260822/heat-l1-extreme-wetbulb" rel="alternate"/>
+    <id>tag:earthbench.io,2026-08-22T12:28:51.559851+00:00</id>
+    <published>2026-08-22T12:28:51.559851+00:00</published>
+    <summary>HeatWaveAlert: 最高温=36.3°C, 湿球=26.5°C, 湿度=54.0%, 持续≈3天, 风险分=0.513</summary>
+  </entry>
+
+  <entry>
+    <title>EarthBench Alert: Heat Wave in Nanjing-OvenCity</title>
+    <link href="/reports/20260822/heat-l3-borderline" rel="alternate"/>
+    <id>tag:earthbench.io,2026-08-22T12:28:51.560698+00:00</id>
+    <published>2026-08-22T12:28:51.560698+00:00</published>
+    <summary>HeatWaveAlert: 最高温=33.0°C, 湿球=27.1°C, 湿度=93.0%, 持续≈0天, 风险分=0.403</summary>
+  </entry>
+
+  <entry>
+    <title>EarthBench Alert: Heat Wave in Wuhan-Yangtze</title>
+    <link href="/reports/20260822/heat-l4-progressive-heat" rel="alternate"/>
+    <id>tag:earthbench.io,2026-08-22T12:28:51.560981+00:00</id>
+    <published>2026-08-22T12:28:51.560981+00:00</published>
+    <summary>HeatWaveAlert: 最高温=35.7°C, 湿球=27.2°C, 湿度=74.0%, 持续≈3天, 风险分=0.578</summary>
+  </entry>
+</feed>

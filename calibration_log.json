@@ -1,0 +1,189 @@
+[
+  {
+    "timestamp": "2026-08-12T19:07:08.970445+08:00",
+    "category": "fire",
+    "old_value": 0.4,
+    "new_value": 0.43,
+    "adjustment": 0.03,
+    "action": "adjust",
+    "reason": "fp=1, fn=0, tn=9, tp=0 | error_diff=1 -> up",
+    "stats": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "tn": 9
+    },
+    "verification_files_used": 2,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-08-12T20:57:27.773394+08:00",
+    "category": "fire",
+    "old_value": 0.43,
+    "new_value": 0.46,
+    "adjustment": 0.03,
+    "action": "adjust",
+    "reason": "fp=1, fn=0, tn=9, tp=0 | error_diff=1 -> up",
+    "stats": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "tn": 9
+    },
+    "verification_files_used": 2,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-08-13T09:43:58.236761+08:00",
+    "category": "fire",
+    "old_value": 0.46,
+    "new_value": 0.49,
+    "adjustment": 0.03,
+    "action": "adjust",
+    "reason": "fp=1, fn=0, tn=14, tp=0 | error_diff=1 -> up",
+    "stats": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "tn": 14
+    },
+    "verification_files_used": 3,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-08-13T20:58:15.779049+08:00",
+    "category": "fire",
+    "old_value": 0.49,
+    "new_value": 0.52,
+    "adjustment": 0.03,
+    "action": "adjust",
+    "reason": "fp=1, fn=0, tn=14, tp=0 | error_diff=1 -> up",
+    "stats": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "tn": 14
+    },
+    "verification_files_used": 3,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-08-14T09:41:31.246469+08:00",
+    "category": "fire",
+    "old_value": 0.52,
+    "new_value": 0.55,
+    "adjustment": 0.03,
+    "action": "adjust",
+    "reason": "fp=1, fn=0, tn=19, tp=0 | error_diff=1 -> up",
+    "stats": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "tn": 19
+    },
+    "verification_files_used": 4,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-08-14T20:54:49.614687+08:00",
+    "category": "fire",
+    "old_value": 0.55,
+    "new_value": 0.58,
+    "adjustment": 0.03,
+    "action": "adjust",
+    "reason": "fp=1, fn=0, tn=19, tp=0 | error_diff=1 -> up",
+    "stats": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "tn": 19
+    },
+    "verification_files_used": 4,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-08-15T09:03:12.178361+08:00",
+    "category": "fire",
+    "old_value": 0.58,
+    "new_value": 0.61,
+    "adjustment": 0.03,
+    "action": "adjust",
+    "reason": "fp=1, fn=0, tn=24, tp=0 | error_diff=1 -> up",
+    "stats": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "tn": 24
+    },
+    "verification_files_used": 5,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-08-15T20:27:22.343883+08:00",
+    "category": "fire",
+    "old_value": 0.61,
+    "new_value": 0.64,
+    "adjustment": 0.03,
+    "action": "adjust",
+    "reason": "fp=1, fn=0, tn=24, tp=0 | error_diff=1 -> up",
+    "stats": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "tn": 24
+    },
+    "verification_files_used": 5,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-08-16T09:06:33.503276+08:00",
+    "category": "fire",
+    "old_value": 0.64,
+    "new_value": 0.65,
+    "adjustment": 0.01,
+    "action": "adjust",
+    "reason": "fp=1, fn=0, tn=29, tp=0 | error_diff=1 -> up",
+    "stats": {
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "tn": 29
+    },
+    "verification_files_used": 6,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-08-16T20:29:09.417702+08:00",
+    "category": "heat",
+    "old_value": 0.2831,
+    "new_value": 0.2664,
+    "adjustment": -0.0167,
+    "action": "adjust",
+    "reason": "fp=1, fn=2, tn=16, tp=5 | error_diff=-1 -> down",
+    "stats": {
+      "tp": 5,
+      "fp": 1,
+      "fn": 2,
+      "tn": 16
+    },
+    "verification_files_used": 6,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-08-17T09:04:06.830526+08:00",
+    "category": "heat",
+    "old_value": 0.2664,
+    "new_value": 0.25,
+    "adjustment": -0.0164,
+    "action": "adjust",
+    "reason": "fp=1, fn=2, tn=19, tp=6 | error_diff=-1 -> down",
+    "stats": {
+      "tp": 6,
+      "fp": 1,
+      "fn": 2,
+      "tn": 19
+    },
+    "verification_files_used": 7,
+    "lookback_days": 14
+  }
+]

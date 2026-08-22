@@ -1,0 +1,2312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<!-- SEO Meta Tags -->
+<title>EarthBench — 每日环境风险AI预警 | 火灾·洪水·干旱·热浪</title>
+<meta name="description" content="EarthBench是全球首个地球决策智能基准测试框架。基于多源时空观测数据（卫星+气象站+传感器），每日自动生成中国20+区域的森林火险、洪涝、干旱和高温热浪风险预警。Decision > Prediction。">
+<meta name="keywords" content="EarthBench,AI决策,环境风险预警,森林火险,洪水预警,干旱监测,热浪预警,遥感,AI防灾减灾,地球科学,big data,benchmark,LLM Agent">
+<meta name="author" content="Kejia Shao / EarthBench Team">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://earth-ai.fun/">
+
+<!-- Open Graph (微信/QQ/微博/Discord) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="EarthBench">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:title" content="EarthBench — 每日环境风险AI预警日报">
+<meta property="og:description" content="基于多源时空观测数据的AI决策智能评测框架。今日监测XX个区域，触发XX次预警，准确率XX%。">
+<meta property="og:url" content="https://earth-ai.fun/">
+<meta property="og:image" content="https://earth-ai.fun/og-banner.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="EarthBench 环境风险预警系统界面截图">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="EarthBench — 每日环境风险AI预警">
+<meta name="twitter:description" content="AI驱动的地球科学决策智能基准测试框架">
+<meta name="twitter:image" content="https://earth-ai.fun/og-banner.png">
+
+<!-- Feeds & Discovery -->
+<link rel="alternate" type="application/rss+xml" title="EarthBench RSS Feed" href="feed.xml">
+<link rel="alternate" type="application/json" title="EarthBench JSON API" href="https://showkeyjar.github.io/earth-bench/latest.json">
+
+<!-- Favicon -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+
+<!-- Structured Data (JSON-LD) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "EarthBench - Earth Decision Intelligence Benchmark",
+  "alternateName": ["EarthBench", "地球决策智能基准测试"],
+  "url": "https://earth-ai.fun/",
+  "description": "全球首个地球决策智能基准测试框架，测试AI能否利用多源时空观测数据做出真实世界的环境风险二元决策。",
+  "author": {
+    "@type": "Person",
+    "name": "Kejia Shao"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "EarthBench",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://earth-ai.fun/logo.png"
+    }
+  },
+  "potentialAction": {
+    "@type": "SubscribeAction",
+    "target": "https://earth-ai.fun/feed.xml"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "name": "AlertBenchmarkSuite",
+  "description": "EarthBench AlertBench测试套件 — 覆盖森林火险、洪涝灾害、干旱、高温热浪四类灾种，L1-L4四级难度共20个测试用例的AI决策基准数据集。",
+  "url": "https://github.com/showkeyjar/earth-bench",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "distribution": "api",
+  "keywords": "AI benchmark, Earth science decision intelligence, multi-hazard alert system"
+}
+</script>
+
+<!-- Preconnect to external resources -->
+<link rel="preconnect" href="https://unpkg.com">
+<link rel="dns-prefetch" href="https://webrd0{s}.is.autonavi.com">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif; background: #f5f7fa; color: #333; font-size: 13px; }
+
+.dashboard { max-width: 1200px; margin: 0 auto; padding: 10px 16px; }
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #2c5364 0%, #203a43 100%);
+  color: white; padding: 14px 20px; border-radius: 12px;
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+}
+.header h1 { font-size: 1.3em; }
+.header .meta { font-size: 0.8em; opacity: 0.8; text-align: right; }
+.publication-badge { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 16px; border-radius: 20px; font-weight: bold; font-size: 0.9em; white-space: nowrap; box-shadow: 0 2px 8px rgba(102,126,234,0.4); }
+
+/* Mini Stats */
+.mini-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 10px; }
+.mini-stat { background: white; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.mini-stat .num { font-size: 1.6em; font-weight: bold; }
+.mini-stat .label { font-size: 0.75em; color: #718096; }
+
+.section-title-bar { background: #2d3748; color: white; padding: 8px 14px; font-weight: 600; font-size: 0.95em; }
+
+/* Two-column layout */
+.main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px; align-items: stretch; }
+
+/* Alert Table */
+.alert-section { background: white; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); overflow: hidden; display: flex; flex-direction: column; }
+.table-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.82em; }
+th { position: sticky; top: 0; background: #4a5568; color: white; padding: 6px 5px; text-align: left; font-weight: 600; z-index: 10; }
+td { padding: 5px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+tr:nth-child(even) { background: #f7fafc; }
+tr:hover { background: #edf2f7; }
+tr.expanded { background: #ebf4ff !important; }
+
+.cat-pill { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 0.85em; font-weight: 600; }
+.cat-fire { background: #fed7d7; color: #c53030; }
+.cat-flood { background: #bee3f8; color: #2b6cb0; }
+.cat-drought { background: #fefcbf; color: #975a16; }
+.cat-heat { background: #feebc8; color: #c05621; }
+
+.tag-on { background: #fee; color: #c0392b; padding: 2px 7px; border-radius: 8px; font-weight: 600; font-size: 0.9em; }
+.tag-off { background: #f0f0f0; color: #888; padding: 2px 7px; border-radius: 8px; font-size: 0.9em; }
+
+.bar-wrap { width: 50px; height: 5px; background: #e2e8f0; border-radius: 3px; display: inline-block; margin-right: 3px; vertical-align: middle; }
+.bar-fill { height: 100%; border-radius: 3px; }
+.bar-green { background: #48bb78; } .bar-yellow { background: #ecc94b; } .bar-red { background: #f56565; }
+
+.mini-info { font-size: 0.9em; color: #4a5568; line-height: 1.4; }
+.expand-icon { cursor: pointer; font-size: 1.1em; transition: transform 0.2s; }
+.expand-icon.open { transform: rotate(90deg); }
+
+/* Detail Panel (expandable) */
+.detail-row td { padding: 0 !important; border: none !important; background: #f8faff !important; }
+.detail-panel { padding: 12px 16px; display: none; }
+.detail-panel.show { display: block; }
+
+/* 侧栏联动地图 — sticky 跟随滚动 */
+.detail-map-section {
+  background: #f0f4f8; border-radius: 12px; overflow: hidden;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  position: sticky; top: 10px; z-index: 100;
+}
+.side-map-header { font-size: 0.9em; font-weight: 600; color: #2d3748; padding: 8px 12px; background: #fff; border-bottom: 1px solid #e2e8f0; }
+#side-map { height: 200px; width: 100%; }
+.side-map-empty { text-align: center; color: #a0aec0; padding: 40px 10px; font-size: 0.9em; }
+
+.inline-map { width: 80px; height: 80px; border-radius: 6px; overflow: hidden; border: 2px solid #e2e8f0; flex-shrink: 0; }
+.inline-map.showing { border-color: #667eea; box-shadow: 0 0 6px rgba(102,126,234,0.3); }
+
+.evidence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.evidence-card { background: #f7fafc; border-radius: 8px; padding: 8px 10px; border-left: 3px solid #cbd5e0; }
+.evidence-card.danger { border-left-color: #f56565; background: #fff5f5; }
+.evidence-card.warn { border-left-color: #ecc94b; background: #fffbeb; }
+.evidence-card.safe { border-left-color: #48bb78; background: #f0fff4; }
+.evidence-card .ev-name { font-weight: 600; font-size: 0.85em; margin-bottom: 3px; }
+.evidence-card .ev-value { font-size: 1.2em; font-weight: bold; }
+.evidence-card .ev-threshold { font-size: 0.75em; color: #718096; }
+.evidence-card .ev-desc { font-size: 0.8em; color: #4a5568; margin-top: 4px; line-height: 1.3; }
+.evidence-card .ev-source { font-size: 0.7em; color: #a0aec0; margin-top: 2px; }
+
+.ev-bar-wrap { width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: 4px; position: relative; }
+.ev-bar-fill { height: 100%; border-radius: 2px; }
+.ev-bar-marker { position: absolute; top: -2px; width: 2px; height: 8px; background: #2d3748; }
+
+.reasoning-chain { background: #f7fafc; border-radius: 8px; padding: 10px 12px; margin-top: 8px; }
+.reasoning-chain .chain-title { font-weight: 600; font-size: 0.85em; margin-bottom: 6px; color: #2d3748; }
+.chain-step { display: flex; gap: 8px; margin: 4px 0; font-size: 0.8em; line-height: 1.4; }
+.chain-num { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75em; font-weight: bold; color: white; }
+.chain-num.intro { background: #4299e1; } .chain-num.evidence { background: #ecc94b; } .chain-num.analysis { background: #9f7aea; } .chain-num.decision { background: #f56565; }
+.chain-text { padding-top: 2px; }
+
+.verification-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; font-weight: 600; margin-left: 6px; }
+.verification-badge.hit { background: #c6f6d5; color: #22543d; }
+.verification-badge.miss { background: #fed7d7; color: #742a2a; }
+
+/* Side panel */
+.side-panel { display: flex; flex-direction: column; gap: 10px; }
+.side-panel > :last-child { flex: 1; }
+.history-card, .info-box, .source-box, .faq-box, .contact-box { background: white; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.history-card h3, .info-box h3, .source-box h3, .faq-box h3, .contact-box h3 { font-size: 0.9em; margin-bottom: 8px; color: #2d3748; border-bottom: 2px solid #667eea; padding-bottom: 4px; }
+
+/* History chart */
+.history-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; margin: 8px 0; }
+.history-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.history-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.3s; position: relative; cursor: pointer; }
+.history-bar.today { border: 2px solid #667eea; }
+.history-bar-label { font-size: 0.65em; color: #718096; }
+.history-bar-val { font-size: 0.65em; font-weight: 600; }
+
+.history-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin: 8px 0; }
+.history-stat { text-align: center; padding: 6px; background: #f7fafc; border-radius: 6px; }
+.history-stat .num { font-size: 1.3em; font-weight: bold; }
+.history-stat .label { font-size: 0.7em; color: #718096; }
+
+.history-detail-list { max-height: 280px; overflow-y: auto; }
+.history-detail-row { padding: 4px 0; border-bottom: 1px dashed #e2e8f0; }
+.hd-row-top { display: flex; justify-content: space-between; align-items: center; font-size: 0.78em; }
+.hd-row-reason { font-size: 0.72em; color: #718096; margin-top: 2px; line-height: 1.3; padding-left: 2px; }
+.history-detail-row .region { color: #4a5568; }
+.history-detail-row .result { font-weight: 600; }
+.history-detail-row .result.hit { color: #38a169; }
+.history-detail-row .result.miss { color: #e53e3e; }
+
+.info-item { font-size: 0.82em; margin: 6px 0; line-height: 1.5; }
+.info-item strong { color: #2d3748; }
+
+.source-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 0.82em; border-bottom: 1px dashed #e2e8f0; }
+.source-item:last-child { border-bottom: none; }
+.source-icon { font-size: 1.2em; }
+
+.low-conf-note { background: #fffff0; border: 1px solid #fbd38d; border-radius: 8px; padding: 8px 14px; margin-bottom: 10px; font-size: 0.85em; color: #975a16; text-align: center; }
+
+.contact-links { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
+.contact-link { display: block; padding: 5px 10px; background: #f7fafc; border-radius: 6px; font-size: 0.8em; color: #4a5568; text-decoration: none; transition: background 0.2s; }
+.contact-link:hover { background: #ebf4ff; color: #3182ce; }
+
+footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
+
+/* Inline map in table */
+.inline-map { width: 80px; height: 80px; border-radius: 6px; overflow: hidden; border: 2px solid #e2e8f0; flex-shrink: 0; }
+.inline-map.showing { border-color: #667eea; box-shadow: 0 0 6px rgba(102,126,234,0.3); }
+
+@media (max-width: 768px) {
+  .mini-stats { grid-template-columns: repeat(3, 1fr); }
+  .main-grid { grid-template-columns: 1fr; }
+  .evidence-grid { grid-template-columns: 1fr; }
+}
+  .toggle-safe-btn { width:100%; text-align:left; background:#f7fafc; border:1px dashed #cbd5e0; color:#2d3748; padding:12px 16px; font-size:0.92em; cursor:pointer; border-radius:0 0 8px 8px; }
+  .toggle-safe-btn:hover { background:#edf2f7; color:#1a202c; }
+  .recent-alerts-card { background: white; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .recent-alerts-card .section-title-bar { background: linear-gradient(90deg,#ed8936,#dd6b20); }
+  .ra-date { font-size: 0.8em; color: #718096; font-weight: 600; margin: 10px 0 4px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 2px; }
+  .ra-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 2px; border-bottom: 1px solid #f7fafc; }
+  .ra-region { color: #4a5568; font-size: 0.92em; }
+  .ra-result { font-weight: 600; font-size: 0.85em; }
+  .ra-result.hit { color: #38a169; }
+  .ra-result.miss { color: #e53e3e; }
+  .ra-reason { font-size: 0.72em; color: #a0aec0; margin: -2px 0 6px 2px; }
+
+  /* ==================== 新增信息板块样式 ==================== */
+
+  /* 导航栏 */
+  .info-nav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
+    background: rgba(26,32,44,0.95); backdrop-filter: blur(8px);
+    padding: 10px 16px; margin: 0 0 24px 0; border-radius: 0 0 12px 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  .nav-link {
+    color: #cbd5e0; text-decoration: none; font-size: 0.9em; font-weight: 600;
+    padding: 6px 14px; border-radius: 8px; transition: all 0.2s;
+  }
+  .nav-link:hover { background: #4a5568; color: #fff; }
+
+  /* 信息板块通用 */
+  .info-section {
+    margin: 0 auto 40px; max-width: 1200px; width: 100%;
+    scroll-margin-top: 70px; padding: 0 16px;
+    box-sizing: border-box;
+  }
+  .section-heading {
+    font-size: 1.5em; color: #2d3748; margin: 0 0 16px;
+    padding-bottom: 10px; border-bottom: 3px solid #4299e1;
+  }
+  .section-intro {
+    color: #4a5568; font-size: 1em; margin-bottom: 24px; line-height: 1.7;
+  }
+
+  /* 关于板块 */
+  .about-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px; margin-bottom: 32px;
+  }
+  .about-card {
+    background: #fff; border-radius: 12px; padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-top: 4px solid #4299e1; transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .about-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+  .about-icon { font-size: 2.2em; margin-bottom: 12px; }
+  .about-card h3 { font-size: 1.15em; color: #2d3748; margin: 0 0 10px; }
+  .about-card p { color: #4a5568; line-height: 1.7; font-size: 0.92em; margin: 0; }
+
+  /* 对比表 */
+  .comparison-box {
+    background: #f7fafc; border-radius: 12px; padding: 24px;
+    border: 1px solid #e2e8f0;
+  }
+  .comparison-box h3 { color: #2d3748; margin: 0 0 16px; font-size: 1.1em; }
+  .comparison-table {
+    width: 100%; border-collapse: collapse; font-size: 0.9em;
+  }
+  .comparison-table th {
+    background: #4299e1; color: #fff; padding: 10px 14px;
+    text-align: left; font-weight: 600; border-radius: 6px 6px 0 0;
+  }
+  .comparison-table th:first-child { width: 18%; }
+  .comparison-table td {
+    padding: 10px 14px; border-bottom: 1px solid #e2e8f0; color: #4a5568;
+  }
+  .comparison-table td:first-child { font-weight: 600; color: #2d3748; }
+  .comparison-table td:last-child { color: #2b6cb0; font-weight: 500; }
+  .comparison-table tr:last-child td { border-bottom: none; }
+  .comparison-table tr:nth-child(even) { background: #fff; }
+
+  /* 灾种卡片 */
+  .hazard-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .hazard-card {
+    background: #fff; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .hazard-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+  .hazard-header {
+    padding: 16px 20px; display: flex; align-items: center; gap: 10px;
+  }
+  .hazard-emoji { font-size: 1.8em; }
+  .hazard-name { font-size: 1.2em; font-weight: 700; color: #fff; }
+  .hazard-fire .hazard-header { background: linear-gradient(135deg, #e53e3e, #c53030); }
+  .hazard-flood .hazard-header { background: linear-gradient(135deg, #3182ce, #2b6cb0); }
+  .hazard-drought .hazard-header { background: linear-gradient(135deg, #d69e2e, #b7791f); }
+  .hazard-heat .hazard-header { background: linear-gradient(135deg, #dd6b20, #c05621); }
+  .hazard-body { padding: 20px; }
+  .hazard-desc { color: #4a5568; line-height: 1.7; font-size: 0.9em; margin: 0 0 16px; }
+  .hazard-metrics { display: flex; flex-direction: column; gap: 8px; }
+  .metric {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px; background: #f7fafc; border-radius: 8px;
+    border-left: 3px solid #cbd5e0;
+  }
+  .metric-label { font-size: 0.82em; color: #718096; font-weight: 600; }
+  .metric-value { font-size: 0.88em; color: #2d3748; font-weight: 500; text-align: right; }
+
+  /* 工作原理流水线 */
+  .pipeline-container {
+    display: flex; flex-direction: column; align-items: center; gap: 0;
+  }
+  .pipeline-stage {
+    display: flex; gap: 20px; width: 100%; max-width: 800px;
+    background: #fff; border-radius: 12px; padding: 20px 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #4299e1;
+  }
+  .stage-number {
+    flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #4299e1, #3182ce); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3em; font-weight: 700;
+  }
+  .stage-content h3 { margin: 0 0 8px; font-size: 1.1em; color: #2d3748; }
+  .stage-content p { color: #4a5568; line-height: 1.6; font-size: 0.9em; margin: 0 0 10px; }
+  .stage-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .stage-tag {
+    background: #ebf8ff; color: #2b6cb0; font-size: 0.78em; font-weight: 600;
+    padding: 3px 10px; border-radius: 12px; border: 1px solid #bee3f8;
+  }
+  .pipeline-connector {
+    font-size: 1.5em; color: #cbd5e0; padding: 4px 0;
+  }
+
+  /* 难度体系 */
+  .difficulty-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .difficulty-card {
+    background: #fff; border-radius: 12px; padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-top: 4px solid; transition: transform 0.2s;
+  }
+  .difficulty-card:hover { transform: translateY(-2px); }
+  .diff-l1 { border-top-color: #48bb78; }
+  .diff-l2 { border-top-color: #ecc94b; }
+  .diff-l3 { border-top-color: #ed8936; }
+  .diff-l4 { border-top-color: #e53e3e; }
+  .diff-badge {
+    display: inline-block; font-size: 1.3em; font-weight: 800; padding: 4px 16px;
+    border-radius: 8px; margin-bottom: 12px; color: #fff;
+  }
+  .diff-l1 .diff-badge { background: #48bb78; }
+  .diff-l2 .diff-badge { background: #ecc94b; color: #1a202c; }
+  .diff-l3 .diff-badge { background: #ed8936; }
+  .diff-l4 .diff-badge { background: #e53e3e; }
+  .difficulty-card h3 { font-size: 1.05em; color: #2d3748; margin: 0 0 10px; }
+  .difficulty-card p { color: #4a5568; line-height: 1.7; font-size: 0.9em; margin: 0 0 14px; }
+  .diff-skill {
+    font-size: 0.85em; color: #718096; font-style: italic;
+    padding-top: 10px; border-top: 1px dashed #e2e8f0;
+  }
+
+  /* 监测区域 */
+  .region-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .region-cat-col {
+    background: #fff; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .region-col-title {
+    padding: 12px 20px; font-size: 1em; font-weight: 700; color: #fff; margin: 0;
+  }
+  .cat-fire-bg { background: linear-gradient(135deg, #e53e3e, #c53030); }
+  .cat-flood-bg { background: linear-gradient(135deg, #3182ce, #2b6cb0); }
+  .cat-drought-bg { background: linear-gradient(135deg, #d69e2e, #b7791f); }
+  .cat-heat-bg { background: linear-gradient(135deg, #dd6b20, #c05621); }
+  .region-list { padding: 12px 20px; }
+  .region-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid #f7fafc;
+  }
+  .region-item:last-child { border-bottom: none; }
+  .region-name { font-size: 0.9em; color: #4a5568; font-weight: 500; }
+  .region-diff {
+    font-size: 0.75em; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+    color: #fff; background: #718096;
+  }
+
+  /* 开放数据 API */
+  .api-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px; margin-bottom: 24px;
+  }
+  .api-card {
+    background: #fff; border-radius: 12px; padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-top: 4px solid #805ad5;
+  }
+  .api-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .api-icon { font-size: 1.6em; }
+  .api-card h3 { margin: 0; font-size: 1.1em; color: #2d3748; }
+  .api-desc { color: #4a5568; font-size: 0.88em; line-height: 1.6; margin: 0 0 12px; }
+  .api-url {
+    background: #1a202c; color: #68d391; font-family: 'Courier New', monospace;
+    font-size: 0.82em; padding: 8px 12px; border-radius: 6px; margin-bottom: 10px;
+    word-break: break-all; overflow-x: auto;
+  }
+  .api-fields { display: flex; flex-wrap: wrap; gap: 6px; }
+  .api-fields code {
+    background: #edf2f7; color: #553c9a; font-size: 0.78em; font-weight: 600;
+    padding: 2px 8px; border-radius: 4px;
+  }
+  .api-usage-box {
+    background: #1a202c; border-radius: 12px; padding: 24px;
+  }
+  .api-usage-box h3 { color: #fff; margin: 0 0 16px; font-size: 1.05em; }
+  .code-block {
+    background: #2d3748; color: #a0aec0; border-radius: 8px; padding: 16px;
+    font-family: 'Courier New', monospace; font-size: 0.85em; line-height: 1.7;
+    overflow-x: auto; margin: 0;
+  }
+  .code-block code { white-space: pre; }
+
+  /* 技术栈 */
+  .tech-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+  }
+  .tech-card {
+    background: #fff; border-radius: 12px; padding: 24px; text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #e2e8f0;
+  }
+  .tech-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+  .tech-icon { font-size: 2.5em; margin-bottom: 12px; }
+  .tech-name { font-size: 1.1em; font-weight: 700; color: #2d3748; margin-bottom: 8px; }
+  .tech-desc { font-size: 0.88em; color: #4a5568; line-height: 1.6; }
+
+  /* 移动端响应式 */
+  @media (max-width: 768px) {
+    .info-nav { gap: 4px; padding: 8px 10px; }
+    .nav-link { font-size: 0.82em; padding: 5px 10px; }
+    .section-heading { font-size: 1.2em; }
+    .about-grid, .hazard-grid, .difficulty-grid, .region-grid, .api-grid, .tech-grid {
+      grid-template-columns: 1fr;
+    }
+    .pipeline-stage { flex-direction: column; gap: 12px; padding: 16px; }
+    .comparison-table { font-size: 0.82em; }
+    .comparison-table th, .comparison-table td { padding: 6px 8px; }
+  }
+
+/* === Global Overview Map === */
+.overview-map-section {
+  margin-bottom: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.overview-map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  font-size: 0.95em;
+  color: #2d3748;
+}
+#overview-map {
+  height: 380px;
+  width: 100%;
+  background: #e8f0fe;
+}
+.overview-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 16px;
+  background: #f7fafc;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.82em;
+  color: #4a5568;
+}
+.legend-item { display: flex; align-items: center; gap: 4px; }
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* === History Date Picker === */
+.history-picker-section {
+  margin-bottom: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.history-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  font-size: 0.95em;
+  color: #2d3748;
+}
+.history-date-list {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px;
+  flex-wrap: wrap;
+}
+.history-date-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-size: 0.82em;
+  cursor: pointer;
+  border: 2px solid #e2e8f0;
+  background: #fff;
+  color: #4a5568;
+  transition: all 0.2s;
+}
+.history-date-chip:hover { border-color: #667eea; color: #667eea; }
+.history-date-chip.active {
+  border-color: #667eea;
+  background: #667eea;
+  color: #fff;
+}
+.history-date-chip.today { font-weight: 600; }
+.history-date-chip .chip-acc { font-size: 0.85em; opacity: 0.7; }
+.history-report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: #edf2f7;
+  border-top: 1px solid #e2e8f0;
+  font-weight: 600;
+  font-size: 0.9em;
+}
+.history-close-btn {
+  background: #e2e8f0;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.82em;
+  color: #4a5568;
+}
+.history-close-btn:hover { background: #cbd5e0; }
+.history-report-body {
+  padding: 12px 16px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+.history-report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85em;
+}
+.history-report-table th {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 2px solid #e2e8f0;
+  color: #718096;
+  font-weight: 600;
+  font-size: 0.82em;
+}
+.history-report-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #edf2f7;
+  color: #2d3748;
+}
+@media (max-width: 768px) {
+  #overview-map { height: 280px; }
+  .history-date-list { gap: 4px; }
+  .history-date-chip { font-size: 0.78em; padding: 4px 8px; }
+}
+
+/* === Verification / Accuracy Panel === */
+.verification-section {
+  margin-bottom: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.verification-header {
+  padding: 10px 14px;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  font-size: 0.95em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.verification-stats {
+  padding: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.verif-stat {
+  flex: 1;
+  min-width: 100px;
+  text-align: center;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+}
+.verif-stat .verif-val {
+  font-size: 1.6em;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 2px;
+}
+.verif-stat .verif-label {
+  font-size: 0.78em;
+  color: #718096;
+}
+.verif-stat.acc .verif-val { color: #3182ce; }
+.verif-stat.prec .verif-val { color: #38a169; }
+.verif-stat.rec .verif-val { color: #d69e2e; }
+.verif-stat.f1 .verif-val { color: #805ad5; }
+.verif-stat.tot .verif-val { color: #4a5568; }
+.verif-category-row {
+  padding: 0 14px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.verif-cat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.82em;
+  font-weight: 500;
+}
+.verif-cat-badge.fire { background: #fed7d7; color: #742a2a; }
+.verif-cat-badge.flood { background: #bee3f8; color: #2a4365; }
+.verif-cat-badge.drought { background: #fefcbf; color: #744210; }
+.verif-cat-badge.heat { background: #feebc8; color: #7b341e; }
+.verif-trend-section {
+  padding: 0 14px 14px;
+}
+.verif-trend-title {
+  font-size: 0.82em;
+  color: #718096;
+  margin-bottom: 6px;
+}
+.verif-trend-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 60px;
+}
+.verif-trend-bar {
+  flex: 1;
+  min-width: 18px;
+  border-radius: 3px 3px 0 0;
+  position: relative;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.verif-trend-bar:hover { opacity: 0.7; }
+.verif-trend-bar .tooltip {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2d3748;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.72em;
+  white-space: nowrap;
+  z-index: 10;
+}
+.verif-trend-bar:hover .tooltip { display: block; }
+.verif-trend-bar.good { background: #48bb78; }
+.verif-trend-bar.mid { background: #ecc94b; }
+.verif-trend-bar.low { background: #e53e3e; }
+.verif-trend-bar.nodata { background: #e2e8f0; }
+.verif-note {
+  padding: 0 14px 12px;
+  font-size: 0.78em;
+  color: #a0aec0;
+  line-height: 1.5;
+}
+.verification-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.75em;
+  font-weight: 600;
+  margin-left: 6px;
+}
+.verification-badge.hit { background: #c6f6d5; color: #22543d; }
+.verification-badge.miss { background: #fed7d7; color: #742a2a; }
+
+/* === Calibration / Threshold Panel === */
+.calibration-section {
+  margin-bottom: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.calibration-header {
+  padding: 10px 14px;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  font-size: 0.95em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.calibration-body {
+  padding: 14px;
+}
+.cal-threshold-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.cal-threshold-card {
+  flex: 1;
+  min-width: 120px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #f7fafc;
+  text-align: center;
+}
+.cal-threshold-card .cal-cat {
+  font-size: 0.78em;
+  color: #718096;
+  margin-bottom: 4px;
+}
+.cal-threshold-card .cal-val {
+  font-size: 1.4em;
+  font-weight: 700;
+  display: block;
+}
+.cal-threshold-card .cal-delta {
+  font-size: 0.72em;
+  margin-top: 2px;
+}
+.cal-threshold-card .cal-delta.up { color: #e53e3e; }
+.cal-threshold-card .cal-delta.down { color: #3182ce; }
+.cal-threshold-card .cal-delta.none { color: #a0aec0; }
+.cal-threshold-card.fire { border-left: 3px solid #e53e3e; }
+.cal-threshold-card.flood { border-left: 3px solid #3182ce; }
+.cal-threshold-card.drought { border-left: 3px solid #d69e2e; }
+.cal-threshold-card.heat { border-left: 3px solid #ed8936; }
+.cal-log-section {
+  margin-top: 10px;
+  font-size: 0.82em;
+}
+.cal-log-title {
+  color: #718096;
+  margin-bottom: 4px;
+}
+.cal-log-entry {
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #f7fafc;
+  margin-bottom: 3px;
+  border-left: 2px solid #cbd5e0;
+}
+.cal-log-entry.adjust { border-left-color: #d69e2e; }
+.cal-log-entry .cal-log-time { color: #a0aec0; font-size: 0.9em; }
+.cal-log-entry .cal-log-detail { color: #4a5568; }
+.cal-note {
+  padding: 0 14px 12px;
+  font-size: 0.78em;
+  color: #a0aec0;
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+<div class="dashboard">
+  <div class="header">
+    <div>
+      <h1>🌍 EarthBench · 每日环境风险预警</h1>
+      <div style="font-size:0.75em;opacity:0.85;margin-top:2px;">Decision &gt; Prediction — AI 地球决策智能基准测试框架</div>
+    </div>
+    <div class="meta" id="header-meta"></div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <span class="publication-badge">今日发布</span>
+    <span style="font-size:0.7em;color:#a0aec0;opacity:0.9;">
+      <a href="feed.xml" target="_blank" style="color:inherit;text-decoration:none;">RSS订阅</a>
+      <span style="margin:0 4px;">·</span>
+      <a href="https://github.com/showkeyjar/earth-bench" target="_blank" style="color:inherit;text-decoration:none;">GitHub</a>
+    </span>
+  </div>
+
+  <!-- Social Share Bar -->
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+    <span style="font-size:0.8em;color:#718096;">分享今日报告:</span>
+    <button onclick="shareReport()" style="background:#667eea;color:white;border:none;padding:4px 12px;border-radius:15px;font-size:0.75em;cursor:pointer;">📤 复制链接</button>
+    <button onclick="copyToClipboard('telegram')" style="background:#0088cc;color:white;border:none;padding:4px 12px;border-radius:15px;font-size:0.75em;cursor:pointer;">✈️ Telegram</button>
+    <button onclick="copyToClipboard('twitter')" style="background:#1DA1F2;color:white;border:none;padding:4px 12px;border-radius:15px;font-size:0.75em;cursor:pointer;">🐦 Twitter</button>
+  </div>
+
+  <div class="mini-stats">
+    <div class="mini-stat"><div class="num" style="color:#667eea;" id="s-total">-</div><div class="label">监测区域</div></div>
+    <div class="mini-stat"><div class="num" style="color:#e53e3e;" id="s-alert">-</div><div class="label">有风险</div></div>
+    <div class="mini-stat"><div class="num" style="color:#38a169;" id="s-safe">-</div><div class="label">安全</div></div>
+    <div class="mini-stat"><div class="num" style="color:#dd6b20;" id="s-conf">-</div><div class="label">平均风险</div></div>
+    <div class="mini-stat"><div class="num" style="color:#38a169;" id="s-acc">-</div><div class="label">7天准确率</div></div>
+  </div>
+
+  <div id="low-conf-bar" class="low-conf-note" style="display:none;"></div>
+
+  <!-- Global Overview Map -->
+  <div class="overview-map-section">
+    <div class="overview-map-header">
+      <span>🗺️ 全局风险总览</span>
+      <span id="overview-update-time" style="font-size:0.8em;color:#a0aec0;font-weight:normal;"></span>
+    </div>
+    <div id="overview-map"></div>
+    <div class="overview-legend">
+      <span class="legend-item"><span class="legend-dot" style="background:#e53e3e;"></span> 有风险</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#ecc94b;"></span> 接近阈值</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#48bb78;"></span> 安全</span>
+      <span style="font-size:0.78em;color:#a0aec0;margin-left:auto;">点击标记跳转到详情</span>
+    </div>
+  </div>
+
+  <!-- History Date Picker -->
+  <div class="history-picker-section">
+    <div class="history-picker-header">
+      <span>📅 历史报告核查</span>
+      <span style="font-size:0.78em;color:#a0aec0;font-weight:normal;">点击日期查看该日完整决策记录</span>
+    </div>
+    <div id="history-date-list" class="history-date-list"></div>
+    <div id="history-report-container" style="display:none;">
+      <div class="history-report-header">
+        <span id="history-report-title"></span>
+        <button id="history-close-btn" class="history-close-btn" onclick="closeHistoryReport()">✕ 关闭</button>
+      </div>
+      <div id="history-report-body" class="history-report-body"></div>
+    </div>
+  </div>
+
+  <!-- Verification / Accuracy Panel -->
+  <div class="verification-section">
+    <div class="verification-header">
+      <span>🎯 预测精度验证</span>
+      <span style="font-size:0.78em;color:#a0aec0;font-weight:normal;" id="verification-update-time"></span>
+    </div>
+    <div class="verification-stats" id="verification-stats">
+      <div class="verif-stat tot"><span class="verif-val" id="verif-total">-</span><span class="verif-label">累计验证</span></div>
+      <div class="verif-stat acc"><span class="verif-val" id="verif-accuracy">-</span><span class="verif-label">准确率</span></div>
+      <div class="verif-stat prec"><span class="verif-val" id="verif-precision">-</span><span class="verif-label">精确率</span></div>
+      <div class="verif-stat rec"><span class="verif-val" id="verif-recall">-</span><span class="verif-label">召回率</span></div>
+      <div class="verif-stat f1"><span class="verif-val" id="verif-f1">-</span><span class="verif-label">F1 分数</span></div>
+    </div>
+    <div class="verif-category-row" id="verif-category-row"></div>
+    <div class="verif-trend-section" id="verif-trend-section" style="display:none;">
+      <div class="verif-trend-title">每日准确率趋势 (近14天)</div>
+      <div class="verif-trend-bars" id="verif-trend-bars"></div>
+    </div>
+    <div class="verif-note" id="verif-note">验证数据在预测发布 T+2 后自动生成, 使用 NASA FIRMS 卫星火点 + QWeather 历史天气独立验证</div>
+  </div>
+
+  <!-- Calibration / Threshold Panel -->
+  <div class="calibration-section" id="calibration-panel" style="display:none;">
+    <div class="calibration-header">
+      <span>🔧 模型自校准</span>
+      <span style="font-size:0.78em;color:#a0aec0;font-weight:normal;" id="calibration-update-time"></span>
+    </div>
+    <div class="calibration-body">
+      <div class="cal-threshold-row" id="cal-threshold-row"></div>
+      <div class="cal-log-section" id="cal-log-section" style="display:none;">
+        <div class="cal-log-title">最近调优记录</div>
+        <div id="cal-log-list"></div>
+      </div>
+    </div>
+    <div class="cal-note">每次验证后自动微调决策阈值: 误报多则上调, 漏报多则下调. 单次调整幅度不超过 0.03, 阈值锁定在 [0.25, 0.65] 安全边界内.</div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="main-grid">
+    <div class="alert-section">
+      <div class="section-title-bar">📋 今日监测结果（点击行展开详细证据和推理过程）</div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>地点</th>
+              <th>类型</th>
+              <th>状态</th>
+              <th>风险</th>
+              <th>关键信号</th>
+              <th>验证</th>
+            </tr>
+          </thead>
+          <tbody id="alert-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 近期预警（今日无预警时回看历史时间范围） -->
+    <div class="recent-alerts-card" id="recent-alerts-card" style="display:none;margin-top:14px;">
+      <div class="section-title-bar">📡 近期环境风险预警（近 14 天）</div>
+      <div id="recent-alerts-body"></div>
+    </div>
+
+    <div class="side-panel">
+      <!-- 联动地图 — 固定在侧栏顶部 -->
+      <div class="detail-map-section" id="side-map-container">
+        <div class="side-map-header">📍 当前选中区域</div>
+        <div id="side-map"></div>
+        <div class="side-map-empty" id="side-map-empty">点击左侧行查看地图</div>
+      </div>
+
+      <div class="history-card">
+        <h3>📊 历史 7 天战绩</h3>
+        <div class="history-chart" id="history-chart"></div>
+        <div class="history-summary" id="history-summary"></div>
+        <div style="font-size:0.8em;color:#4a5568;margin-bottom:4px;">今日命中详情：</div>
+        <div class="history-detail-list" id="history-detail-list"></div>
+      </div>
+
+      <div class="info-box">
+        <h3>⚠️ 风险等级说明</h3>
+        <div class="info-item"><strong>🔴 高风险 (≥85%)：</strong>需要立即关注，建议启动应急预案</div>
+        <div class="info-item"><strong>🟡 中风险 (75%-84%)：</strong>需持续监控，建议加强巡查</div>
+        <div class="info-item"><strong>🟢 低风险 (&lt;75%)：</strong>暂时无需特殊措施</div>
+      </div>
+
+      <div class="source-box">
+        <h3>🛰️ 数据来源</h3>
+        <div class="source-item"><span class="source-icon">🛰️</span><div><strong>NASA MODIS 卫星</strong><br><span style="color:#718096;">地表温度、植被指数(NDVI)</span></div></div>
+        <div class="source-item"><span class="source-icon">🌬️</span><div><strong>ECMWF 数值预报</strong><br><span style="color:#718096;">火险指数(FWI)、气象预报</span></div></div>
+        <div class="source-item"><span class="source-icon">🏭</span><div><strong>中国气象局(CMA)</strong><br><span style="color:#718096;">降水量、SPI/Palmer干旱指数</span></div></div>
+        <div class="source-item"><span class="source-icon">📡</span><div><strong>地面气象站</strong><br><span style="color:#718096;">湿度、风速、温度、湿球温度</span></div></div>
+        <div class="source-item"><span class="source-icon">💧</span><div><strong>水文传感器</strong><br><span style="color:#718096;">水位、土壤含水率实时监测</span></div></div>
+      </div>
+
+      <div class="faq-box">
+        <h3>💡 快速了解</h3>
+        <div class="info-item"><strong>这是什么？</strong><br>AI 帮您提前知道哪里可能有火灾、洪水、干旱或高温热浪。</div>
+        <div class="info-item"><strong>怎么判断的？</strong><br>多源数据融合：卫星+气象站+传感器，AI 综合分析各指标是否超过国标阈值。</div>
+        <div class="info-item"><strong>为什么只显示部分区域？</strong><br>默认只展示有风险的预警；安全区域可点下方按钮展开查看全部监测状态。</div>
+        <div class="info-item"><strong>准不准？</strong><br>过去7天平均准确率见右侧战绩面板，每条预警都标注是否命中。</div>
+      </div>
+
+      <div class="contact-box">
+        <h3>📬 关于与联系</h3>
+        <div class="info-item"><strong>EarthBench</strong> — 基于 AI 的自然灾害预警系统，每天自动分析全国 20+ 监测区域的火灾、洪涝、干旱和高温热浪风险。</div>
+        <div class="contact-links">
+          <a href="mailto:zergskj@163.com" class="contact-link">📧 zergskj@163.com</a>
+          <a href="https://github.com/showkeyjar/earth-bench" target="_blank" class="contact-link">🔗 GitHub 项目仓库</a>
+        </div>
+        <div class="info-item" style="margin-top:6px;font-size:0.75em;color:#a0aec0;">如有数据合作、技术咨询或问题反馈，欢迎通过以上方式联系。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 信息充实板块 ==================== -->
+
+  <!-- 导航栏 -->
+  <nav class="info-nav" id="info-nav">
+    <a href="#about" class="nav-link">关于</a>
+    <a href="#hazards" class="nav-link">四大灾种</a>
+    <a href="#howitworks" class="nav-link">工作原理</a>
+    <a href="#difficulty" class="nav-link">难度体系</a>
+    <a href="#regions" class="nav-link">监测区域</a>
+    <a href="#api" class="nav-link">开放数据</a>
+    <a href="#tech" class="nav-link">技术栈</a>
+  </nav>
+
+  <!-- 1. 关于 EarthBench -->
+  <section class="info-section" id="about">
+    <h2 class="section-heading">🌐 关于 EarthBench</h2>
+    <div class="about-grid">
+      <div class="about-card">
+        <div class="about-icon">🎯</div>
+        <h3>决策优先</h3>
+        <p>传统气象系统回答"明天降雨多少毫米"，EarthBench 回答"今天是否应该启动洪水应急预案"。我们不预测数字，我们做决策。</p>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">🔬</div>
+        <h3>多源融合</h3>
+        <p>卫星遥感（NASA MODIS）、数值预报（ECMWF）、气象站（和风天气 API）、水文传感器——四类数据源交叉验证，单一来源的偏差被系统性修正。</p>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">🧠</div>
+        <h3>AI 推理透明</h3>
+        <p>每条预警不是黑箱输出。系统记录从数据采集到阈值对比、加权评分、最终决策的完整推理链，用户可以逐条审查 AI 的判断依据。</p>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">✅</div>
+        <h3>每日验证</h3>
+        <p>每条决策都标注是否与 Ground Truth（基于国标阈值推导的标准答案）一致。命中、误报、漏报一目了然，准确率持续追踪。</p>
+      </div>
+    </div>
+    <div class="comparison-box">
+      <h3>EarthBench vs 传统天气预报</h3>
+      <table class="comparison-table">
+        <thead>
+          <tr><th>维度</th><th>传统天气预报</th><th>EarthBench</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>核心问题</td><td>明天温度 35 度吗？</td><td>今天该启动高温应急预案吗？</td></tr>
+          <tr><td>输出形态</td><td>数值预测（温度、降水量）</td><td>二元决策（预警 / 不预警）+ 置信度 + 推理链</td></tr>
+          <tr><td>数据来源</td><td>单一气象模型</td><td>卫星 + 气象站 + 传感器多源融合</td></tr>
+          <tr><td>验证方式</td><td>预测值 vs 实际值</td><td>决策结果 vs Ground Truth（命中/误报/漏报）</td></tr>
+          <tr><td>可解释性</td><td>低（数值输出，无推理过程）</td><td>高（完整推理链 + 证据卡片 + 阈值标注）</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 2. 四大灾种监测 -->
+  <section class="info-section" id="hazards">
+    <h2 class="section-heading">🔥🌊🏜️☀️ 四大灾种监测</h2>
+    <div class="hazard-grid">
+      <div class="hazard-card hazard-fire">
+        <div class="hazard-header">
+          <span class="hazard-emoji">🔥</span>
+          <span class="hazard-name">森林火险</span>
+        </div>
+        <div class="hazard-body">
+          <p class="hazard-desc">基于加拿大 FWI（火险天气指数）体系，综合风速、湿度、温度和降雨量评估火灾风险。FWI 大于 40 即进入高风险区间。</p>
+          <div class="hazard-metrics">
+            <div class="metric"><span class="metric-label">核心指标</span><span class="metric-value">FWI 火险指数</span></div>
+            <div class="metric"><span class="metric-label">预警阈值</span><span class="metric-value">FWI 大于等于 40</span></div>
+            <div class="metric"><span class="metric-label">辅助指标</span><span class="metric-value">湿度、风速、温度、降雨</span></div>
+            <div class="metric"><span class="metric-label">数据来源</span><span class="metric-value">ECMWF + 地面站 + NASA MODIS</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="hazard-card hazard-flood">
+        <div class="hazard-header">
+          <span class="hazard-emoji">🌊</span>
+          <span class="hazard-name">洪涝灾害</span>
+        </div>
+        <div class="hazard-body">
+          <p class="hazard-desc">对标《国家防汛抗旱应急预案》暴雨标准。24 小时降雨达 100mm 或 6 小时达 50mm 即触发预警，同时监测土壤饱和度和水位趋势。</p>
+          <div class="hazard-metrics">
+            <div class="metric"><span class="metric-label">核心指标</span><span class="metric-value">24h 累计降雨量</span></div>
+            <div class="metric"><span class="metric-label">预警阈值</span><span class="metric-value">24h 大于等于 100mm</span></div>
+            <div class="metric"><span class="metric-label">辅助指标</span><span class="metric-value">6h 降雨、土壤湿度、水位</span></div>
+            <div class="metric"><span class="metric-label">数据来源</span><span class="metric-value">QWeather 逐小时预报 + 水文站</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="hazard-card hazard-drought">
+        <div class="hazard-header">
+          <span class="hazard-emoji">🏜️</span>
+          <span class="hazard-name">干旱监测</span>
+        </div>
+        <div class="hazard-body">
+          <p class="hazard-desc">基于 SPI（标准化降水指数）和 Palmer 干旱指数双指标体系。SPI 小于 -1.5 或 Palmer 小于 -1.0 即为严重干旱，同时考虑月降雨亏缺和植被状态。</p>
+          <div class="hazard-metrics">
+            <div class="metric"><span class="metric-label">核心指标</span><span class="metric-value">SPI + Palmer 指数</span></div>
+            <div class="metric"><span class="metric-label">预警阈值</span><span class="metric-value">SPI 小于 -1.5 或 Palmer 小于 -1.0</span></div>
+            <div class="metric"><span class="metric-label">辅助指标</span><span class="metric-value">湿度、月降雨量、NDVI</span></div>
+            <div class="metric"><span class="metric-label">数据来源</span><span class="metric-value">QWeather + ECMWF + MODIS NDVI</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="hazard-card hazard-heat">
+        <div class="hazard-header">
+          <span class="hazard-emoji">☀️</span>
+          <span class="hazard-name">高温热浪</span>
+        </div>
+        <div class="hazard-body">
+          <p class="hazard-desc">对标中央气象台高温预警信号。湿球温度大于 27 度为危险阈值，持续 3 天最高温大于等于 35 度即构成典型热浪环境。湿热组合比单纯高温更危险。</p>
+          <div class="hazard-metrics">
+            <div class="metric"><span class="metric-label">核心指标</span><span class="metric-value">湿球温度 + 持续天数</span></div>
+            <div class="metric"><span class="metric-label">预警阈值</span><span class="metric-value">湿球温度大于 27 度</span></div>
+            <div class="metric"><span class="metric-label">辅助指标</span><span class="metric-value">最高温、湿度、持续天数</span></div>
+            <div class="metric"><span class="metric-label">数据来源</span><span class="metric-value">QWeather 实时 + 逐日预报</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 工作原理 -->
+  <section class="info-section" id="howitworks">
+    <h2 class="section-heading">⚙️ 工作原理</h2>
+    <p class="section-intro">每天 UTC 00:00 和 12:00（北京时间 08:00 和 20:00），系统自动执行四阶段流水线：</p>
+    <div class="pipeline-container">
+      <div class="pipeline-stage">
+        <div class="stage-number">1</div>
+        <div class="stage-content">
+          <h3>📡 数据采集</h3>
+          <p>从 QWeather API 获取 20 个监测区域的实时天气数据（温度、湿度、风速、降雨量），同时拉取逐小时和逐日预报用于趋势分析。QWeather 不可用时自动降级到内置场景数据。</p>
+          <div class="stage-tags"><span class="stage-tag">QWeather API</span><span class="stage-tag">实时观测</span><span class="stage-tag">逐小时预报</span><span class="stage-tag">逐日预报</span></div>
+        </div>
+      </div>
+      <div class="pipeline-connector">↓</div>
+      <div class="pipeline-stage">
+        <div class="stage-number">2</div>
+        <div class="stage-content">
+          <h3>🧠 AI 决策</h3>
+          <p>规则引擎首先基于国标阈值计算风险评分（动态权重归一化），然后将完整证据链传递给 LLM（Qwen3 14B via Ollama）做二次判断。LLM 可升级规则引擎的决策，但不能降级。</p>
+          <div class="stage-tags"><span class="stage-tag">规则引擎</span><span class="stage-tag">动态权重</span><span class="stage-tag">Qwen3 14B</span><span class="stage-tag">Ollama</span></div>
+        </div>
+      </div>
+      <div class="pipeline-connector">↓</div>
+      <div class="pipeline-stage">
+        <div class="stage-number">3</div>
+        <div class="stage-content">
+          <h3>📝 报告生成</h3>
+          <p>为每个监测区域生成结构化决策记录，包含详细证据卡片（阈值对比 + 状态判定）、推理链条（从数据到决策的完整步骤）和 Ground Truth 验证结果。最终输出 Markdown 报告 + JSON 数据 + Atom Feed。</p>
+          <div class="stage-tags"><span class="stage-tag">Markdown</span><span class="stage-tag">JSON</span><span class="stage-tag">Atom RSS</span><span class="stage-tag">证据卡片</span></div>
+        </div>
+      </div>
+      <div class="pipeline-connector">↓</div>
+      <div class="pipeline-stage">
+        <div class="stage-number">4</div>
+        <div class="stage-content">
+          <h3>📡 分发部署</h3>
+          <p>报告自动部署到 GitHub Pages（gh-pages 分支），通过 Cloudflare CDN 加速到 earth-ai.fun。Atom Feed 供 RSS 阅读器订阅，JSON API 供第三方系统消费，微信公众号草稿待人工审核后发布。</p>
+          <div class="stage-tags"><span class="stage-tag">GitHub Pages</span><span class="stage-tag">Cloudflare CDN</span><span class="stage-tag">RSS Feed</span><span class="stage-tag">JSON API</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. 难度体系 -->
+  <section class="info-section" id="difficulty">
+    <h2 class="section-heading">📊 难度体系</h2>
+    <p class="section-intro">20 个测试场景按 L1-L4 四级难度递进，每级考验 AI 不同层面的决策能力：</p>
+    <div class="difficulty-grid">
+      <div class="difficulty-card diff-l1">
+        <div class="diff-badge">L1</div>
+        <h3>简单 — 明确极端值</h3>
+        <p>观测值远超或远低于阈值，决策方向明确无歧义。如 FWI=70（远超 40 阈值）或 24h 降雨=0mm。</p>
+        <div class="diff-skill">考验：阈值判断基础能力</div>
+      </div>
+      <div class="difficulty-card diff-l2">
+        <div class="diff-badge">L2</div>
+        <h3>中等 — 边界值 + 次要因素</h3>
+        <p>主要指标接近阈值，次要因素成为决定性变量。如 FWI=49 但降雨 25mm 抑制了火险——降雨是否足够抑制？</p>
+        <div class="diff-skill">考验：多变量综合权衡能力</div>
+      </div>
+      <div class="difficulty-card diff-l3">
+        <div class="diff-badge">L3</div>
+        <h3>困难 — 信号冲突</h3>
+        <p>不同指标给出矛盾信号。如 SPI 正常但 Palmer 显示干旱，或沿海高湿但 FWI 中等——哪个指标优先？</p>
+        <div class="diff-skill">考验：冲突解决与优先级判断</div>
+      </div>
+      <div class="difficulty-card diff-l4">
+        <div class="diff-badge">L4</div>
+        <h3>超越 — 边缘案例</h3>
+        <p>需要从时序趋势推断隐含信号，或处理极端组合场景。如连续升温趋势是否构成热浪？水位持续上涨是否即将超警？</p>
+        <div class="diff-skill">考验：时序推理与趋势预判</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 监测区域 -->
+  <section class="info-section" id="regions">
+    <h2 class="section-heading">🗺️ 监测区域</h2>
+    <p class="section-intro">覆盖全国 20 个代表性区域，横跨 4 大灾种、4 级难度：</p>
+    <div class="region-grid">
+      <div class="region-cat-col">
+        <h3 class="region-col-title cat-fire-bg">🔥 火险（5 区域）</h3>
+        <div class="region-list">
+          <div class="region-item"><span class="region-name">北京·香山</span><span class="region-diff">L1</span></div>
+          <div class="region-item"><span class="region-name">杭州·西湖</span><span class="region-diff">L1</span></div>
+          <div class="region-item"><span class="region-name">长白山</span><span class="region-diff">L2</span></div>
+          <div class="region-item"><span class="region-name">深圳·海岸</span><span class="region-diff">L3</span></div>
+          <div class="region-item"><span class="region-name">大兴安岭</span><span class="region-diff">L4</span></div>
+        </div>
+      </div>
+      <div class="region-cat-col">
+        <h3 class="region-col-title cat-flood-bg">🌊 洪涝（5 区域）</h3>
+        <div class="region-list">
+          <div class="region-item"><span class="region-name">武汉·长江</span><span class="region-diff">L1</span></div>
+          <div class="region-item"><span class="region-name">拉萨·西藏</span><span class="region-diff">L1</span></div>
+          <div class="region-item"><span class="region-name">广州·珠江</span><span class="region-diff">L2</span></div>
+          <div class="region-item"><span class="region-name">桂林·广西</span><span class="region-diff">L3</span></div>
+          <div class="region-item"><span class="region-name">南京·长江</span><span class="region-diff">L4</span></div>
+        </div>
+      </div>
+      <div class="region-cat-col">
+        <h3 class="region-col-title cat-drought-bg">🏜️ 干旱（5 区域）</h3>
+        <div class="region-list">
+          <div class="region-item"><span class="region-name">昆明·云南</span><span class="region-diff">L1</span></div>
+          <div class="region-item"><span class="region-name">杭州·浙江</span><span class="region-diff">L1</span></div>
+          <div class="region-item"><span class="region-name">哈尔滨·黑龙江</span><span class="region-diff">L2</span></div>
+          <div class="region-item"><span class="region-name">乌鲁木齐·新疆</span><span class="region-diff">L3</span></div>
+          <div class="region-item"><span class="region-name">太原·山西</span><span class="region-diff">L4</span></div>
+        </div>
+      </div>
+      <div class="region-cat-col">
+        <h3 class="region-col-title cat-heat-bg">☀️ 热浪（5 区域）</h3>
+        <div class="region-list">
+          <div class="region-item"><span class="region-name">重庆</span><span class="region-diff">L1</span></div>
+          <div class="region-item"><span class="region-name">昆明·春城</span><span class="region-diff">L1</span></div>
+          <div class="region-item"><span class="region-name">乌鲁木齐·新疆</span><span class="region-diff">L2</span></div>
+          <div class="region-item"><span class="region-name">南京</span><span class="region-diff">L3</span></div>
+          <div class="region-item"><span class="region-name">武汉·长江</span><span class="region-diff">L4</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. 开放数据与 API -->
+  <section class="info-section" id="api">
+    <h2 class="section-heading">📦 开放数据与 API</h2>
+    <p class="section-intro">所有数据以 CC BY 4.0 许可开放，欢迎研究者、开发者和防灾减灾机构自由使用。</p>
+    <div class="api-grid">
+      <div class="api-card">
+        <div class="api-header"><span class="api-icon">📊</span><h3>JSON API</h3></div>
+        <p class="api-desc">今日全部 20 个区域的决策数据，包含每个场景的详细证据、推理链和验证结果。</p>
+        <div class="api-url">GET https://earth-ai.fun/latest.json</div>
+        <div class="api-fields">
+          <code>published_at</code> <code>total_scenarios</code> <code>alert_count</code> <code>average_confidence</code> <code>decisions[]</code>
+        </div>
+      </div>
+      <div class="api-card">
+        <div class="api-header"><span class="api-icon">📡</span><h3>RSS / Atom Feed</h3></div>
+        <p class="api-desc">每日预警 Atom 格式订阅源，支持 RSS 阅读器（如 Feedly、Inoreader）自动推送。</p>
+        <div class="api-url">GET https://earth-ai.fun/feed.xml</div>
+        <div class="api-fields">
+          <code>atom:entry</code> <code>category</code> <code>region</code> <code>confidence</code> <code>summary</code>
+        </div>
+      </div>
+      <div class="api-card">
+        <div class="api-header"><span class="api-icon">📈</span><h3>历史数据</h3></div>
+        <p class="api-desc">过去 7 天的决策历史和准确率统计，含每日命中/误报/漏报明细。</p>
+        <div class="api-url">GET https://earth-ai.fun/history.json</div>
+        <div class="api-fields">
+          <code>date</code> <code>total</code> <code>alerts</code> <code>hits</code> <code>misses</code> <code>accuracy</code> <code>details[]</code>
+        </div>
+      </div>
+      <div class="api-card">
+        <div class="api-header"><span class="api-icon">💻</span><h3>GitHub 开源</h3></div>
+        <p class="api-desc">完整源代码、测试用例、CI/CD 配置、场景定义和 Ground Truth 推导函数全部开源。</p>
+        <div class="api-url">github.com/showkeyjar/earth-bench</div>
+        <div class="api-fields">
+          <code>earthbench/</code> <code>tests/</code> <code>.github/workflows/</code> <code>scenarios.py</code> <code>agents.py</code>
+        </div>
+      </div>
+    </div>
+    <div class="api-usage-box">
+      <h3>快速接入示例</h3>
+      <pre class="code-block"><code># Python 获取今日决策
+import requests
+data = requests.get("https://earth-ai.fun/latest.json").json()
+alerts = [d for d in data["decisions"] if d["llm_decision"]]
+print(f"今日 {data['total_scenarios']} 区域，{len(alerts)} 条预警")
+
+# curl 获取 JSON
+curl -s https://earth-ai.fun/latest.json | jq '.alert_count'
+
+# RSS 订阅（Feedly 等阅读器直接添加）
+https://earth-ai.fun/feed.xml</code></pre>
+    </div>
+  </section>
+
+  <!-- 7. 技术栈 -->
+  <section class="info-section" id="tech">
+    <h2 class="section-heading">🔧 技术栈</h2>
+    <div class="tech-grid">
+      <div class="tech-card">
+        <div class="tech-icon">🐍</div>
+        <div class="tech-name">Python 3.12</div>
+        <div class="tech-desc">核心框架，12 个模块覆盖数据采集、推理引擎、评测系统和发布流水线</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🌤️</div>
+        <div class="tech-name">QWeather API</div>
+        <div class="tech-desc">和风天气商业 API，提供实时气象观测、逐小时和逐日预报数据</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🦙</div>
+        <div class="tech-name">Ollama + Qwen3</div>
+        <div class="tech-desc">本地部署 Qwen3 14B 大模型，执行自然语言推理和二次决策升级</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🛰️</div>
+        <div class="tech-name">NASA FIRMS + MODIS</div>
+        <div class="tech-desc">卫星火点检测和植被指数（NDVI），补充地面站无法覆盖的遥感数据</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🔄</div>
+        <div class="tech-name">GitHub Actions CI/CD</div>
+        <div class="tech-desc">每日自动流水线：数据采集 → AI 决策 → 报告生成 → 部署发布，全程无人值守</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🌐</div>
+        <div class="tech-name">Cloudflare CDN</div>
+        <div class="tech-desc">全球 CDN 加速，自定义域名 earth-ai.fun，自动 HTTPS 和边缘缓存</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">📄</div>
+        <div class="tech-name">GitHub Pages</div>
+        <div class="tech-desc">gh-pages 分支托管 JSON API、Atom Feed 和静态资源，配合 CDN 实现高可用</div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon">🗺️</div>
+        <div class="tech-name">Leaflet + 高德地图</div>
+        <div class="tech-desc">前端地图引擎，支持区域定位、影响范围多边形渲染和交互式标注</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    © 2026 EarthBench · 地球决策智能基准测试框架 | Powered by AI · 每天自动更新
+    <div style="margin-top:4px;display:flex;justify-content:center;gap:12px;">
+      <a href="mailto:zergskj@163.com" style="color:#a0aec0;text-decoration:none;">📧 Email</a>
+      <a href="https://github.com/showkeyjar/earth-bench" target="_blank" style="color:#a0aec0;text-decoration:none;">🔗 GitHub</a>
+      <a href="feed.xml" target="_blank" style="color:#a0aec0;text-decoration:none;">📡 RSS Feed</a>
+    </div>
+  </footer>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const categoryIcons = {
+  'fire':   { label: '🔥 火',   cls: 'cat-fire' },
+  'flood':  { label: '🌊 洪',   cls: 'cat-flood' },
+  'drought':{ label: '🏜️ 旱',   cls: 'cat-drought' },
+  'heat':   { label: '☀️ 热',   cls: 'cat-heat' }
+};
+const categoryNames = { fire: '森林火险', flood: '洪涝灾害', drought: '干旱', heat: '高温热浪' };
+const suggestions = { fire: '注意防火', flood: '远离低洼', drought: '节约用水', heat: '减少户外' };
+const signalLabels = {
+  'FWI': '火险', 'humidity': '湿度', 'wind_speed': '风', 'wind': '风', 'temp': '温度', 'temperature': '温度',
+  'rainfall': '降雨', 'wet_bulb_temp': '闷热', 'soil_moisture': '土湿',
+  'water_level': '水位', 'rainfall_24h': '降雨24h', 'rainfall_6h': '降雨6h',
+  'SPI': 'SPI', 'palmer_index': 'Palmer', 'NDVI': 'NDVI', 'rainfall_monthly': '月降雨',
+  'temperature_max': '最高温', 'heat_duration_days': '持续天数'
+};
+
+function shareReport() {
+  const url = window.location.href;
+  navigator.clipboard.writeText(url).then(() => {
+    alert('链接已复制到剪贴板！');
+  }).catch(() => {
+    prompt('复制此链接:', url);
+  });
+}
+
+function copyToClipboard(platform) {
+  const url = encodeURIComponent(window.location.href);
+  const text = encodeURIComponent('🌍 EarthBench 每日环境风险预警 — 基于AI的多源时空数据决策智能基准测试框架\n\n' + window.location.href);
+  let shareUrl = '';
+  if (platform === 'telegram') {
+    shareUrl = `https://t.me/share/url?url=${url}&text=${text}`;
+  } else if (platform === 'twitter') {
+    shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${text}`;
+  }
+  window.open(shareUrl, '_blank', 'width=600,height=400');
+}
+
+let historyData = [];
+let recentAlertsData = [];
+// 数据源：GitHub Pages（gh-pages 分支，由每日工作流自动更新；CORS 开放、仅 ~10 分钟缓存）
+// 说明：相对路径 history.json 来自 Cloudflare Pages(main 分支根目录) 且长期未更新，
+// 因此前端改为直接读取 gh-pages 实时数据；bust() 追加时间戳查询参数以绕过 CDN/浏览器缓存。
+const DATA_BASE = 'https://showkeyjar.github.io/earth-bench/';
+function bust(u) { return u + (u.indexOf('?') >= 0 ? '&' : '?') + '_=' + Date.now(); }
+// 存储每行的内联小地图实例（已废弃，改用侧栏联动）
+
+async function fetchJSON(url) {
+  // 不使用自定义请求头，避免触发跨域(CORS)预检；新鲜度由调用方追加的时间戳查询参数保证
+  const resp = await fetch(url);
+  if (!resp.ok) return null;
+  const ct = resp.headers.get('content-type') || '';
+  if (!ct.includes('application/json') && !ct.includes('text/plain')) return null;
+  const text = await resp.text();
+  if (!text.trim().startsWith('{') && !text.trim().startsWith('[')) return null;
+  return JSON.parse(text);
+}
+
+async function loadData() {
+  let data = null;
+  // 优先从 gh-pages 读取实时数据（带时间戳绕过缓存），失败再回退到同站相对路径
+  try { data = await fetchJSON(bust(DATA_BASE + 'latest.json')); } catch(e) {}
+  if (!data) {
+    try { data = await fetchJSON('latest.json'); } catch(e) {}
+  }
+  if (!data) {
+    const today = new Date();
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(today); d.setDate(d.getDate() - i);
+      const dateStr = d.getFullYear() + '' + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+      try { data = await fetchJSON(bust(DATA_BASE + 'decisions_' + dateStr + '.json')); if (data) break; } catch(e) {}
+      if (!data) { try { data = await fetchJSON('decisions_' + dateStr + '.json'); if (data) break; } catch(e) {} }
+    }
+  }
+
+  // 加载历史数据（兼容新旧结构：旧为数组，新为 {days, recent_alerts}）
+  let rawHistory = [];
+  try { rawHistory = await fetchJSON(bust(DATA_BASE + 'history.json')) || []; } catch(e) { rawHistory = []; }
+  if (!rawHistory || (Array.isArray(rawHistory) && rawHistory.length === 0)) {
+    try { rawHistory = await fetchJSON('history.json') || []; } catch(e) { rawHistory = []; }
+  }
+  historyData = Array.isArray(rawHistory) ? rawHistory : (rawHistory.days || []);
+  recentAlertsData = Array.isArray(rawHistory) ? [] : (rawHistory.recent_alerts || []);
+
+  if (data) {
+    renderToday(data);
+    renderHistory();
+    renderRecentAlerts(data);
+    // Initialize overview map after data is loaded
+    if (data.decisions) {
+      initOverviewMap(data.decisions);
+      const updateTime = data.published_at
+        ? new Date(data.published_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+        : '';
+      document.getElementById('overview-update-time').textContent = updateTime ? '更新于 ' + updateTime : '';
+    }
+    // Render history date list for date picker
+    renderHistoryDateList(historyData);
+    // Load and render verification / accuracy trend data
+    loadVerificationData();
+    // Load and render calibration data
+    loadCalibrationData();
+  } else {
+    document.getElementById('alert-body').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#e53e3e;padding:30px;">暂时无法加载数据，请稍后刷新页面重试</td></tr>';
+  }
+}
+
+function renderToday(data) {
+  document.getElementById('header-meta').innerHTML =
+    '<div>更新于 ' + new Date(data.published_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) + '</div>';
+  document.getElementById('s-total').textContent = data.total_scenarios;
+  document.getElementById('s-alert').textContent = data.alert_count;
+  document.getElementById('s-safe').textContent = data.total_scenarios - data.alert_count;
+  document.getElementById('s-conf').textContent = Math.round(data.average_confidence * 100) + '%';
+
+  // 7天准确率
+  if (historyData.length > 0) {
+    const avgAcc = historyData.reduce((s,h) => s + h.accuracy, 0) / historyData.length;
+    document.getElementById('s-acc').textContent = Math.round(avgAcc * 100) + '%';
+  } else {
+    document.getElementById('s-acc').textContent = '-';
+  }
+
+  const tbody = document.getElementById('alert-body');
+  let html = '';
+  let alertHtml = '';
+  let safeHtml = '';
+  let alertCount = 0;
+  let safeCount = 0;
+
+  // 存储决策数据供联动地图使用
+  window._decisionData = data.decisions;
+
+  data.decisions.forEach((d, idx) => {
+    const confPercent = Math.round(d.confidence * 100);
+    const isWarning = d.llm_decision;
+
+    // confidence 字段是"风险评分"(0=安全,1=极危,阈值0.4)，不是决策把握度。
+    // 风险评分仅用于风险程度着色；预警优先，安全区域折叠在"全部区域"中。
+
+    const cat = categoryIcons[d.category] || {};
+    // 风险评分越高越危险：>=40(预警阈值)红, >=25黄, 其余绿
+    const barCls = confPercent >= 40 ? 'bar-red' : confPercent >= 25 ? 'bar-yellow' : 'bar-green';
+
+    // 关键信号（取详细证据中的 danger 项）
+    let signals = '-';
+    if (d.detailed_evidence && d.detailed_evidence.length > 0) {
+      const dangerEvs = d.detailed_evidence.filter(e => e.status === 'danger').slice(0, 3);
+      if (dangerEvs.length > 0) {
+        signals = dangerEvs.map(e => `${e.display_name.split('(')[0]}${e.value}${e.unit}`).join(', ');
+      } else {
+        const topEvs = d.detailed_evidence.slice(0, 2);
+        signals = topEvs.map(e => `${e.display_name.split('(')[0]}${e.value}${e.unit}`).join(', ');
+      }
+    } else {
+      const evEntries = Object.entries(d.evidence_summary || {})
+        .filter(([k,v]) => typeof v === 'number' && !k.startsWith('llm') && !k.startsWith('heuristic'))
+        .slice(0, 2);
+      signals = evEntries.map(([k,v]) => `${signalLabels[k]||k} ${(v*100).toFixed(0)}%`).join(', ') || '-';
+    }
+
+    // 验证徽章
+    let verifyBadge = '';
+    if (d.verification) {
+      const v = d.verification;
+      verifyBadge = v.hit
+        ? '<span class="verification-badge hit">✅ 命中</span>'
+        : '<span class="verification-badge miss">❌ 误报</span>';
+    }
+
+    const regionCn = d.region_cn || d.region;
+    // 统一显示"今日"而不是原始观测日期（所有场景都是今天评估的）
+    const obsTime = '今日';
+
+    const rowCls = isWarning ? 'alert-row' : 'safe-row';
+    let rowHtml = `<tr id="row-${idx}" onclick="toggleDetail(${idx})" style="cursor:pointer;" class="${rowCls}">
+      <td><span class="expand-icon" id="icon-${idx}">▶</span></td>
+      <td><strong>${regionCn}</strong><br><span style="font-size:0.8em;color:#a0aec0;">预计: ${obsTime}</span></td>
+      <td><span class="cat-pill ${cat.cls}">${cat.label}</span></td>
+      <td><span class="${isWarning ? 'tag-on' : 'tag-off'}">${isWarning ? '⚠️ 有风险' : '✅ 安全'}</span></td>
+      <td><div class="bar-wrap"><div class="bar-fill ${barCls}" style="width:${confPercent}%"></div></div>${confPercent}%</td>
+      <td class="mini-info">${signals}</td>
+      <td>${verifyBadge || '<span style="color:#a0aec0;">-</span>'}</td>
+    </tr>`;
+
+    // 展开行
+    let detailHtml = `<tr class="detail-row ${rowCls}" id="detail-${idx}" data-expanded="false" style="display:none;"><td colspan="7"><div class="detail-panel" id="panel-${idx}">`;
+    detailHtml += buildDetailPanel(d, idx);
+    detailHtml += `</div></td></tr>`;
+    if (isWarning) { alertHtml += rowHtml + detailHtml; alertCount++; }
+    else { safeHtml += rowHtml + detailHtml; safeCount++; }
+  });
+
+  // 预警优先：先列有风险的预警，再提供可折叠的"全部区域"
+  if (alertCount > 0) {
+    html += alertHtml;
+    if (safeCount > 0) html += safeToggleRow(safeCount);
+  } else {
+    html += '<tr><td colspan="7" style="text-align:center;color:#38a169;padding:24px;font-size:1.05em;">✅ 今日暂无环境风险预警，所有监测区域均处于安全状态</td></tr>';
+    if (safeCount > 0) html += safeToggleRow(safeCount);
+  }
+
+  tbody.innerHTML = html;
+
+  // 默认仅显示预警；安全行折叠隐藏（无预警时也已隐藏，待用户展开）
+  setSafeRowsVisible(false);
+  updateToggleBtn();
+
+  // 自动展开第一条预警（若有）
+  if (alertCount > 0) {
+    const firstAlertIdx = data.decisions.findIndex(d => d.llm_decision);
+    if (firstAlertIdx >= 0) setTimeout(() => toggleDetail(firstAlertIdx), 200);
+  }
+}
+
+// —— 安全区域折叠/展开 ——
+function safeToggleRow(safeCount) {
+  return `<tr id="safe-toggle-row"><td colspan="7" style="padding:0;">`
+    + `<button id="toggle-safe-btn" class="toggle-safe-btn" onclick="toggleSafeRows()">`
+    + `▸ 展开全部 ${safeCount} 个监测区域</button></td></tr>`;
+}
+let _safeVisible = false;
+function setSafeRowsVisible(v) {
+  _safeVisible = v;
+  document.querySelectorAll('.safe-row').forEach(el => { el.style.display = v ? '' : 'none'; });
+}
+function toggleSafeRows() {
+  setSafeRowsVisible(!_safeVisible);
+  updateToggleBtn();
+}
+function updateToggleBtn() {
+  const btn = document.getElementById('toggle-safe-btn');
+  if (!btn) return;
+  const safeCount = document.querySelectorAll('.safe-row').length;
+  const alertCount = document.querySelectorAll('.alert-row').length;
+  if (_safeVisible) {
+    btn.textContent = `▾ 收起${alertCount > 0 ? '其余' : '全部'} ${safeCount} 个监测区域`;
+  } else {
+    btn.textContent = `▸ 展开${alertCount > 0 ? '其余' : '全部'} ${safeCount} 个监测区域${alertCount > 0 ? '（当前均安全）' : '状态'}`;
+  }
+}
+
+function buildDetailPanel(d, idx) {
+  let html = '';
+
+  // 详细证据
+  if (d.detailed_evidence && d.detailed_evidence.length > 0) {
+    html += '<div style="font-weight:600;font-size:0.85em;margin-bottom:6px;color:#2d3748;">🔬 原始观测数据与阈值分析</div>';
+    html += '<div class="evidence-grid">';
+    d.detailed_evidence.forEach(ev => {
+      const valDisplay = ev.value + ev.unit;
+      let thresholdText = '';
+      if (ev.direction === 'high') {
+        thresholdText = `阈值: ≥${ev.threshold}${ev.unit}`;
+      } else if (ev.direction === 'low') {
+        thresholdText = `阈值: ≤${ev.threshold}${ev.unit}`;
+      } else {
+        thresholdText = `阈值: ≥${ev.threshold}${ev.unit}`;
+      }
+
+      // 进度条
+      let barPercent = 50;
+      if (ev.direction === 'high' && ev.threshold > 0) {
+        barPercent = Math.min(100, (ev.value / (ev.threshold * 1.5)) * 100);
+      } else if (ev.direction === 'low' && ev.threshold !== 0) {
+        barPercent = Math.min(100, ((ev.threshold * 2 - ev.value) / (ev.threshold * 2)) * 100);
+      }
+      const barColor = ev.status === 'danger' ? '#f56565' : ev.status === 'warn' ? '#ecc94b' : '#48bb78';
+      const markerPos = ev.direction === 'high'
+        ? Math.min(100, (ev.threshold / (ev.threshold * 1.5)) * 100)
+        : 50;
+
+      html += `<div class="evidence-card ${ev.status}">
+        <div class="ev-name">${ev.display_name}</div>
+        <div class="ev-value">${valDisplay} <span style="font-size:0.7em;color:#718096;">${ev.status_text}</span></div>
+        <div class="ev-threshold">${thresholdText} · 来源: ${ev.source}</div>
+        <div class="ev-bar-wrap"><div class="ev-bar-fill" style="width:${barPercent}%;background:${barColor};"></div><div class="ev-bar-marker" style="left:${markerPos}%;"></div></div>
+        <div class="ev-desc">${ev.description}</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  // 原始观测时间序列（如果有多个时间点）
+  if (d.raw_observations && d.raw_observations.length > 0) {
+    const grouped = {};
+    d.raw_observations.forEach(o => {
+      if (!grouped[o.variable]) grouped[o.variable] = [];
+      grouped[o.variable].push(o);
+    });
+    const multiPoint = Object.values(grouped).filter(arr => arr.length >= 2);
+    if (multiPoint.length > 0) {
+      html += '<div style="font-weight:600;font-size:0.85em;margin:8px 0 4px;color:#2d3748;">📈 时序趋势（L4 场景）</div>';
+      html += '<div style="font-size:0.78em;color:#4a5568;line-height:1.6;">';
+      multiPoint.forEach(arr => {
+        const varName = signalLabels[arr[0].variable] || arr[0].variable;
+        const values = arr.map(o => `${o.value}${o.unit}`).join(' → ');
+        const times = arr.map(o => o.timestamp.substring(5,16)).join(' → ');
+        html += `<div><strong>${varName}</strong>: ${values} <span style="color:#a0aec0;">(${times})</span></div>`;
+      });
+      html += '</div>';
+    }
+  }
+
+  // 推理链条
+  if (d.reasoning_chain && d.reasoning_chain.length > 0) {
+    html += '<div class="reasoning-chain">';
+    html += '<div class="chain-title">🧠 AI 推理过程</div>';
+    d.reasoning_chain.forEach(step => {
+      const iconMap = { intro: '📋', evidence: '📊', analysis: '⚖️', decision: d.llm_decision ? '⚠️' : '✅' };
+      html += `<div class="chain-step">
+        <div class="chain-num ${step.type}">${step.step}</div>
+        <div class="chain-text">${iconMap[step.type] || ''} ${step.text}</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  // 建议措施
+  if (d.llm_decision) {
+    html += `<div style="margin-top:8px;padding:8px 10px;background:#fff5f5;border-radius:6px;font-size:0.82em;">
+      <strong>📌 建议:</strong> ${suggestions[d.category] || '-'} — ${getAdvice(d.category)}
+    </div>`;
+  }
+
+  // 数据来源详情
+  html += `<div style="margin-top:6px;font-size:0.72em;color:#a0aec0;">数据来源: ${d.data_sources || '-'} · 预计发生时间: ${d.observation_time ? d.observation_time.substring(0,10) : '-'}</div>`;
+
+  // 验证结果与理由
+  if (d.verification) {
+    const v = d.verification;
+    const hitClass = v.hit ? 'hit' : 'miss';
+    const hitIcon = v.hit ? '✅' : '❌';
+    const hitLabel = v.hit
+      ? (v.predicted ? '正确预警' : '正确排除')
+      : (v.predicted ? '误报' : '漏报');
+    const reasonText = d.verification_reason || '';
+    html += `<div style="margin-top:8px;padding:10px 12px;background:${v.hit ? '#f0fff4' : '#fff5f5'};border-radius:8px;border-left:3px solid ${v.hit ? '#48bb78' : '#f56565'};">
+      <div style="font-weight:600;font-size:0.85em;margin-bottom:4px;color:${v.hit ? '#22543d' : '#742a2a'};">${hitIcon} 验证结果：${hitLabel}</div>
+      <div style="font-size:0.78em;color:#4a5568;line-height:1.5;">${reasonText}</div>
+    </div>`;
+  }
+
+  return html;
+}
+
+function getAdvice(category) {
+  const advice = {
+    fire: '加强巡查、清理可燃物、准备灭火设备、关注风向变化',
+    flood: '远离河道和低洼地区、准备防汛物资、关注水位预警',
+    drought: '合理调配水资源、减少农业灌溉、关注饮用水储备',
+    heat: '减少户外活动、多饮水、关注老人儿童健康状况、防止中暑'
+  };
+  return advice[category] || '';
+}
+
+// 存储所有决策数据供联动地图使用
+window._decisionData = [];
+let sideMapInstance = null;
+let currentExpandedIdx = -1; // 当前展开的行
+let lastMapData = null; // 上一次展示的区域数据
+
+function toggleDetail(idx) {
+  const row = document.getElementById('detail-' + idx);
+  const icon = document.getElementById('icon-' + idx);
+  const panel = document.getElementById('panel-' + idx);
+  const mainRow = document.getElementById('row-' + idx);
+  const d = window._decisionData[idx];
+
+  if (row.dataset.expanded !== 'true') {
+    // === 收起上一行 ===
+    if (currentExpandedIdx >= 0 && currentExpandedIdx !== idx) {
+      const oldRow = document.getElementById('detail-' + currentExpandedIdx);
+      if (oldRow) {
+        oldRow.style.display = 'none';
+        oldRow.dataset.expanded = 'false';
+        oldRow.classList.remove('expanded');
+        const oldIcon = document.getElementById('icon-' + currentExpandedIdx);
+        if (oldIcon) { oldIcon.classList.remove('open'); oldIcon.textContent = '▶'; }
+      }
+    }
+
+    // 展开
+    row.dataset.expanded = 'true';
+    row.style.display = '';
+    panel.classList.add('show');
+    icon.classList.add('open');
+    icon.textContent = '▼';
+    mainRow.classList.add('expanded');
+    currentExpandedIdx = idx;
+
+    // 显示侧栏地图（如果尚未创建）
+    if (d && d.coordinates) {
+      document.getElementById('side-map-container').style.display = '';
+      document.getElementById('side-map-empty').style.display = 'none';
+      setTimeout(() => showSideMap(d, idx), 50);
+    }
+  } else {
+    // 收起当前行 — 保留地图，不清除
+    row.dataset.expanded = 'false';
+    row.style.display = 'none';
+    panel.classList.remove('show');
+    icon.classList.remove('open');
+    icon.textContent = '▶';
+    mainRow.classList.remove('expanded');
+    currentExpandedIdx = -1;
+
+    // 保留侧栏地图显示上一次选中的区域
+  }
+}
+
+function showSideMap(d, idx) {
+  if (typeof L === 'undefined' || !d.coordinates) return;
+  const mapEl = document.getElementById('side-map');
+  if (!mapEl) return;
+
+  const riskColor = d.llm_decision ? '#e53e3e' : '#48bb78';
+  const radiusM = (d.affected_radius_km || 20) * 1000;
+
+  // 如果已有地图实例，只更新内容（不销毁重建）
+  if (sideMapInstance) {
+    sideMapInstance.eachLayer(layer => {
+      if (layer instanceof L.Polygon || layer instanceof L.CircleMarker) {
+        sideMapInstance.removeLayer(layer);
+      }
+    });
+  } else {
+    sideMapInstance = L.map('side-map', {
+      scrollWheelZoom: true,
+      zoomControl: true,
+      attributionControl: true,
+    }).setView([d.coordinates.lat, d.coordinates.lng], 13);
+
+    L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+      subdomains: ['1', '2', '3', '4'],
+      maxZoom: 18
+    }).addTo(sideMapInstance);
+
+    L.control.attribution({ position: 'bottomleft' }).addTo(sideMapInstance);
+  }
+
+  // 使用后端生成的固定多边形（如果有），否则回退到随机生成
+  let polygonPoints;
+  if (d.polygon && d.polygon.length > 0) {
+    polygonPoints = d.polygon.map(p => [p.lat, p.lng]);
+  } else {
+    // 旧数据没有 polygon 字段，回退到客户端随机生成
+    const latRange = (radiusM / 111320) * 0.8;
+    const lngRange = (radiusM / (111320 * Math.cos(d.coordinates.lat * Math.PI / 180))) * 0.8;
+    polygonPoints = [];
+    const numSides = 7;
+    for (let i = 0; i < numSides; i++) {
+      const angle = (i / numSides) * Math.PI * 2;
+      const r = 0.7 + (i % 3) * 0.1;
+      const lat = d.coordinates.lat + Math.sin(angle) * latRange * r;
+      const lng = d.coordinates.lng + Math.cos(angle) * lngRange * r;
+      polygonPoints.push([lat, lng]);
+    }
+  }
+
+  const polygon = L.polygon(polygonPoints, {
+    color: riskColor,
+    fillColor: riskColor,
+    fillOpacity: 0.15,
+    weight: 2,
+    dashArray: '6,3'
+  }).addTo(sideMapInstance).bindPopup(`<strong>${d.region_cn}</strong><br>影响范围`);
+
+  L.circleMarker([d.coordinates.lat, d.coordinates.lng], {
+    radius: 5,
+    color: riskColor,
+    fillColor: '#fff',
+    fillOpacity: 1,
+    weight: 2
+  }).addTo(sideMapInstance);
+
+  // 自动调整视图，让多边形完全可见
+  const bounds = polygon.getBounds();
+  sideMapInstance.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+
+  // 更新标题
+  lastMapData = d;
+  document.querySelector('.side-map-header').textContent = `📍 ${d.region_cn}`;
+}
+
+// ===================== History =====================
+function renderHistory() {
+  const days = Array.isArray(historyData) ? historyData : (historyData.days || []);
+  if (!days || days.length === 0) {
+    document.getElementById('history-chart').innerHTML = '<div style="font-size:0.8em;color:#a0aec0;text-align:center;padding:20px;">暂无历史数据</div>';
+    return;
+  }
+
+  // 图表
+  const chartHtml = days.slice().reverse().map(h => {
+    const accPercent = Math.round(h.accuracy * 100);
+    const barHeight = Math.max(4, accPercent * 0.7);
+    const barColor = accPercent >= 95 ? '#48bb78' : accPercent >= 85 ? '#ecc94b' : '#f56565';
+    return `<div class="history-bar-col">
+      <div class="history-bar-val" style="color:${barColor};">${accPercent}%</div>
+      <div class="history-bar ${h.is_today ? 'today' : ''}" style="height:${barHeight}px;background:${barColor};" title="${h.date_short}: ${h.hits}/${h.alerts}命中"></div>
+      <div class="history-bar-label">${h.date_short}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('history-chart').innerHTML = chartHtml;
+
+  // 汇总统计 — 按"总决策数"计算准确率，更清晰
+  const totalDecisions = days.reduce((s,h) => s + h.total, 0);
+  const totalHits = days.reduce((s,h) => s + h.hits, 0);
+  const totalErrors = days.reduce((s,h) => s + h.misses, 0);
+  const overallAcc = totalDecisions > 0 ? Math.round(totalHits / totalDecisions * 100) : 0;
+
+  document.getElementById('history-summary').innerHTML = `
+    <div class="history-stat"><div class="num" style="color:#38a169;">${totalHits}</div><div class="label">正确 ${totalDecisions}次</div></div>
+    <div class="history-stat"><div class="num" style="color:#e53e3e;">${totalErrors}</div><div class="label">错误</div></div>
+    <div class="history-stat"><div class="num" style="color:#667eea;">${overallAcc}%</div><div class="label">总准确率</div></div>
+  `;
+
+  // 今日详情
+  const today = days.find(h => h.is_today) || days[0];
+  if (today && today.details) {
+    const detailHtml = today.details.map(d => {
+      const catIcon = categoryIcons[d.category] || { label: '' };
+      const resultText = d.hit
+        ? (d.predicted ? '✅ 正确预警' : '✅ 正确排除')
+        : (d.predicted ? '❌ 误报' : '❌ 漏报');
+      const reason = d.hit_reason || '';
+      return `<div class="history-detail-row">
+        <div class="hd-row-top">
+          <span class="region">${catIcon.label} ${d.region}</span>
+          <span class="result ${d.hit ? 'hit' : 'miss'}">${resultText}</span>
+        </div>
+        ${reason ? `<div class="hd-row-reason">${reason}</div>` : ''}
+      </div>`;
+    }).join('');
+    document.getElementById('history-detail-list').innerHTML = detailHtml;
+  }
+}
+
+// 今日无预警时，回看近 14 天的真实风险预警（扩展时间范围）
+function renderRecentAlerts(latestData) {
+  const card = document.getElementById('recent-alerts-card');
+  const body = document.getElementById('recent-alerts-body');
+  if (!card || !body) return;
+  // 今天已有预警：主表已展示，无需重复
+  if (latestData && latestData.alert_count > 0) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+  const alerts = recentAlertsData || [];
+  if (alerts.length === 0) {
+    body.innerHTML = '<div style="text-align:center;color:#a0aec0;padding:18px;">近 14 天无环境风险预警记录，系统持续监测中。</div>';
+    return;
+  }
+  const byDate = {};
+  alerts.forEach(a => { (byDate[a.date] = byDate[a.date] || []).push(a); });
+  const dates = Object.keys(byDate).sort().reverse();
+  let html = '';
+  dates.forEach(date => {
+    html += '<div class="ra-date">' + date + '</div>';
+    byDate[date].forEach(a => {
+      const icon = (categoryIcons[a.category] && categoryIcons[a.category].label) || '';
+      const res = a.hit ? (a.predicted ? '✅ 正确预警' : '✅ 正确排除') : (a.predicted ? '❌ 误报' : '❌ 漏报');
+      const resCls = a.hit ? 'hit' : 'miss';
+      const reason = a.hit_reason ? '<div class="ra-reason">' + a.hit_reason + '</div>' : '';
+      html += '<div class="ra-row"><span class="ra-region">' + icon + ' ' + a.region + '</span>' +
+              '<span class="ra-result ' + resCls + '">' + res + '</span></div>' + reason;
+    });
+  });
+  body.innerHTML = html;
+}
+
+// ===================== Global Overview Map =====================
+let overviewMapInstance = null;
+
+function initOverviewMap(decisions) {
+  if (typeof L === 'undefined' || !decisions) return;
+  const mapEl = document.getElementById('overview-map');
+  if (!mapEl) return;
+
+  if (overviewMapInstance) {
+    overviewMapInstance.eachLayer(layer => {
+      if (layer instanceof L.Polygon || layer instanceof L.CircleMarker || layer instanceof L.Marker) {
+        overviewMapInstance.removeLayer(layer);
+      }
+    });
+  } else {
+    overviewMapInstance = L.map('overview-map', {
+      scrollWheelZoom: true,
+      zoomControl: true,
+      attributionControl: true,
+    }).setView([35.0, 108.0], 4);
+
+    L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+      subdomains: ['1', '2', '3', '4'],
+      maxZoom: 18,
+      attribution: '高德地图'
+    }).addTo(overviewMapInstance);
+  }
+
+  decisions.forEach((d, idx) => {
+    if (!d.coordinates) return;
+    const confPercent = Math.round((d.confidence || 0) * 100);
+    const isWarning = d.llm_decision;
+    const cat = categoryIcons[d.category] || { label: '' };
+
+    // Marker color: red for alert, yellow for >=25% risk, green for safe
+    const markerColor = isWarning ? '#e53e3e' : confPercent >= 25 ? '#ecc94b' : '#48bb78';
+
+    // Draw polygon if available
+    if (d.polygon && d.polygon.length > 0) {
+      const polygonPoints = d.polygon.map(p => [p.lat, p.lng]);
+      L.polygon(polygonPoints, {
+        color: markerColor,
+        fillColor: markerColor,
+        fillOpacity: 0.12,
+        weight: 1.5,
+        dashArray: '4,2'
+      }).addTo(overviewMapInstance).bindPopup(
+        `<strong>${cat.label} ${d.region_cn || d.region}</strong><br>` +
+        `状态: ${isWarning ? '⚠️ 有风险' : '✅ 安全'}<br>` +
+        `风险评分: ${confPercent}%<br>` +
+        `<a href="#row-${idx}" onclick="setTimeout(()=>toggleDetail(${idx}),100)">查看详情 →</a>`
+      );
+    }
+
+    // Circle marker at center
+    L.circleMarker([d.coordinates.lat, d.coordinates.lng], {
+      radius: isWarning ? 7 : 5,
+      color: markerColor,
+      fillColor: markerColor,
+      fillOpacity: 0.8,
+      weight: 2
+    }).addTo(overviewMapInstance).bindPopup(
+      `<strong>${cat.label} ${d.region_cn || d.region}</strong><br>` +
+      `状态: ${isWarning ? '⚠️ 有风险' : '✅ 安全'}<br>` +
+      `风险评分: ${confPercent}%<br>` +
+      `<a href="#row-${idx}" onclick="setTimeout(()=>toggleDetail(${idx}),100)">查看详情 →</a>`
+    );
+  });
+
+  // Fit bounds to show all markers
+  const bounds = L.latLngBounds(
+    decisions.filter(d => d.coordinates).map(d => [d.coordinates.lat, d.coordinates.lng])
+  );
+  if (bounds.isValid()) {
+    overviewMapInstance.fitBounds(bounds, { padding: [30, 30], maxZoom: 6 });
+  }
+}
+
+// ===================== History Date Picker =====================
+let historyReportData = null;
+
+function renderHistoryDateList(historyDays) {
+  const container = document.getElementById('history-date-list');
+  if (!container || !historyDays || historyDays.length === 0) {
+    if (container) container.innerHTML = '<span style="color:#a0aec0;font-size:0.82em;padding:4px;">暂无历史数据</span>';
+    return;
+  }
+
+  let html = '';
+  historyDays.forEach(h => {
+    const accPercent = Math.round(h.accuracy * 100);
+    const cls = h.is_today ? 'history-date-chip today' : 'history-date-chip';
+    const dateTag = h.date.replace(/-/g, '');
+    html += `<div class="${cls}" onclick="loadHistoryReport('${dateTag}', '${h.date_short}')">
+      <span>${h.date_short}</span>
+      <span class="chip-acc">${accPercent}%</span>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+async function loadHistoryReport(dateTag, dateLabel) {
+  // Highlight active chip
+  document.querySelectorAll('.history-date-chip').forEach(el => el.classList.remove('active'));
+  event && event.target && event.target.classList.add('active');
+
+  const container = document.getElementById('history-report-container');
+  const title = document.getElementById('history-report-title');
+  const body = document.getElementById('history-report-body');
+
+  title.textContent = `📅 ${dateLabel} 决策报告`;
+  body.innerHTML = '<div style="text-align:center;padding:20px;color:#a0aec0;">加载中...</div>';
+  container.style.display = 'block';
+
+  // Try loading from gh-pages
+  let data = null;
+  try { data = await fetchJSON(bust(DATA_BASE + 'decisions_' + dateTag + '.json')); } catch(e) {}
+  if (!data) {
+    try { data = await fetchJSON('decisions_' + dateTag + '.json'); } catch(e) {}
+  }
+
+  if (!data || !data.decisions) {
+    body.innerHTML = '<div style="text-align:center;padding:20px;color:#e53e3e;">该日期暂无报告数据</div>';
+    return;
+  }
+
+  // Try loading verification data for this date
+  let verifData = null;
+  try { verifData = await fetchJSON(bust(DATA_BASE + 'verification_' + dateTag + '.json')); } catch(e) {}
+  if (!verifData) {
+    try { verifData = await fetchJSON('verification_' + dateTag + '.json'); } catch(e) {}
+  }
+
+  // Merge verification results into decisions
+  const decs = data.decisions;
+  if (verifData && verifData.verifications) {
+    const verifMap = {};
+    verifData.verifications.forEach(v => {
+      verifMap[v.region_id + ':' + v.category] = v;
+    });
+    decs.forEach(d => {
+      const key = (d.region_id || d.region || '') + ':' + (d.category || '');
+      if (verifMap[key]) {
+        d.verification = {
+          hit: verifMap[key].hit,
+          actual: verifMap[key].actual,
+          source: verifMap[key].verification_source,
+          evidence: verifMap[key].verification_evidence,
+          status: verifMap[key].verification_status,
+        };
+      }
+    });
+  }
+  const alertCount = decs.filter(d => d.llm_decision).length;
+  const hits = decs.filter(d => d.verification && d.verification.hit).length;
+  const totalCount = decs.length;
+  const publishedAt = data.published_at || '';
+
+  let html = `<div style="margin-bottom:10px;font-size:0.85em;color:#718096;">
+    发布时间: ${publishedAt ? new Date(publishedAt).toLocaleString('zh-CN', {timeZone:'Asia/Shanghai'}) : '-'}
+    · 共 ${totalCount} 个场景 · ${alertCount} 个预警 · 命中 ${hits}/${totalCount}
+  </div>`;
+
+  html += '<table class="history-report-table"><thead><tr>';
+  html += '<th>区域</th><th>类型</th><th>状态</th><th>风险</th><th>验证</th><th>理由</th>';
+  html += '</tr></thead><tbody>';
+
+  decs.forEach(d => {
+    const cat = categoryIcons[d.category] || {};
+    const confPercent = Math.round((d.confidence || 0) * 100);
+    const isWarning = d.llm_decision;
+    const verifyBadge = d.verification
+      ? (d.verification.hit === true
+          ? '<span class="verification-badge hit">✅ 命中</span>'
+          : d.verification.hit === false
+            ? '<span class="verification-badge miss">❌ 误报</span>'
+            : '<span style="color:#a0aec0;font-size:0.78em;">数据不足</span>')
+      : '<span style="color:#a0aec0;font-size:0.78em;">待验证</span>';
+    const reason = d.verification_reason || d.rationale || '';
+    const reasonShort = reason.length > 80 ? reason.substring(0, 80) + '...' : reason;
+
+    html += `<tr>
+      <td><strong>${d.region_cn || d.region}</strong></td>
+      <td>${cat.label || d.category}</td>
+      <td>${isWarning ? '<span style="color:#e53e3e;">⚠️ 有风险</span>' : '<span style="color:#38a169;">✅ 安全</span>'}</td>
+      <td>${confPercent}%</td>
+      <td>${verifyBadge}</td>
+      <td style="font-size:0.82em;color:#4a5568;">${reasonShort}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+
+  body.innerHTML = html;
+  container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeHistoryReport() {
+  document.getElementById('history-report-container').style.display = 'none';
+  document.querySelectorAll('.history-date-chip').forEach(el => el.classList.remove('active'));
+}
+
+// ============================================================================
+// Verification / Accuracy Trend
+// ============================================================================
+
+async function loadVerificationData() {
+  let trend = null;
+  try { trend = await fetchJSON(bust(DATA_BASE + 'accuracy_trend.json')); } catch(e) {}
+  if (!trend) {
+    try { trend = await fetchJSON('accuracy_trend.json'); } catch(e) {}
+  }
+
+  if (!trend) {
+    document.getElementById('verification-update-time').textContent = '暂无验证数据 (T+2后自动生成)';
+    return;
+  }
+
+  const genAt = trend.generated_at
+    ? new Date(trend.generated_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+    : '';
+  document.getElementById('verification-update-time').textContent = genAt ? '更新于 ' + genAt : '';
+
+  // Stats
+  document.getElementById('verif-total').textContent = trend.total_verified || 0;
+  document.getElementById('verif-accuracy').textContent = trend.accuracy != null ? Math.round(trend.accuracy * 100) + '%' : '-';
+  document.getElementById('verif-precision').textContent = trend.precision != null ? Math.round(trend.precision * 100) + '%' : '-';
+  document.getElementById('verif-recall').textContent = trend.recall != null ? Math.round(trend.recall * 100) + '%' : '-';
+  document.getElementById('verif-f1').textContent = trend.f1 != null ? Math.round(trend.f1 * 100) + '%' : '-';
+
+  // Category badges
+  const catRow = document.getElementById('verif-category-row');
+  catRow.innerHTML = '';
+  const catNames = { fire: '火灾', flood: '洪水', drought: '干旱', heat: '热浪' };
+  if (trend.by_category) {
+    for (const [cat, stats] of Object.entries(trend.by_category)) {
+      const badge = document.createElement('span');
+      badge.className = 'verif-cat-badge ' + cat;
+      const accStr = stats.accuracy != null ? Math.round(stats.accuracy * 100) + '%' : '?';
+      badge.textContent = (catNames[cat] || cat) + ': ' + accStr + ' (' + stats.verified + '/' + stats.total + ')';
+      catRow.appendChild(badge);
+    }
+  }
+
+  // Trend bar chart
+  if (trend.daily_trend && trend.daily_trend.length > 0) {
+    const trendSection = document.getElementById('verif-trend-section');
+    trendSection.style.display = 'block';
+    const bars = document.getElementById('verif-trend-bars');
+    bars.innerHTML = '';
+    trend.daily_trend.forEach(day => {
+      const bar = document.createElement('div');
+      bar.className = 'verif-trend-bar';
+      let accPct = day.accuracy;
+      if (accPct == null) {
+        bar.classList.add('nodata');
+        bar.style.height = '4px';
+      } else {
+        if (accPct >= 0.8) bar.classList.add('good');
+        else if (accPct >= 0.5) bar.classList.add('mid');
+        else bar.classList.add('low');
+        bar.style.height = Math.max(4, accPct * 60) + 'px';
+      }
+      const tooltip = document.createElement('span');
+      tooltip.className = 'tooltip';
+      const accStr = accPct != null ? Math.round(accPct * 100) + '%' : '无数据';
+      tooltip.textContent = day.date + ': ' + accStr + ' (' + day.verified + '条验证)';
+      bar.appendChild(tooltip);
+      bars.appendChild(bar);
+    });
+  }
+}
+
+// ============================================================================
+// Calibration / Threshold Auto-Tuning
+// ============================================================================
+
+async function loadCalibrationData() {
+  let status = null;
+  try { status = await fetchJSON(bust(DATA_BASE + 'calibration_status.json')); } catch(e) {}
+  if (!status) {
+    try { status = await fetchJSON('calibration_status.json'); } catch(e) {}
+  }
+
+  if (!status) {
+    return; // Panel stays hidden
+  }
+
+  // Show panel
+  document.getElementById('calibration-panel').style.display = 'block';
+
+  const calAt = status.calibrated_at
+    ? new Date(status.calibrated_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+    : '';
+  document.getElementById('calibration-update-time').textContent = calAt ? '更新于 ' + calAt : '';
+
+  // Render threshold cards
+  const catNames = { fire: '火灾', flood: '洪水', drought: '干旱', heat: '热浪' };
+  const defaultThresholds = { fire: 0.40, flood: 0.45, drought: 0.40, heat: 0.40 };
+  const newThresholds = status.new_thresholds || status.current_thresholds || defaultThresholds;
+  const adjustments = status.adjustments || [];
+
+  const row = document.getElementById('cal-threshold-row');
+  row.innerHTML = '';
+
+  for (const cat of ['fire', 'flood', 'drought', 'heat']) {
+    const val = newThresholds[cat] != null ? newThresholds[cat] : defaultThresholds[cat];
+    const adj = adjustments.find(a => a.category === cat);
+    const defaultVal = defaultThresholds[cat];
+    const delta = val - defaultVal;
+    const deltaClass = delta > 0.001 ? 'up' : delta < -0.001 ? 'down' : 'none';
+    const deltaSign = delta > 0.001 ? '+' : '';
+    const deltaStr = deltaClass !== 'none' ? `${deltaSign}${delta.toFixed(4)}` : 'default';
+
+    const card = document.createElement('div');
+    card.className = 'cal-threshold-card ' + cat;
+    card.innerHTML = `
+      <div class="cal-cat">${catNames[cat] || cat}</div>
+      <span class="cal-val">${val.toFixed(2)}</span>
+      <div class="cal-delta ${deltaClass}">${deltaStr}</div>
+    `;
+    row.appendChild(card);
+  }
+
+  // Render calibration log (if exists)
+  let logData = null;
+  try { logData = await fetchJSON(bust(DATA_BASE + 'calibration_log.json')); } catch(e) {}
+  if (!logData) {
+    try { logData = await fetchJSON('calibration_log.json'); } catch(e) {}
+  }
+
+  if (logData && Array.isArray(logData) && logData.length > 0) {
+    const logSection = document.getElementById('cal-log-section');
+    logSection.style.display = 'block';
+    const logList = document.getElementById('cal-log-list');
+    logList.innerHTML = '';
+    // Show last 5 entries (most recent first)
+    const recent = logData.slice(-5).reverse();
+    recent.forEach(entry => {
+      const div = document.createElement('div');
+      div.className = 'cal-log-entry ' + (entry.action === 'adjust' ? 'adjust' : '');
+      const time = entry.timestamp
+        ? new Date(entry.timestamp).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+        : '';
+      const cat = catNames[entry.category] || entry.category;
+      const oldV = entry.old_value != null ? entry.old_value.toFixed(4) : '?';
+      const newV = entry.new_value != null ? entry.new_value.toFixed(4) : '?';
+      const adj = entry.adjustment != null ? (entry.adjustment > 0 ? '+' : '') + entry.adjustment.toFixed(4) : '0';
+      const reason = entry.reason || '';
+      div.innerHTML = `<span class="cal-log-time">${time}</span> <strong>${cat}</strong>: ${oldV} -> ${newV} (${adj}) <span class="cal-log-detail">${reason}</span>`;
+      logList.appendChild(div);
+    });
+  }
+}
+
+loadData();
+</script>
+</body>
+</html>

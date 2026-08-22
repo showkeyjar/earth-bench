@@ -1,0 +1,88 @@
+{
+  "status": "no_change",
+  "files_used": 12,
+  "lookback_days": 14,
+  "current_thresholds": {
+    "fire": 0.65,
+    "flood": 0.25,
+    "drought": 0.25,
+    "heat": 0.25
+  },
+  "new_thresholds": {
+    "fire": 0.65,
+    "flood": 0.25,
+    "drought": 0.25,
+    "heat": 0.25
+  },
+  "adjustments": [
+    {
+      "timestamp": "2026-08-22T20:28:53.774822+08:00",
+      "category": "fire",
+      "old_value": 0.65,
+      "new_value": 0.65,
+      "adjustment": 0.0,
+      "action": "adjust",
+      "reason": "fp=1, fn=0, tn=59, tp=0 | error_diff=1 -> up",
+      "stats": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0,
+        "tn": 59
+      },
+      "verification_files_used": 12,
+      "lookback_days": 14
+    },
+    {
+      "timestamp": "2026-08-22T20:28:53.774838+08:00",
+      "category": "flood",
+      "old_value": 0.25,
+      "new_value": 0.25,
+      "adjustment": 0.0,
+      "action": "adjust",
+      "reason": "fp=0, fn=2, tn=46, tp=0 | error_diff=-2 -> down",
+      "stats": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "tn": 46
+      },
+      "verification_files_used": 12,
+      "lookback_days": 14
+    },
+    {
+      "timestamp": "2026-08-22T20:28:53.774847+08:00",
+      "category": "drought",
+      "old_value": 0.25,
+      "new_value": 0.25,
+      "adjustment": 0.0,
+      "action": "adjust",
+      "reason": "fp=1, fn=2, tn=44, tp=13 | error_diff=-1 -> down",
+      "stats": {
+        "tp": 13,
+        "fp": 1,
+        "fn": 2,
+        "tn": 44
+      },
+      "verification_files_used": 12,
+      "lookback_days": 14
+    },
+    {
+      "timestamp": "2026-08-22T20:28:53.774854+08:00",
+      "category": "heat",
+      "old_value": 0.25,
+      "new_value": 0.25,
+      "adjustment": 0.0,
+      "action": "adjust",
+      "reason": "fp=1, fn=4, tn=29, tp=14 | error_diff=-3 -> down",
+      "stats": {
+        "tp": 14,
+        "fp": 1,
+        "fn": 4,
+        "tn": 29
+      },
+      "verification_files_used": 12,
+      "lookback_days": 14
+    }
+  ],
+  "calibrated_at": "2026-08-22T20:28:53.774908+08:00"
+}
