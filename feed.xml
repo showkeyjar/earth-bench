@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>EarthBench Alerts</title>
+  <subtitle>Environmental Risk Decision Intelligence</subtitle>
+  <link href="https://earthbench.io/feed.xml" rel="self"/>
+  <link href="https://earthbench.io"/>
+  <updated>2026-09-05T22:26:39+08:00</updated>
+  <id>tag:earthbench.io,2026:</id>
+  <generator>EarthBench Pipeline v0.3.0</generator>
+
+  <entry>
+    <title>EarthBench Alert: Heat Wave in Chongqing-HotPotato</title>
+    <link href="/reports/20260905/heat-l1-extreme-wetbulb" rel="alternate"/>
+    <id>tag:earthbench.io,2026-09-05T14:26:39.058321+00:00</id>
+    <published>2026-09-05T14:26:39.058321+00:00</published>
+    <summary>HeatWaveAlert: 最高温=36.7°C, 湿球=23.6°C, 湿度=48.0%, 持续≈3天, 风险分=0.423</summary>
+  </entry>
+</feed>

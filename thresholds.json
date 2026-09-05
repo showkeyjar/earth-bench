@@ -1,0 +1,10 @@
+{
+  "thresholds": {
+    "fire": 0.65,
+    "flood": 0.65,
+    "drought": 0.5897,
+    "heat": 0.25
+  },
+  "updated_at": "2026-09-05T22:26:39.348596+08:00",
+  "version": 62
+}
