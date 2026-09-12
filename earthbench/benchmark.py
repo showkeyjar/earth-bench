@@ -57,13 +57,38 @@ class AlertBenchEvaluator:
         self.raw_suite: list[dict[str, Any]] = get_alert_benchmark_suite()
         self.test_cases: list[AlertTestCase] = []
         self.results: list[dict[str, Any]] = []
+        self._gt_divergences: list[dict[str, Any]] = []
         self._build_test_cases()
 
     def _build_test_cases(self) -> None:
-        """从 raw_suite 构建 AlertTestCase 列表，并提取 Ground Truth。"""
+        """从 raw_suite 构建 AlertTestCase 列表，并提取 Ground Truth。
+
+                Ground Truth 一律通过各场景的 `_gt_fn` **运行时推导**获得（独立物理
+                标准查表），不直接读取场景中的硬编码值——硬编码值仅作为文档化参考，
+        若与独立标准推导结果不一致，以独立标准为准并记录差异。
+        """
+        self._gt_divergences = []
         for item in self.raw_suite:
-            # 提取 Ground Truth（不会修改原始数据）
-            ground_truth = item.get("ground_truth", False)
+            gt_fn = item.get("_gt_fn")
+            obs = item.get("observations", [])
+            if gt_fn is not None:
+                kwargs = {}
+                if item.get("category") == "heat":
+                    kwargs["heat_duration_days"] = item.get("heat_duration_days", 3)
+                decision, _score, _explanation = gt_fn(obs, **kwargs)
+                ground_truth = decision
+                # 硬编码值仅作一致性校验：若与独立标准不一致，记录差异
+                doc_truth = item.get("ground_truth", None)
+                if doc_truth is not None and doc_truth != ground_truth:
+                    self._gt_divergences.append(
+                        {
+                            "case_id": item["case_id"],
+                            "documented": doc_truth,
+                            "derived": ground_truth,
+                        }
+                    )
+            else:
+                ground_truth = item.get("ground_truth", False)
 
             tc = AlertTestCase(
                 case_id=item["case_id"],
@@ -71,9 +96,14 @@ class AlertBenchEvaluator:
                 category=item["category"],
                 region=item["region"],
                 ground_truth=ground_truth,
-                observations=item["observations"],
+                observations=obs,
             )
             self.test_cases.append(tc)
+
+    @property
+    def gt_divergences(self) -> list[dict[str, Any]]:
+        """独立标准推导与文档硬编码不一致的场景（应为空，否则需更新文档真值）。"""
+        return self._gt_divergences
 
     def evaluate_agent(self, agent) -> list[dict[str, Any]]:
         """

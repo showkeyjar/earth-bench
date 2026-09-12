@@ -1,7 +1,8 @@
 """Alert 决策 Agent 实现。
 
 Phase 1 提供四类场景各自专用的规则引擎 baseline Agent。
-每类场景都有自己的 Ground Truth 推导逻辑，作为 LLM Agent 的对标基准。
+每类场景 Agent 使用独立的加权评分模型（归一化加权求和 + 阈值判定）做出决策；
+Ground Truth 由 scenarios.py 的独立物理标准（国标分级查表）推导，两者相互独立。
 
 阈值校准: agents.py 的决策阈值可被 calibration 模块动态调整。
 通过环境变量 EARTHBENCH_THRESHOLDS_JSON 指定 thresholds.json 路径,
@@ -121,28 +122,28 @@ class FireAlertAgent(AlertAgent):
         evidence: dict[str, float] = {}
         components: list[tuple[float, float, str]] = []
 
-        # FWI — 与 GT 推导公式对齐: min(fwi / 60, 1.0)
+        # FWI 归一化（Agent 自身评分模型）: min(fwi / 60, 1.0)
         if fwi_vals:
             avg_fwi = sum(fwi_vals) / len(fwi_vals)
             fwi_risk = min(avg_fwi / 60.0, 1.0)
             components.append((fwi_risk, 0.40, "FWI"))
             evidence["FWI"] = round(fwi_risk, 3)
 
-        # 湿度 — 与 GT 对齐: max(0, (100 - hum) / 100)
+        # 湿度归一化（Agent 自身评分模型）: max(0, (100 - hum) / 100)
         if hum_vals:
             avg_hum = sum(hum_vals) / len(hum_vals)
             hum_risk = max(0, (100 - avg_hum) / 100)
             components.append((hum_risk, 0.20, "humidity"))
             evidence["humidity"] = round(hum_risk, 3)
 
-        # 风速 — 与 GT 对齐: min(wind / 20, 1.0)
+        # 风速归一化（Agent 自身评分模型）: min(wind / 20, 1.0)
         if wind_vals:
             avg_wind = sum(wind_vals) / len(wind_vals)
             wind_risk = min(avg_wind / 20.0, 1.0)
             components.append((wind_risk, 0.15, "wind_speed"))
             evidence["wind_speed"] = round(wind_risk, 3)
 
-        # 温度 — 与 GT 对齐: max(0, (temp - 20) / 30)
+        # 温度归一化（Agent 自身评分模型）: max(0, (temp - 20) / 30)
         if temp_vals:
             avg_temp = sum(temp_vals) / len(temp_vals)
             temp_risk = max(0, (avg_temp - 20) / 30.0)
@@ -278,7 +279,7 @@ class FloodAlertAgent(AlertAgent):
         total_weight = sum(w for _, w, _ in components)
         risk_score = sum(r * (w / total_weight) for r, w, _ in components)
 
-        # 水位趋势检测（与 GT 推导对齐：设风险下限而非加 bonus）
+        # 水位趋势检测（设风险下限而非加 bonus）
         # 关键：必须按时间戳排序后再判断趋势，否则观测列表顺序可能不一致
         water_t_bonus = 0.0
         if len(level_obs_list) >= 3:
@@ -287,9 +288,9 @@ class FloodAlertAgent(AlertAgent):
             increasing = all(levels[i] < levels[i + 1] for i in range(len(levels) - 1))
             latest = levels[-1]
             if increasing and latest > 10.0:
-                water_t_bonus = 0.75  # 与 GT 一致：设风险下限 0.75
+                water_t_bonus = 0.75  # 设风险下限 0.75（Agent 评分模型）
             elif increasing and latest >= 9.0:
-                water_t_bonus = 0.50  # 与 GT 一致：设风险下限 0.50
+                water_t_bonus = 0.50  # 设风险下限 0.50（Agent 评分模型）
 
         if water_t_bonus > 0:
             risk_score = max(risk_score, water_t_bonus)
@@ -380,7 +381,7 @@ class DroughtAlertAgent(AlertAgent):
             components.append((hum_risk, 0.15, "humidity"))
             evidence["humidity"] = round(hum_risk, 3)
 
-        # 月降雨 — 阈值与 GT 推导保持一致（30mm）
+        # 月降雨 — 阈值 30mm（Agent 评分模型自设）
         if rain_vals:
             avg_rain = sum(rain_vals) / len(rain_vals)
             rain_risk = max(0, (30 - avg_rain) / 30.0)
@@ -473,7 +474,7 @@ class HeatWaveAlertAgent(AlertAgent):
         evidence: dict[str, float] = {}
         components: list[tuple[float, float, str]] = []
 
-        # --- 最高温 — 与 GT 对齐: max(0, (temp - 28) / 12.0), 权重 0.35 ---
+        # --- 最高温归一化: max(0, (temp - 28) / 12.0), 权重 0.35 ---
         temp_candidates = (
             temp_vals
             if temp_vals
@@ -488,7 +489,7 @@ class HeatWaveAlertAgent(AlertAgent):
         else:
             avg_temp = 0
 
-        # --- 持续天数 — 与 GT 对齐: min(duration / 5.0, 1.0), 权重 0.25 ---
+        # --- 持续天数归一化: min(duration / 5.0, 1.0), 权重 0.25 ---
         # 优先使用观测中的 heat_duration_days，否则从时序温度推断
         if duration_vals:
             heat_duration_days = int(sum(duration_vals) / len(duration_vals))
@@ -519,7 +520,7 @@ class HeatWaveAlertAgent(AlertAgent):
         components.append((duration_factor, 0.25, "heat_duration_days"))
         evidence["heat_duration_days"] = round(heat_duration_days)
 
-        # --- 湿球温度 — 与 GT 对齐: max(0, (wb - 23) / 8.0), 权重 0.25 ---
+        # --- 湿球温度归一化: max(0, (wb - 23) / 8.0), 权重 0.25 ---
         if wbt_vals:
             avg_wbt = sum(wbt_vals) / len(wbt_vals)
             wbt_risk = max(0, (avg_wbt - 23.0) / 8.0)
@@ -528,7 +529,7 @@ class HeatWaveAlertAgent(AlertAgent):
         else:
             avg_wbt = None
 
-        # --- 湿度 — 与 GT 对齐: max(0, (hum - 50) / 50.0), 权重 0.15 ---
+        # --- 湿度归一化: max(0, (hum - 50) / 50.0), 权重 0.15 ---
         if hum_vals:
             avg_hum = sum(hum_vals) / len(hum_vals)
             hum_risk = max(0, (avg_hum - 50) / 50.0)

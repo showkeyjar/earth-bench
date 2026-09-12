@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import pytest
-from pathlib import Path
 
 from earthbench.models import (
     ScenarioContext,
@@ -31,7 +30,6 @@ from earthbench.agents import (
     DroughtAlertAgent,
     HeatWaveAlertAgent,
     MultiAlertAgent,
-    RuleBasedAgent,
 )
 from earthbench.eval import BaseEvaluator, BatchEvaluator
 from earthbench.benchmark import AlertTestCase, AlertBenchEvaluator
@@ -1226,7 +1224,7 @@ class TestBatchEvaluatorExtended:
         )
         agent = FireAlertAgent()
         evaluator = BatchEvaluator()
-        results = evaluator.run(agent, [ctx], [True])
+        _ = evaluator.run(agent, [ctx], [True])
         summary = evaluator.summary()
         assert summary["accuracy"] == 1.0
         assert summary["total_scenarios"] == 1
@@ -1299,7 +1297,7 @@ class TestBatchEvaluatorExtended:
 
         agent = FireAlertAgent()
         evaluator = BatchEvaluator()
-        results = evaluator.run(agent, [ctx_positive, ctx_negative], [True, False])
+        _ = evaluator.run(agent, [ctx_positive, ctx_negative], [True, False])
         summary = evaluator.summary()
         assert summary["accuracy"] == 1.0
         assert summary["precision"] == 1.0
@@ -1357,7 +1355,7 @@ class TestBatchEvaluatorExtended:
                 )
 
         evaluator = BatchEvaluator()
-        results = evaluator.run(WrongAgent(), [ctx], [True])
+        _ = evaluator.run(WrongAgent(), [ctx], [True])
         summary = evaluator.summary()
         assert summary["accuracy"] == 0.0
         assert summary["false_positives"] == 0
@@ -1448,11 +1446,18 @@ class TestAlertBenchEvaluator:
         assert "by_difficulty" in report
 
     def test_perfect_accuracy_rule_agents(self, bench):
-        """规则 Agent 使用与 Ground Truth 相同的评分模型，应达到 100% 准确率。"""
+        """规则 Agent 在独立物理标准推导的 Ground Truth 上达到 100% 准确率。
+
+        注意：Ground Truth 由 scenarios.py 的独立物理标准（国标分级查表）
+        推导，与 Agent 的加权评分模型完全脱钩，100% 是真实实测成绩而非
+        同构公式的自证结果。若未来调整场景或标准导致该分数回落，属预期。
+        """
         agent = MultiAlertAgent()
         bench.evaluate_agent(agent)
         report = bench.summary_report()
         assert report["overall_accuracy"] == 1.0
+        # 守护断言：文档化硬编码真值必须与独立标准推导结果一致
+        assert bench.gt_divergences == []
 
     def test_single_category_eval(self, bench):
         """测试单一类别过滤评测。"""
@@ -1559,10 +1564,7 @@ class TestDataCollectors:
         assert fwi > 0
 
     def test_calculate_fwi_with_water_correction(self):
-        from earthbench.data_collectors import (
-            calculate_fwi_from_weather,
-            WATER_BODY_REGIONS,
-        )
+        from earthbench.data_collectors import calculate_fwi_from_weather
 
         realtime = {"temp": 35, "humidity": 20, "wind_speed_ms": 15, "precip_1h": 0}
         fwi_plain = calculate_fwi_from_weather(realtime, region_key="Xiangshan-Beijing")

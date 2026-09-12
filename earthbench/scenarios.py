@@ -100,225 +100,357 @@ class ScenarioStore:
 
 
 # ===========================================================================
-# Ground Truth 推导规则 — 国标阈值
+# Ground Truth 推导规则 — 独立物理标准（查表式分级判定）
+#
+# 说明：Ground Truth 一律依据公开国家标准/行业标准的"分级表"直接判定，
+# 不是加权评分公式。这样 benchmark 的真值来源与 agents.py 的
+# 评分模型（归一化加权求和）完全脱钩，避免"自证循环"——
+# 即用与决策 Agent 相同的公式反推真值，再宣称 Agent 得分 100%。
+#
+# 各灾种引用的外部标准：
+# - Fire   : GB/T 36743-2018《森林火险气象等级》 / 加拿大 FWI 分级体系
+# - Flood  : GB/T 28592-2012《降水量等级》(24h 暴雨/大暴雨) + 防汛警戒水位
+# - Drought: GB/T 20481-2017《气象干旱等级》(SPI 分级 / Palmer 指数)
+# - Heat   : 《中央气象台高温预警信号》(黄/橙/红) + WBGT 湿球热应激阈值
 # ===========================================================================
 
-# === Wildfire ===
-FWI_HIGH_THRESHOLD = 40.0
-WIND_HIGH_THRESHOLD = 12.0
-HUMIDITY_LOW_THRESHOLD = 20.0
-RAINFALL_SUPPRESS = 10.0
+# === Wildfire — 加拿大 FWI 火险天气指数分级表 ===
+# FWI < 5 很低 | 5-11 低 | 12-21 中 | 22-33 高 | >33 极高
+FWI_LEVEL_VERY_LOW = 5.0
+FWI_LEVEL_LOW = 11.0
+FWI_LEVEL_MODERATE = 21.0
+FWI_LEVEL_HIGH = 22.0
+FWI_LEVEL_EXTREME = 33.0
+# 极高火险（FWI>33）本身即触发预警；高火险（22~33）需叠加干燥/大风
+FIRE_EXTREME_SCORE = 0.95
+FIRE_HIGH_TRIGGER_SCORE = 0.75
+# 24h 降雨 >= 30mm 视为彻底灭火，强制不预警；>= 20mm 且 FWI < 40 降档
+RAINFALL_EXTINGUISH = 30.0
+RAINFALL_SUPPRESS_LEVEL = 20.0
+FWI_SUPPRESS_CEILING = 40.0
 
-# === Flood ===
-RAINFALL_FLOOD_24H = 50.0
-RAINFALL_FLOOD_6H = 30.0
+# === Flood — GB/T 28592-2012 降水量等级（24h 暴雨 >= 50mm / 大暴雨 >= 100mm）===
+RAINFALL_FLOOD_24H_EXTREME = 100.0  # 大暴雨
+RAINFALL_FLOOD_24H_HEAVY = 50.0  # 暴雨
+RAINFALL_FLOOD_24H_MODERATE = 30.0  # 中雨偏高（叠加土壤饱和即险）
+RAINFALL_FLOOD_6H = 50.0  # 6h 短时强降雨（>= 50mm）
 SOIL_MOISTURE_SATURATED = 0.85
+WATER_LEVEL_WARNING = 10.0  # 警戒水位（米）
+WATER_LEVEL_TREND_RISING = 9.5  # 持续上升逼近警戒即预警
 
-# === Drought ===
-SPI_DROUGHT = -1.0
-PALMER_DROUGHT = -0.5
+# === Drought — GB/T 20481-2017 SPI 分级（<= -1.0 中旱 / <= -1.5 重旱 / <= -2.0 特旱）===
+SPI_DROUGHT_MODERATE = -1.0
+SPI_DROUGHT_SEVERE = -1.5
+SPI_DROUGHT_EXTREME = -2.0
+PALMER_DROUGHT_LIGHT = -1.0  # Palmer <= -1.0 轻旱起步（续以副因子印证）
+PALMER_DROUGHT_MODERATE = -2.0  # Palmer <= -2.0 中旱直接预警
 HUMIDITY_DROUGHT = 25.0
 RAINFALL_DEFICIT = 10.0
 NDVI_DEGRADE = 0.3
 
-# === HeatWave ===
-TEMP_HEAT_WAVE = 35.0
-WET_BULB_TEMP = 27.0
+# === HeatWave — 《中央气象台高温预警信号》+ WBGT 湿球热应激 ===
+TEMP_HEAT_RED = 40.0  # 红色预警：单日 >= 40℃
+TEMP_HEAT_ORANGE = 37.0  # 橙色预警：单日 >= 37℃
+TEMP_HEAT_YELLOW = 35.0  # 黄色预警：连续 3 天 >= 35℃
+WET_BULB_TEMP = 27.0  # WBGT 湿球 >= 27℃ 即热应激危险
 HEAT_DURATION_DAYS = 3
+# 黄色预警需湿热印证（干热不算）：连续 3 天 >=35℃ 且 湿球 >= 24℃
+WET_BULB_YELLOW_CONFIRM = 24.0
+TEMP_MUGGY = 33.0  # 闷热起点：>=33℃ 且 湿度 >= 70%
+HUMIDITY_MUGGY = 70.0
+
+
+# ===========================================================================
+# 独立物理标准推导 — 通用取值辅助
+# ===========================================================================
+
+
+def _obs_vals(obs: list[dict], variable: str) -> list[tuple[str, float]]:
+    """返回 (timestamp, value) 列表，按时间戳升序。"""
+    items = [
+        (str(o.get("timestamp", "")), float(o["value"]))
+        for o in obs
+        if o["variable"] == variable
+    ]
+    items.sort(key=lambda x: x[0])
+    return items
+
+
+def _latest(obs: list[dict], variable: str) -> float | None:
+    vals = _obs_vals(obs, variable)
+    return vals[-1][1] if vals else None
+
+
+def _max_val(obs: list[dict], variable: str) -> float | None:
+    vals = _obs_vals(obs, variable)
+    return max(v[1] for v in vals) if vals else None
+
+
+def _mean_val(obs: list[dict], variable: str) -> float | None:
+    vals = _obs_vals(obs, variable)
+    return sum(v[1] for v in vals) / len(vals) if vals else None
+
+
+def _fwi_level(fwi: float) -> str:
+    """加拿大 FWI 火险天气指数五级（GB/T 36743-2018 同构分级）。"""
+    if fwi > FWI_LEVEL_EXTREME:
+        return "极高"
+    if fwi > FWI_LEVEL_HIGH:
+        return "高"
+    if fwi > FWI_LEVEL_MODERATE:
+        return "中"
+    if fwi > FWI_LEVEL_LOW:
+        return "低"
+    return "很低"
 
 
 def infer_fire_ground_truth(obs: list[dict]) -> tuple[bool, float, dict[str, Any]]:
-    """森林火险 Ground Truth 推导（基于国家林草局标准）。
+    """森林火险 Ground Truth 推导（独立物理标准查表判定）。
 
-    当某观测变量缺失时，该变量不参与评分，其权重分配给其他变量。
+    依据 GB/T 36743-2018《森林火险气象等级》的 FWI 五级分级表直接判定，
+    不采用加权评分模型，与决策 Agent 的评分逻辑完全脱钩：
+
+    1. 最新 FWI > 33（极高火险）→ 预警（score=0.95）
+    2. 最新 FWI 22~33（高火险）且 相对湿度 < 30% 或 风速 >= 12m/s → 预警（0.75）
+    3. 抑制条件：最新观测 24h 降雨 >= 30mm → 强制不预警（彻底灭火）；
+       降雨 >= 20mm 且 FWI < 40 → 降档不预警
     """
     explanation: dict[str, Any] = {}
-    components: list[tuple[float, float, str]] = []  # (risk_score, weight, label)
 
-    fwi_vals = [o["value"] for o in obs if o["variable"] == "FWI"]
-    if fwi_vals:
-        avg_fwi = sum(fwi_vals) / len(fwi_vals)
-        fwi_norm = min(avg_fwi / 60.0, 1.0)
-        components.append((fwi_norm, 0.40, f"fwi_mean={round(avg_fwi, 1)}"))
+    fwi = _latest(obs, "FWI")
+    if fwi is None:
+        return False, 0.0, {"reason": "no FWI observations; 独立标准无依据"}
 
-    hum_vals = [o["value"] for o in obs if o["variable"] == "humidity"]
-    if hum_vals:
-        avg_hum = sum(hum_vals) / len(hum_vals)
-        hum_inv = max(0, (100 - avg_hum) / 100)
-        components.append((hum_inv, 0.20, f"humidity_mean={round(avg_hum, 1)}"))
+    fwi_lvl = _fwi_level(fwi)
+    explanation["fwi_level"] = fwi_lvl
+    explanation["fwi_latest"] = round(fwi, 1)
 
-    wind_vals = [o["value"] for o in obs if o["variable"] == "wind_speed"]
-    if wind_vals:
-        avg_wind = sum(wind_vals) / len(wind_vals)
-        wind_risk = min(avg_wind / 20.0, 1.0)
-        components.append((wind_risk, 0.15, f"wind_mean={round(avg_wind, 1)}"))
+    hum = _latest(obs, "humidity")
+    wind = _latest(obs, "wind_speed")
+    rain24 = _max_val(obs, "rainfall")
+    if hum is not None:
+        explanation["humidity_latest"] = round(hum, 1)
+    if wind is not None:
+        explanation["wind_latest"] = round(wind, 1)
+    if rain24 is not None:
+        explanation["rainfall_max_24h"] = round(rain24, 1)
 
-    rain_vals = [o["value"] for o in obs if o["variable"] == "rainfall"]
-    if rain_vals:
-        avg_rain = sum(rain_vals) / len(rain_vals)
-        if avg_rain > RAINFALL_SUPPRESS:
-            suppression = min(avg_rain / 30.0, 1.0)
-            explanation["rainfall_suppression"] = round(suppression, 3)
-    else:
-        avg_rain = 0.0
+    # 1) 彻底灭火：24h 降雨 >= 30mm 强制降级为不预警
+    if rain24 is not None and rain24 >= RAINFALL_EXTINGUISH:
+        explanation["standard"] = "GB/T 36743-2018 降雨抑制"
+        explanation["detail"] = f"24h 降雨 {rain24:.0f}mm >= 30mm，彻底灭火，不预警"
+        return False, 0.15, explanation
 
-    temp_vals = [o["value"] for o in obs if o["variable"] == "temperature"]
-    if temp_vals:
-        avg_temp = sum(temp_vals) / len(temp_vals)
-        temp_risk = max(0, (avg_temp - 20) / 30.0)
-        components.append((temp_risk, 0.15, f"temperature_mean={round(avg_temp, 1)}"))
+    # 2) 极大暴雨压制（>=20mm 且 FWI 未到高危）也不预警
+    if (
+        rain24 is not None
+        and rain24 >= RAINFALL_SUPPRESS_LEVEL
+        and fwi < FWI_SUPPRESS_CEILING
+    ):
+        explanation["standard"] = "GB/T 36743-2018 降雨抑制"
+        explanation["detail"] = (
+            f"24h 降雨 {rain24:.0f}mm >= 20mm 且 FWI {fwi:.0f} < 40，风险被压制"
+        )
+        return False, 0.30, explanation
 
-    if not components:
-        return False, 0.0, {"reason": "no relevant observations"}
+    # 3) 极高火险（FWI > 33）：无条件预警
+    if fwi > FWI_LEVEL_EXTREME:
+        explanation["standard"] = "GB/T 36743-2018 FWI 分级表"
+        explanation["detail"] = f"FWI {fwi:.1f} > 33，极高火险，触发预警"
+        return True, FIRE_EXTREME_SCORE, explanation
 
-    total_weight = sum(w for _, w, _ in components)
-    risk_score = sum(r * (w / total_weight) for r, w, _ in components)
+    # 4) 高火险（22~33）需叠加干燥或大风
+    if fwi > FWI_LEVEL_HIGH:
+        if (hum is not None and hum < 30.0) or (wind is not None and wind >= 12.0):
+            explanation["standard"] = "GB/T 36743-2018 FWI 分级表"
+            explanation["detail"] = (
+                f"FWI {fwi:.1f} 属高火险，且 "
+                f"{'湿度<30%' if (hum is not None and hum < 30.0) else '风速>=12m/s'}，触发预警"
+            )
+            return True, FIRE_HIGH_TRIGGER_SCORE, explanation
+        explanation["standard"] = "GB/T 36743-2018 FWI 分级表"
+        explanation["detail"] = (
+            f"FWI {fwi:.1f} 属高火险，但未叠加干燥（湿度<30%）或大风（>=12m/s），不预警"
+        )
+        return False, 0.50, explanation
 
-    # 降雨抑制
-    if rain_vals:
-        avg_rain = sum(rain_vals) / len(rain_vals)
-        if avg_rain > RAINFALL_SUPPRESS:
-            suppression = min(avg_rain / 30.0, 1.0)
-            risk_score *= 1.0 - suppression * 0.6
-
-    for _, _, label in components:
-        key, val = label.split("=", 1)
-        explanation[key] = val
-
-    risk_score = max(0.0, min(risk_score, 1.0))
-    decision = risk_score >= 0.4
-    return bool(decision), round(risk_score, 3), explanation
+    # 5) 中及以下火险：不预警
+    explanation["standard"] = "GB/T 36743-2018 FWI 分级表"
+    explanation["detail"] = f"FWI {fwi:.1f} 属{fwi_lvl}火险等级，不触发预警"
+    return False, 0.40 if fwi > FWI_LEVEL_MODERATE else 0.25, explanation
 
 
 def infer_flood_ground_truth(obs: list[dict]) -> tuple[bool, float, dict[str, Any]]:
-    """洪涝 Ground Truth 推导（基于《国家防汛抗旱应急预案》）。
+    """洪涝 Ground Truth 推导（独立物理标准查表判定）。
 
-    当某观测变量缺失时，该变量不参与评分，其权重分配给其他变量。
+    依据 GB/T 28592-2012《降水量等级》逐条查表，任何一个阈值命中即预警：
+
+    1. 24h 降雨 >= 100mm（大暴雨）→ 预警（0.95）
+    2. 24h 降雨 >= 50mm（暴雨）→ 预警（0.85）
+    3. 6h 降雨 >= 50mm（短时强降雨）→ 预警（0.85）
+    4. 24h 降雨 >= 30mm 且 土壤湿度 >= 0.85（饱和）→ 预警（0.80）
+    5. 最新水位 >= 10m（警戒水位）→ 预警（0.90）
+    6. 最新水位 >= 9.5m 且持续上升 → 预警（0.70）
     """
     explanation: dict[str, Any] = {}
-    components: list[tuple[float, float, str]] = []
 
-    rain24_vals = [o["value"] for o in obs if "rainfall_24h" in o["variable"]]
-    if rain24_vals:
-        avg_rain24 = sum(rain24_vals) / len(rain24_vals)
-        rain24_risk = min(avg_rain24 / 100.0, 1.0)
-        components.append((rain24_risk, 0.35, f"rainfall_24h={round(avg_rain24, 1)}"))
+    rain24 = _max_val(obs, "rainfall_24h")
+    rain6 = _max_val(obs, "rainfall_6h")
+    soil = _max_val(obs, "soil_moisture")
+    levels = _obs_vals(obs, "water_level")
 
-    rain6_vals = [o["value"] for o in obs if "rainfall_6h" in o["variable"]]
-    if rain6_vals:
-        avg_rain6 = sum(rain6_vals) / len(rain6_vals)
-        rain6_risk = min(avg_rain6 / 50.0, 1.0)
-        components.append((rain6_risk, 0.25, f"rainfall_6h={round(avg_rain6, 1)}"))
+    if rain24 is not None:
+        explanation["rainfall_24h_max"] = round(rain24, 1)
+    if rain6 is not None:
+        explanation["rainfall_6h_max"] = round(rain6, 1)
+    if soil is not None:
+        explanation["soil_moisture_max"] = round(soil, 3)
+    if levels:
+        explanation["water_level_latest"] = levels[-1][1]
+        explanation["water_level_series"] = [v for _, v in levels]
 
-    soil_vals = [o["value"] for o in obs if "soil_moisture" in o["variable"]]
-    if soil_vals:
-        avg_soil = sum(soil_vals) / len(soil_vals)
-        soil_sat_risk = max(0, (avg_soil - 0.6) / 0.4)
-        components.append((soil_sat_risk, 0.15, f"soil_moisture={round(avg_soil, 3)}"))
+    # 1) 大暴雨
+    if rain24 is not None and rain24 >= RAINFALL_FLOOD_24H_EXTREME:
+        explanation["standard"] = "GB/T 28592-2012 降水量等级"
+        explanation["detail"] = f"24h 降雨 {rain24:.0f}mm >= 100mm（大暴雨），触发预警"
+        return True, 0.95, explanation
 
-    level_vals = [o["value"] for o in obs if "water_level" in o["variable"]]
-    if level_vals:
-        avg_level = sum(level_vals) / len(level_vals)
-        level_risk = min(avg_level / 10.0, 1.0)
-        components.append((level_risk, 0.25, f"water_level_mean={round(avg_level, 2)}"))
+    # 2) 暴雨
+    if rain24 is not None and rain24 >= RAINFALL_FLOOD_24H_HEAVY:
+        explanation["standard"] = "GB/T 28592-2012 降水量等级"
+        explanation["detail"] = f"24h 降雨 {rain24:.0f}mm >= 50mm（暴雨），触发预警"
+        return True, 0.85, explanation
 
-    if not components:
-        return False, 0.0, {"reason": "no relevant observations"}
+    # 3) 6h 短时强降雨
+    if rain6 is not None and rain6 >= RAINFALL_FLOOD_6H:
+        explanation["standard"] = "GB/T 28592-2012 短时强降雨"
+        explanation["detail"] = f"6h 降雨 {rain6:.0f}mm >= 50mm，触发预警"
+        return True, 0.85, explanation
 
-    total_weight = sum(w for _, w, _ in components)
-    risk_score = sum(r * (w / total_weight) for r, w, _ in components)
+    # 4) 中雨 + 土壤饱和
+    if (
+        rain24 is not None
+        and rain24 >= RAINFALL_FLOOD_24H_MODERATE
+        and soil is not None
+        and soil >= SOIL_MOISTURE_SATURATED
+    ):
+        explanation["standard"] = "GB/T 28592-2012 + 土壤饱和判据"
+        explanation["detail"] = (
+            f"24h 降雨 {rain24:.0f}mm >= 30mm 且 土壤湿度 {soil:.2f} >= 0.85，触发预警"
+        )
+        return True, 0.80, explanation
 
-    # 水位趋势检测（L4 关键能力）
-    # 关键：必须按时间戳排序后再判断趋势，否则观测列表顺序可能不一致
-    if len(level_vals) >= 3:
-        # 按对应的时间戳排序后再取值
-        level_obs = [o for o in obs if "water_level" in o["variable"]]
-        level_obs_sorted = sorted(level_obs, key=lambda o: o.get("timestamp", ""))
-        levels = [o["value"] for o in level_obs_sorted]
-        increasing = all(levels[i] < levels[i + 1] for i in range(len(levels) - 1))
-        latest = levels[-1]
-        if increasing and latest > 10.0:
-            risk_score = max(risk_score, 0.75)
-            explanation["water_trend"] = "rising_above_critical"
-        elif increasing and latest >= 9.0:
-            risk_score = max(risk_score, 0.50)
-            explanation["water_trend"] = "rising_near_critical"
+    # 5) 超警戒水位
+    if levels and levels[-1][1] >= WATER_LEVEL_WARNING:
+        explanation["standard"] = "防汛警戒水位判据"
+        explanation["detail"] = (
+            f"最新水位 {levels[-1][1]:.1f}m >= 10m（警戒），触发预警"
+        )
+        return True, 0.90, explanation
 
-    for _, _, label in components:
-        key, val = label.split("=", 1)
-        explanation[key] = val
+    # 6) 持续上升逼近警戒
+    if len(levels) >= 3:
+        values = [v for _, v in levels]
+        increasing = all(values[i] < values[i + 1] for i in range(len(values) - 1))
+        if increasing and values[-1] >= WATER_LEVEL_TREND_RISING:
+            explanation["standard"] = "防汛警戒水位判据（趋势）"
+            explanation["detail"] = (
+                f"水位持续上升至 {values[-1]:.1f}m >= 9.5m，逼近警戒，触发预警"
+            )
+            return True, 0.70, explanation
 
-    risk_score = max(0.0, min(risk_score, 1.0))
-    decision = risk_score >= 0.45
-    return bool(decision), round(risk_score, 3), explanation
+    explanation["standard"] = "GB/T 28592-2012 + 防汛警戒判据"
+    explanation["detail"] = "未命中任何暴雨/警戒阈值，不预警"
+    return False, 0.20, explanation
 
 
 def infer_drought_ground_truth(obs: list[dict]) -> tuple[bool, float, dict[str, Any]]:
-    """干旱 Ground Truth 推导（基于气象干旱标准）。
+    """干旱 Ground Truth 推导（独立物理标准查表判定）。
 
-    当某观测变量缺失时，该变量不参与评分，其权重分配给其他变量。
+    依据 GB/T 20481-2017《气象干旱等级》SPI 分级逐条查表：
+
+    1. 最新 SPI <= -2.0（特旱）→ 预警（0.95）
+    2. 最新 SPI <= -1.5（重旱）→ 预警（0.85）
+    3. 最新 SPI <= -1.0（中旱）→ 预警（0.75）
+    4. Palmer <= -2.0（中旱）→ 预警（0.75）
+    5. Palmer <= -1.0（轻旱起步）且任一印证因子
+       （湿度<25% / 月降雨<10mm / NDVI<0.3）→ 预警（0.65）
     """
     explanation: dict[str, Any] = {}
-    components: list[tuple[float, float, str]] = []  # (risk_score, weight, label)
 
-    spi_vals = [o["value"] for o in obs if o["variable"] == "SPI"]
-    if spi_vals:
-        avg_spi = sum(spi_vals) / len(spi_vals)
-        spi_risk = max(0, (-avg_spi - 0.5) / 2.0)
-        components.append((spi_risk, 0.30, f"spi_mean={round(avg_spi, 2)}"))
+    spi = _latest(obs, "SPI")
+    palmer = _latest(obs, "palmer_index")
+    hum = _latest(obs, "humidity")
+    rain_month = _latest(obs, "rainfall_monthly")
+    ndvi = _latest(obs, "NDVI")
 
-    palmer_vals = [o["value"] for o in obs if o["variable"] == "palmer_index"]
-    if palmer_vals:
-        avg_palmer = sum(palmer_vals) / len(palmer_vals)
-        palmer_risk = max(0, (-avg_palmer - 0.25) / 1.5)
-        components.append((palmer_risk, 0.25, f"palmer_mean={round(avg_palmer, 2)}"))
+    if spi is not None:
+        explanation["spi_latest"] = spi
+    if palmer is not None:
+        explanation["palmer_latest"] = palmer
+    if hum is not None:
+        explanation["humidity_latest"] = round(hum, 1)
+    if rain_month is not None:
+        explanation["rainfall_monthly_latest"] = round(rain_month, 1)
+    if ndvi is not None:
+        explanation["ndvi_latest"] = round(ndvi, 3)
 
-    hum_vals = [o["value"] for o in obs if o["variable"] == "humidity"]
-    if hum_vals:
-        avg_hum = sum(hum_vals) / len(hum_vals)
-        hum_risk = max(0, (30 - avg_hum) / 30.0)
-        components.append((hum_risk, 0.15, f"humidity_mean={round(avg_hum, 1)}"))
+    # 1-3) SPI 分级
+    if spi is not None:
+        if spi <= SPI_DROUGHT_EXTREME:
+            explanation["standard"] = "GB/T 20481-2017 SPI 分级"
+            explanation["detail"] = f"SPI {spi:.2f} <= -2.0（特旱），触发预警"
+            return True, 0.95, explanation
+        if spi <= SPI_DROUGHT_SEVERE:
+            explanation["standard"] = "GB/T 20481-2017 SPI 分级"
+            explanation["detail"] = f"SPI {spi:.2f} <= -1.5（重旱），触发预警"
+            return True, 0.85, explanation
+        if spi <= SPI_DROUGHT_MODERATE:
+            explanation["standard"] = "GB/T 20481-2017 SPI 分级"
+            explanation["detail"] = f"SPI {spi:.2f} <= -1.0（中旱），触发预警"
+            return True, 0.75, explanation
 
-    rain_vals = [o["value"] for o in obs if o["variable"] == "rainfall_monthly"]
-    if rain_vals:
-        avg_rain = sum(rain_vals) / len(rain_vals)
-        # 阈值从 50mm 降到 30mm，因为 QWeather 7 天预报外推的月估算通常偏低
-        rain_deficit = max(0, (30 - avg_rain) / 30.0)
-        components.append(
-            (rain_deficit, 0.15, f"rainfall_monthly={round(avg_rain, 1)}")
-        )
+    # 4) Palmer 中旱
+    if palmer is not None and palmer <= PALMER_DROUGHT_MODERATE:
+        explanation["standard"] = "GB/T 20481-2017 Palmer 分级"
+        explanation["detail"] = f"Palmer {palmer:.2f} <= -2.0（中旱），触发预警"
+        return True, 0.75, explanation
 
-    ndvi_vals = [o["value"] for o in obs if o["variable"] == "NDVI"]
-    if ndvi_vals:
-        avg_ndvi = sum(ndvi_vals) / len(ndvi_vals)
-        ndvi_risk = max(0, (0.5 - avg_ndvi) / 0.3)
-        components.append((ndvi_risk, 0.15, f"ndvi_mean={round(avg_ndvi, 3)}"))
+    # 5) Palmer 轻旱 + 印证因子
+    if palmer is not None and palmer <= PALMER_DROUGHT_LIGHT:
+        confirms: list[str] = []
+        if hum is not None and hum < HUMIDITY_DROUGHT:
+            confirms.append(f"湿度{hum:.0f}%<25%")
+        if rain_month is not None and rain_month < RAINFALL_DEFICIT:
+            confirms.append(f"月降雨{rain_month:.0f}mm<10mm")
+        if ndvi is not None and ndvi < NDVI_DEGRADE:
+            confirms.append(f"NDVI {ndvi:.2f}<0.3")
+        if confirms:
+            explanation["standard"] = "GB/T 20481-2017 多因子印证"
+            explanation["detail"] = (
+                f"Palmer {palmer:.2f} 轻旱，且印证因子：{'；'.join(confirms)}，触发预警"
+            )
+            return True, 0.65, explanation
 
-    if not components:
-        return False, 0.0, {"reason": "no relevant observations"}
-
-    # 动态归一化权重：将缺失变量的权重按比例分配给存在的变量
-    total_weight = sum(w for _, w, _ in components)
-    risk_score = sum(r * (w / total_weight) for r, w, _ in components)
-
-    for _, _, label in components:
-        key, val = label.split("=", 1)
-        explanation[key] = val
-
-    risk_score = max(0.0, min(risk_score, 1.0))
-    decision = risk_score >= 0.4
-    return bool(decision), round(risk_score, 3), explanation
+    explanation["standard"] = "GB/T 20481-2017 SPI/Palmer 分级"
+    explanation["detail"] = "未达到中旱及以上等级，不预警"
+    return False, 0.25, explanation
 
 
 def infer_heatwave_ground_truth(
-    obs: list[dict], heat_duration_days: int = 3
+    obs: list[dict], heat_duration_days: int = HEAT_DURATION_DAYS
 ) -> tuple[bool, float, dict[str, Any]]:
-    """热浪 Ground Truth 推导（基于《中央气象台高温预警信号》）。
+    """热浪 Ground Truth 推导（独立物理标准查表判定）。
 
-    当某观测变量缺失时，该变量不参与评分，其权重分配给其他变量。
-    如果观测中包含 heat_duration_days，优先使用该值而非默认参数。
+    依据《中央气象台高温预警信号》色阶 + WBGT 湿球热应激阈值：
+
+    1. 单日最高温 >= 40℃（红色预警）→ 预警（0.95）
+    2. 单日最高温 >= 37℃（橙色预警）→ 预警（0.85）
+    3. 单日最高温 >= 35℃ 且 持续 >= 3 天 且 湿球 >= 24℃（黄色+湿热印证）→ 预警（0.70）
+    4. 湿球温度 >= 27℃（WBGT 热应激危险）→ 预警（0.80）
+    5. 最高温 >= 33℃ 且 湿度 >= 70%（闷热）→ 预警（0.60）
     """
-    # 尝试从观测中读取实际持续高温天数
+    # 优先使用观测中的持续高温天数；缺失时用调用方传入的默认值
     duration_vals = [o["value"] for o in obs if o["variable"] == "heat_duration_days"]
     if duration_vals:
         actual_duration = int(duration_vals[0])
@@ -326,44 +458,70 @@ def infer_heatwave_ground_truth(
         actual_duration = heat_duration_days
 
     explanation: dict[str, Any] = {}
-    components: list[tuple[float, float, str]] = []
 
-    temp_vals = [o["value"] for o in obs if o["variable"] == "temperature_max"]
-    if temp_vals:
-        avg_temp = sum(temp_vals) / len(temp_vals)
-        temp_risk = max(0, (avg_temp - 28) / 12.0)
-        components.append(
-            (temp_risk, 0.35, f"temperature_max_mean={round(avg_temp, 1)}")
+    temp_max = _max_val(obs, "temperature_max")
+    if temp_max is None:
+        temp_max = _max_val(obs, "temperature")
+    wbt = _max_val(obs, "wet_bulb_temp")
+    hum = _latest(obs, "humidity")
+
+    if temp_max is not None:
+        explanation["temperature_max"] = round(temp_max, 1)
+    if wbt is not None:
+        explanation["wet_bulb_temp_max"] = round(wbt, 1)
+    if hum is not None:
+        explanation["humidity_latest"] = round(hum, 1)
+    explanation["heat_duration_days"] = actual_duration
+
+    # 1) 红色：>= 40℃
+    if temp_max is not None and temp_max >= TEMP_HEAT_RED:
+        explanation["standard"] = "中央气象台高温红色预警"
+        explanation["detail"] = f"最高温 {temp_max:.1f}℃ >= 40℃，触发预警"
+        return True, 0.95, explanation
+
+    # 2) 橙色：>= 37℃
+    if temp_max is not None and temp_max >= TEMP_HEAT_ORANGE:
+        explanation["standard"] = "中央气象台高温橙色预警"
+        explanation["detail"] = f"最高温 {temp_max:.1f}℃ >= 37℃，触发预警"
+        return True, 0.85, explanation
+
+    # 3) 黄色：>= 35℃ 连续 3 天 + 湿热印证（干热不算）
+    if (
+        temp_max is not None
+        and temp_max >= TEMP_HEAT_YELLOW
+        and actual_duration >= HEAT_DURATION_DAYS
+        and wbt is not None
+        and wbt >= WET_BULB_YELLOW_CONFIRM
+    ):
+        explanation["standard"] = "中央气象台高温黄色预警"
+        explanation["detail"] = (
+            f"最高温 {temp_max:.1f}℃ >= 35℃ 且持续 {actual_duration} 天 "
+            f"且湿球 {wbt:.1f}℃ >= 24℃，触发预警"
         )
+        return True, 0.70, explanation
 
-    duration_factor = min(actual_duration / 5.0, 1.0)
-    components.append((duration_factor, 0.25, f"heat_duration_days={actual_duration}"))
+    # 4) 湿球热应激
+    if wbt is not None and wbt >= WET_BULB_TEMP:
+        explanation["standard"] = "WBGT 湿球热应激阈值"
+        explanation["detail"] = f"湿球温度 {wbt:.1f}℃ >= 27℃，触发预警"
+        return True, 0.80, explanation
 
-    wbt_vals = [o["value"] for o in obs if o["variable"] == "wet_bulb_temp"]
-    if wbt_vals:
-        avg_wbt = sum(wbt_vals) / len(wbt_vals)
-        wbt_risk = max(0, (avg_wbt - 23.0) / 8.0)
-        components.append((wbt_risk, 0.25, f"wet_bulb_temp_mean={round(avg_wbt, 1)}"))
+    # 5) 闷热
+    if (
+        temp_max is not None
+        and temp_max >= TEMP_MUGGY
+        and hum is not None
+        and hum >= HUMIDITY_MUGGY
+    ):
+        explanation["standard"] = "闷热判据"
+        explanation["detail"] = (
+            f"最高温 {temp_max:.1f}℃ >= 33℃ 且 湿度 {hum:.0f}% >= 70%，触发预警"
+        )
+        return True, 0.60, explanation
 
-    hum_vals = [o["value"] for o in obs if o["variable"] == "humidity"]
-    if hum_vals:
-        avg_hum = sum(hum_vals) / len(hum_vals)
-        hum_risk = max(0, (avg_hum - 50) / 50.0)
-        components.append((hum_risk, 0.15, f"humidity_mean={round(avg_hum, 1)}"))
-
-    if not components:
-        return False, 0.0, {"reason": "no relevant observations"}
-
-    total_weight = sum(w for _, w, _ in components)
-    risk_score = sum(r * (w / total_weight) for r, w, _ in components)
-
-    for _, _, label in components:
-        key, val = label.split("=", 1)
-        explanation[key] = val
-
-    risk_score = max(0.0, min(risk_score, 1.0))
-    decision = risk_score >= 0.4
-    return bool(decision), round(risk_score, 3), explanation
+    explanation["standard"] = "中央气象台高温预警信号 + WBGT"
+    explanation["detail"] = "未达到任何预警等级，不预警"
+    return False, 0.25, explanation
 
 
 # ===========================================================================
