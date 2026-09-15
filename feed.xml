@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>EarthBench Alerts</title>
+  <subtitle>Environmental Risk Decision Intelligence</subtitle>
+  <link href="https://earthbench.io/feed.xml" rel="self"/>
+  <link href="https://earthbench.io"/>
+  <updated>2026-09-16T00:06:14+08:00</updated>
+  <id>tag:earthbench.io,2026:</id>
+  <generator>EarthBench Pipeline v0.3.0</generator>
+
+  <entry>
+    <title>EarthBench Alert: Drought in Hangzhou-Zhejiang</title>
+    <link href="/reports/20260916/drought-l1-normal" rel="alternate"/>
+    <id>tag:earthbench.io,2026-09-15T16:06:14.462217+00:00</id>
+    <published>2026-09-15T16:06:14.462217+00:00</published>
+    <summary>DroughtAlert: SPI=0.00, Palmer=0.00, 湿度=50.0%, 月降雨=6.0mm, NDVI=0.00, 风险分=0.400</summary>
+  </entry>
+
+  <entry>
+    <title>EarthBench Alert: Drought in Harbin-Heilongjiang</title>
+    <link href="/reports/20260916/drought-l2-borderline-spi" rel="alternate"/>
+    <id>tag:earthbench.io,2026-09-15T16:06:14.462428+00:00</id>
+    <published>2026-09-15T16:06:14.462428+00:00</published>
+    <summary>DroughtAlert: SPI=0.00, Palmer=0.00, 湿度=93.0%, 月降雨=8.1mm, NDVI=0.00, 风险分=0.365</summary>
+  </entry>
+
+  <entry>
+    <title>EarthBench Alert: Drought in Urumqi-Xinjiang</title>
+    <link href="/reports/20260916/drought-l3-palmerspi-conflict" rel="alternate"/>
+    <id>tag:earthbench.io,2026-09-15T16:06:14.462655+00:00</id>
+    <published>2026-09-15T16:06:14.462655+00:00</published>
+    <summary>DroughtAlert: SPI=0.00, Palmer=0.00, 湿度=34.0%, 月降雨=0.0mm, NDVI=0.00, 风险分=0.500</summary>
+  </entry>
+
+  <entry>
+    <title>EarthBench Alert: Drought in Taiyuan-Shanxi</title>
+    <link href="/reports/20260916/drought-l4-spir-declining" rel="alternate"/>
+    <id>tag:earthbench.io,2026-09-15T16:06:14.462859+00:00</id>
+    <published>2026-09-15T16:06:14.462859+00:00</published>
+    <summary>DroughtAlert: SPI=0.00, Palmer=0.00, 湿度=81.0%, 月降雨=12.0mm, NDVI=0.00, 风险分=0.300</summary>
+  </entry>
+</feed>
