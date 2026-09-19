@@ -1,0 +1,15 @@
+{
+  "generated_at": "2026-09-19T23:13:28.999561+08:00",
+  "keep_days": 14,
+  "total_verified": 0,
+  "tp": 0,
+  "fp": 0,
+  "fn": 0,
+  "tn": 0,
+  "accuracy": null,
+  "precision": null,
+  "recall": null,
+  "f1": null,
+  "by_category": {},
+  "daily_trend": []
+}
