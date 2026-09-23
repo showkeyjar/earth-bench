@@ -83,16 +83,11 @@ def load_thresholds(output_dir: Path) -> dict[str, float]:
         return dict(DEFAULT_THRESHOLDS)
 
 
-def save_thresholds(
-    output_dir: Path,
-    thresholds: dict[str, float],
-    log_entry: dict[str, Any] | None = None,
-) -> None:
-    """保存阈值到 thresholds.json, 并追加调优日志。"""
+def save_thresholds(output_dir: Path, thresholds: dict[str, float]) -> dict[str, Any]:
+    """保存阈值到 thresholds.json（版本自增）。返回写入的数据。"""
     threshold_file = output_dir / "thresholds.json"
 
-    # 读取现有数据 (如果有)
-    existing = {}
+    existing: dict[str, Any] = {}
     if threshold_file.exists():
         try:
             with open(threshold_file, encoding="utf-8") as f:
@@ -100,7 +95,6 @@ def save_thresholds(
         except (json.JSONDecodeError, ValueError):
             pass
 
-    # 保存阈值
     data = {
         "thresholds": thresholds,
         "updated_at": datetime.now(CST).isoformat(),
@@ -109,35 +103,34 @@ def save_thresholds(
 
     with open(threshold_file, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+    return data
 
-    # 追加调优日志
-    if log_entry:
-        log_file = output_dir / "calibration_log.json"
 
-        log_entries: list[dict[str, Any]] = []
-        if log_file.exists():
-            try:
-                with open(log_file, encoding="utf-8") as f:
-                    log_entries = json.load(f)
-                    if not isinstance(log_entries, list):
-                        log_entries = []
-            except (json.JSONDecodeError, ValueError):
-                pass
+def append_calibration_log(output_dir: Path, log_entry: dict[str, Any]) -> None:
+    """向 calibration_log.json 追加一条调优日志（只保留最近 30 条）。"""
+    log_file = output_dir / "calibration_log.json"
 
-        log_entries.append(log_entry)
+    log_entries: list[dict[str, Any]] = []
+    if log_file.exists():
+        try:
+            with open(log_file, encoding="utf-8") as f:
+                loaded = json.load(f)
+                log_entries = loaded if isinstance(loaded, list) else []
+        except (json.JSONDecodeError, ValueError):
+            pass
 
-        # 只保留最近 30 条日志
-        if len(log_entries) > 30:
-            log_entries = log_entries[-30:]
+    log_entries.append(log_entry)
+    if len(log_entries) > 30:
+        log_entries = log_entries[-30:]
 
-        with open(log_file, "w", encoding="utf-8") as f:
-            json.dump(log_entries, f, ensure_ascii=False, indent=2)
+    with open(log_file, "w", encoding="utf-8") as f:
+        json.dump(log_entries, f, ensure_ascii=False, indent=2)
 
-        logger.info(
-            f"Threshold calibration: {log_entry.get('category', '?')} "
-            f"{log_entry.get('old_value', '?')} -> {log_entry.get('new_value', '?')} "
-            f"({log_entry.get('reason', '?')})"
-        )
+    logger.info(
+        f"Threshold calibration: {log_entry.get('category', '?')} "
+        f"{log_entry.get('old_value', '?')} -> {log_entry.get('new_value', '?')} "
+        f"({log_entry.get('reason', '?')})"
+    )
 
 
 # ============================================================================
@@ -344,16 +337,12 @@ def run_calibration(output_dir: Path) -> dict[str, Any]:
     has_changes = any(a["adjustment"] != 0.0 for a in adjustments)
 
     if has_changes:
-        # 保存新阈值 + 调优日志 (只记录有变更的)
+        # 阈值只写一次；每个变更灾种各追加一条审计日志
+        # （修复此前 for+break 只落首条分类日志的问题）
+        save_thresholds(output_dir, new_thresholds)
         changed_logs = [a for a in adjustments if a["adjustment"] != 0.0]
         for log_entry in changed_logs:
-            save_thresholds(output_dir, new_thresholds, log_entry)
-            # save_thresholds 会追加日志, 但阈值只需要保存一次
-            # 后续调用只追加日志
-            break  # 只调用一次 save_thresholds
-
-        # 再次保存确保阈值文件是最新的
-        save_thresholds(output_dir, new_thresholds, None)
+            append_calibration_log(output_dir, log_entry)
     else:
         logger.info("[Calibration] No threshold changes needed")
 

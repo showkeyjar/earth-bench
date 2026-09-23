@@ -1,0 +1,46 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'earthbench/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - '.github/workflows/tests.yml'
+  pull_request:
+    paths:
+      - 'earthbench/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e .
+          # tests/test_cars_verify.py 引入 cars_serve → ��要 numpy（其余为纯 stdlib/pydantic）
+          pip install numpy pytest
+
+      - name: Run tests
+        env:
+          # 显式清空外部服务凭据，确保测试不依赖网络/key（本地验证亦如此）
+          QWEATHER_API_KEY: ''
+          FIRMS_MAP_KEY: ''
+        run: python -m pytest tests/ -v --tb=short

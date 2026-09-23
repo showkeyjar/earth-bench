@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import logging
 from enum import Enum
 from typing import Any
 
@@ -32,8 +33,20 @@ class ScenarioCategory(str, Enum):
 
     @classmethod
     def from_string(cls, value: str) -> ScenarioCategory:
-        """将字符串安全地转换为 ScenarioCategory，未知值回退到 FIRE。"""
-        return _CATEGORY_MAP.get(value, cls.FIRE)
+        """将字符串安全地转换为 ScenarioCategory，未知值回退到 FIRE（并告警）。
+
+        此前未知类别静默回退 FIRE，拼写错误（如 "haet"）会被当成火险场景
+        处理且不留任何痕迹；保留回退行为以兼容，但显式记录告警。
+        """
+        cat = _CATEGORY_MAP.get(value)
+        if cat is None:
+            logging.getLogger(__name__).warning(
+                "Unknown scenario category %r — falling back to FIRE "
+                "(expected one of: fire/flood/drought/heat/ecology)",
+                value,
+            )
+            return cls.FIRE
+        return cat
 
 
 _CATEGORY_MAP: dict[str, ScenarioCategory] = {

@@ -30,6 +30,12 @@ vision = [
     "torch>=2.0",
     "rasterio>=1.3",
 ]
+cars = [
+    # deep-NGR serving; `pip install -e ../CRPS` provides crps-cars (local, not on PyPI)
+    "numpy",
+    "scipy",
+    "crps-cars",
+]
 
 [project.scripts]
 earthbench-eval = "earthbench.__main__:main"

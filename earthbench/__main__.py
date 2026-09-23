@@ -24,9 +24,9 @@ def main():
     )
     parser.add_argument(
         "--agent",
-        choices=["rule", "carm"],
+        choices=["rule", "carm", "cars"],
         default="rule",
-        help="Agent type to evaluate (default: rule)",
+        help="Agent type to evaluate (default: rule; cars = CARS probabilistic)",
     )
     parser.add_argument(
         "--carm-root",
@@ -39,6 +39,11 @@ def main():
         choices=["all", "fire", "flood", "drought", "heat"],
         default="all",
         help="Filter by category (default: all)",
+    )
+    parser.add_argument(
+        "--adversarial",
+        action="store_true",
+        help="Run the adversarial hard-case suite (rule baseline scores < 100%)",
     )
     parser.add_argument(
         "--publish",
@@ -66,7 +71,7 @@ def main():
     elif args.demo:
         run_demo()
     elif args.benchmark:
-        run_alert_benchmark(args.agent, args.carm_root, args.category)
+        run_alert_benchmark(args.agent, args.carm_root, args.category, args.adversarial)
     elif args.eval:
         run_eval_mode(args.eval_input)
 
@@ -141,11 +146,19 @@ def run_demo():
 
 
 def run_alert_benchmark(
-    agent_type: str, carm_root: str | None, category_filter: str = "all"
+    agent_type: str,
+    carm_root: str | None,
+    category_filter: str = "all",
+    adversarial: bool = False,
 ):
-    """运行 AlertBench 基准评测。"""
+    """运行 AlertBench 基准评测（基础套件或对抗套件）。"""
+    from earthbench.scenarios import get_adversarial_suite
+
     print("=" * 60)
-    print("AlertBench — Full Benchmark (Fire + Flood + Drought + Heat)")
+    if adversarial:
+        print("AlertBench — Adversarial Suite (hard cases, rule baseline < 100%)")
+    else:
+        print("AlertBench — Full Benchmark (Fire + Flood + Drought + Heat)")
     print("=" * 60)
 
     # 选择 Agent
@@ -164,6 +177,11 @@ def run_alert_benchmark(
         bridge = CARMBridge(carm_root=carm_root)
         agent = bridge
         agent_name = f"CARM ({'LLM' if bridge._loaded else 'heuristic-fallback'})"
+    elif agent_type == "cars":
+        from earthbench.cars_agent import CarsMultiAgent
+
+        agent = CarsMultiAgent()
+        agent_name = "CarsMultiAgent (heat=CARS probabilistic, rest=rule)"
     else:
         print(f"Unknown agent type: {agent_type}")
         return
@@ -172,7 +190,9 @@ def run_alert_benchmark(
     print(f"场景过滤: {category_filter}")
 
     # 运行评测
-    bench_eval = AlertBenchEvaluator()
+    bench_eval = AlertBenchEvaluator(
+        suite=get_adversarial_suite() if adversarial else None
+    )
 
     if category_filter != "all":
         # 重新初始化 evaluator 并过滤 raw_suite

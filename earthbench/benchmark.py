@@ -53,8 +53,16 @@ class AlertTestCase:
 class AlertBenchEvaluator:
     """AlertBench 基准评测引擎（四类场景通用）。"""
 
-    def __init__(self):
-        self.raw_suite: list[dict[str, Any]] = get_alert_benchmark_suite()
+    def __init__(self, suite: list[dict[str, Any]] | None = None):
+        """初始化评测器。
+
+        Args:
+            suite: 可选的自定义场景套件（如 get_adversarial_suite()）；
+                   缺省使用基础 AlertBench 套件。
+        """
+        self.raw_suite: list[dict[str, Any]] = (
+            suite if suite is not None else get_alert_benchmark_suite()
+        )
         self.test_cases: list[AlertTestCase] = []
         self.results: list[dict[str, Any]] = []
         self._gt_divergences: list[dict[str, Any]] = []

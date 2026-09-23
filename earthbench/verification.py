@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import Any
 
 from earthbench.data_collectors import (
+    FIRMS_MAP_KEY,
     QWEATHER_API_KEY,
     fetch_firms_hotspots,
     qweather_request,
@@ -43,22 +44,10 @@ CST = timezone(timedelta(hours=8))
 
 
 def _wet_bulb(temp_c: float, rh: float) -> float:
-    """Stull 2011 湿球温度近似公式。
+    """Stull (2011) 湿球温度近似（委托共享 weather.wet_bulb_stull，保留 2 位舍入）。"""
+    from .weather import wet_bulb_stull
 
-    Tw = T * atan(0.151977 * sqrt(RH + 8.313659))
-         + atan(T + RH) - atan(RH - 1.676331)
-         + 0.00391838 * RH^1.5 * atan(0.023101 * RH) - 4.686035
-    """
-    t = float(temp_c)
-    rh = float(rh)
-    tw = (
-        t * math.atan(0.151977 * math.sqrt(rh + 8.313659))
-        + math.atan(t + rh)
-        - math.atan(rh - 1.676331)
-        + 0.00391838 * (rh**1.5) * math.atan(0.023101 * rh)
-        - 4.686035
-    )
-    return round(tw, 2)
+    return round(wet_bulb_stull(temp_c, rh), 2)
 
 
 def _date_str(d: datetime) -> str:
@@ -128,25 +117,37 @@ def fetch_firms_fire_data(region_id: str) -> list[dict]:
 def verify_fire(prediction: dict[str, Any], region_id: str) -> dict[str, Any]:
     """验证火灾预测: 用 NASA FIRMS 卫星火点数据验证。
 
-    如果 FIRMS 在该区域检测到火点 -> 实际发生火灾
-    否则 -> 无火灾
+    关键修正：FIRMS 未探测到火点 ≠ 一定无火（受卫星探测下限/云遮挡影响）；
+    当无 FIRMS 密钥或查询失败时，绝不能把「无数据」当「无火灾」。
+    - 无 FIRMS_MAP_KEY → insufficient_data（此前 CI 不配 key，导致每次火险预测被误判为漏报）
+    - 有数据且 0 火点 → actual=False（verified，附带探测下限 caveat）
     """
+    if not FIRMS_MAP_KEY:
+        return {
+            "actual": None,
+            "verification_source": "NASA FIRMS",
+            "verification_evidence": "FIRMS_MAP_KEY 未配置，无法验证火险（不做无火推断）",
+            "verification_status": "insufficient_data",
+            "fire_count": None,
+        }
+
     firms_data = fetch_firms_fire_data(region_id)
 
-    fire_detected = len(firms_data) > 0
-
-    evidence = (
-        f"NASA FIRMS 卫星检测到 {len(firms_data)} 个火点"
-        if fire_detected
-        else "NASA FIRMS 卫星未检测到火点"
-    )
+    if firms_data:
+        return {
+            "actual": True,
+            "verification_source": "NASA FIRMS",
+            "verification_evidence": f"NASA FIRMS 卫星检测到 {len(firms_data)} 个火点",
+            "verification_status": "verified",
+            "fire_count": len(firms_data),
+        }
 
     return {
-        "actual": fire_detected,
+        "actual": False,
         "verification_source": "NASA FIRMS",
-        "verification_evidence": evidence,
+        "verification_evidence": "NASA FIRMS 近 7 天未检测到火点（探测下限内，可能漏检小火）",
         "verification_status": "verified",
-        "fire_count": len(firms_data),
+        "fire_count": 0,
     }
 
 
@@ -232,9 +233,19 @@ def verify_drought(
 
     daily = daily_list[0]
     precip = float(daily.get("precip", 0))
-    humidity = float(daily.get("humidity", 50))
 
-    # 日降水=0 且湿度低 -> 干旱条件辅助判断
+    # 湿度字段缺失时不能用默认 50 硬凑（否则恒不判干旱）；宁可标记数据不足
+    if "humidity" not in daily:
+        return {
+            "actual": None,
+            "verification_source": "QWeather Historical",
+            "verification_evidence": "历史天气缺湿度字段，单日降水不足以判定干旱",
+            "verification_status": "insufficient_data",
+        }
+
+    humidity = float(daily["humidity"])
+    # 单日代理（弱）：干日(<0.1mm)且低湿(<50%) → 干旱条件。
+    # 诚实披露：非 30 天累计口径，可能过/欠判定，仅作辅助验证。
     drought_actual = precip < 0.1 and humidity < 50
 
     evidence = f"日降水量={precip:.1f}mm, 湿度={humidity:.0f}%"

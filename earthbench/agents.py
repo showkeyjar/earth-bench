@@ -17,8 +17,37 @@ import os
 from pathlib import Path
 
 from .models import DecisionOutput, ScenarioContext
+from .llm import domain_hint, parse_yes_no
 
 logger = logging.getLogger(__name__)
+
+
+def _max_consecutive_days(date_tokens: list[str]) -> int:
+    """从观测时间戳推断最大「连续高温」日历天数。
+
+    同一日多条读数去重；仅严格相邻的日期计入连续（修复此前同一日多条
+    读数被重复累加、隔日也当成连续的误判）。
+    """
+    from datetime import date as _date
+
+    days: set = set()
+    for tok in date_tokens:
+        ts = tok[:10] if isinstance(tok, str) and len(tok) >= 10 else str(tok)
+        try:
+            days.add(_date.fromisoformat(ts))
+        except ValueError:
+            continue
+    if not days:
+        return max(1, len(date_tokens))
+    ordered = sorted(days)
+    best = run = 1
+    for a, b in zip(ordered, ordered[1:]):
+        if (b - a).days == 1:
+            run += 1
+            best = max(best, run)
+        else:
+            run = 1
+    return best
 
 
 # ============================================================================
@@ -494,23 +523,9 @@ class HeatWaveAlertAgent(AlertAgent):
         if duration_vals:
             heat_duration_days = int(sum(duration_vals) / len(duration_vals))
         elif temp_ts:
-            temp_ts.sort(key=lambda x: x[0])
-            consecutive_high = 0
-            prev_date = None
-            for ts, tv in temp_ts:
-                if tv >= 35.0:
-                    # 提取日期部分用于连续性检查
-                    cur_date = ts[:10] if len(ts) >= 10 else ts
-                    if prev_date is None or cur_date == prev_date:
-                        consecutive_high += 1
-                    elif cur_date > prev_date:
-                        # 日期递增，继续计数
-                        consecutive_high += 1
-                    else:
-                        # 日期回退，重置
-                        consecutive_high = 1
-                    prev_date = cur_date
-            heat_duration_days = max(consecutive_high, 1)
+            heat_duration_days = _max_consecutive_days(
+                [ts for ts, tv in temp_ts if tv >= 35.0]
+            )
         elif context.horizon_hours >= 72:
             heat_duration_days = min(context.horizon_hours // 24, 5)
         else:
@@ -713,12 +728,15 @@ class LLMDecisionAgent(AlertAgent):
             )
         obs_text = "\n".join(obs_lines)
 
+        cat_hint = domain_hint(context.category.value)
+
         prompt = (
             f"[EarthBench Alert 决策任务]\n"
             f"区域: {context.region}\n"
             f"时间窗口: {context.horizon_hours}小时\n"
             f"决策模板: {tmpl_label}\n"
             f"\n证据列表:\n{obs_text}\n"
+            f"{cat_hint}"
             f"\n请做出二元决策：是或否？\n"
             f"只回答 YES 或 NO（大写），然后简要说明理由和置信度。\n"
             f"格式：决策:YES/NO\n置信度:0.xx\n理由:..."
@@ -807,36 +825,12 @@ class LLMDecisionAgent(AlertAgent):
 
     @staticmethod
     def _parse_llm_response(text: str) -> tuple[str | None, float, str]:
-        import re
-
+        """解析 LLM 响应为 (answer, confidence, rationale)（委托 llm.parse_yes_no）。"""
         content = text.strip()
-        if "</think>" in content:
-            content = content.split("</think>", 1)[1]
-        elif "<antThinking>" in content:
-            content = content.split("<antThinking>", 1)[1]
-
-        lower = content.lower()
-
-        dec_match = re.search(r"决策[:：]\s*(yes|no|是|否)", lower)
-        if dec_match:
-            ans = dec_match.group(1)
-            if ans in ("yes", "是"):
-                return "yes", 0.85, content[:300]
-            else:
-                return "no", 0.85, content[:300]
-
-        first_line = (
-            lower.split("\n")[0].strip() if "\n" in content else lower[:100].strip()
-        )
-        if re.match(r"^(yes|no)\b", first_line):
-            return ("yes" if first_line.startswith("y") else "no"), 0.8, content[:300]
-
-        if re.search(r"应.*预警|建议.*预警|必须.*预警|需要.*预警|激活.*响应", lower):
-            return "yes", 0.7, content[:300]
-        if re.search(r"不应.*预警|不建议.*预警|不需要.*预警|不.*发出.*预警", lower):
-            return "no", 0.7, content[:300]
-
-        return None, 0.5, content[:300]
+        ans = parse_yes_no(content)
+        if ans is None:
+            return None, 0.5, content[:300]
+        return ans, 0.85, content[:300]
 
     def _heuristic_fallback(self, context: ScenarioContext) -> DecisionOutput:
         """当 LLM 不可用时，使用启发式规则引擎作为兜底。"""

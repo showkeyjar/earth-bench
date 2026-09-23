@@ -1,0 +1,17 @@
+{
+  "_comment": "CARS 日报城市配置。cold_alert_active: 冬季常温在 0°C 以上的城市（低温事件罕见且有害：冻雨/冻害/结冰），才启用低温预警列。北方城市冬季常态低于 0°C，持续预警没有信息量。",
+  "cities": [
+    {"region": "Chongqing-HotPotato",   "lat": 29.56, "lon": 106.55, "name_zh": "重庆", "cold_alert_active": true},
+    {"region": "Kunming-SpringCity",     "lat": 25.05, "lon": 102.72, "name_zh": "昆明", "cold_alert_active": true},
+    {"region": "Nanjing-OvenCity",       "lat": 32.06, "lon": 118.78, "name_zh": "南京", "cold_alert_active": true},
+    {"region": "Wuhan-Yangtze",          "lat": 30.52, "lon": 114.31, "name_zh": "武汉", "cold_alert_active": true},
+    {"region": "Beijing-Xiangshan",      "lat": 39.92, "lon": 116.20, "name_zh": "北京", "cold_alert_active": false},
+    {"region": "Guangzhou-PearlRiver",   "lat": 23.13, "lon": 113.26, "name_zh": "广州", "cold_alert_active": true},
+    {"region": "Shanghai-Bund",          "lat": 31.23, "lon": 121.47, "name_zh": "上海", "cold_alert_active": true},
+    {"region": "Chengdu-Panda",          "lat": 30.57, "lon": 104.07, "name_zh": "成都", "cold_alert_active": true},
+    {"region": "Hangzhou-WestLake",      "lat": 30.27, "lon": 120.16, "name_zh": "杭州", "cold_alert_active": true},
+    {"region": "Changsha-Xiangjiang",    "lat": 28.23, "lon": 112.94, "name_zh": "长沙", "cold_alert_active": true},
+    {"region": "Xian-Terracotta",        "lat": 34.34, "lon": 108.94, "name_zh": "西安", "cold_alert_active": false},
+    {"region": "Jinan-SpringCity",       "lat": 36.65, "lon": 117.12, "name_zh": "济南", "cold_alert_active": false}
+  ]
+}

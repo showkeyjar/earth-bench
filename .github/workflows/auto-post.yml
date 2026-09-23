@@ -67,11 +67,17 @@ jobs:
           "
 
       - name: Create GitHub Release
+        # 每日创建 release 会刷屏（且资产多为空）——改为仅在周一发布周度 release。
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          DOW=$(date +%u)
+          if [ "$DOW" != "1" ]; then
+            echo "Not Monday (dow=$DOW) — skip weekly release (avoid release spam)"
+            exit 0
+          fi
           TODAY=$(date +%Y-%m-%d)
-          gh release create "daily-$TODAY" \
-            --title "Daily Report $TODAY" \
+          gh release create "weekly-$TODAY" \
+            --title "Weekly Report $TODAY" \
             --generate-notes \
             published_reports/decisions_*.json || echo "Release may already exist"

@@ -473,22 +473,10 @@ def weather_to_observations(
             }
         )
 
-        # 湿球温度估算 — 使用 Stull (2011) 近似公式
-        # Tw = T * atan(0.151977 * (RH + 8.313659)^0.5) + atan(T + RH)
-        #       - atan(RH - 1.676331) + 0.00391838 * RH^1.5 * atan(0.023101 * RH) - 4.686035
-        # 参考: Stull, R. (2011), "Wet-Bulb Temperature from Relative Humidity and Air Temperature"
-        # 该公式在 -20°C~50°C、5%~99% RH 范围内误差 < 1°C
-        import math as _m
+        # 湿球温度估算 — Stull (2011) 近似（单一来源：earthbench.weather.wet_bulb_stull）
+        from .weather import wet_bulb_stull
 
-        rh = hum
-        tw = (
-            temp * _m.atan(0.151977 * (rh + 8.313659) ** 0.5)
-            + _m.atan(temp + rh)
-            - _m.atan(rh - 1.676331)
-            + 0.00391838 * rh**1.5 * _m.atan(0.023101 * rh)
-            - 4.686035
-        )
-        wet_bulb = round(tw, 1)
+        wet_bulb = round(wet_bulb_stull(temp, hum), 1)
         obs_list.append(
             {
                 "source": "QWeather/Calculated",

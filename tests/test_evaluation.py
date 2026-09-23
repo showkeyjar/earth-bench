@@ -1167,7 +1167,7 @@ class TestBaseEvaluator:
         metrics = evaluator.evaluate(pred)
         assert metrics["accuracy"] == 0.0
 
-    def test_confidence_calibration(self):
+    def test_brier_rewards_calibrated(self):
         evaluator = BaseEvaluator(ground_truth=True)
         ctx = ScenarioContext(
             category=ScenarioCategory.FIRE,
@@ -1183,7 +1183,27 @@ class TestBaseEvaluator:
             rationale="test",
         )
         metrics = evaluator.evaluate(pred)
-        assert metrics["confidence_calibration"] > 0.9
+        # Brier = (0.95 - 1.0)^2 = 0.0025 —— 理想校准
+        assert metrics["brier"] < 0.01
+
+    def test_brier_penalizes_overconfidence(self):
+        evaluator = BaseEvaluator(ground_truth=False)
+        ctx = ScenarioContext(
+            category=ScenarioCategory.FIRE,
+            template=DecisionTemplate.ALERT,
+            observations=[],
+            region="test",
+        )
+        pred = DecisionOutput(
+            context=ctx,
+            decision=True,
+            confidence=0.9,
+            evidence_summary={},
+            rationale="test",
+        )
+        metrics = evaluator.evaluate(pred)
+        # 高置信但事件未发生 → (0.9 - 0)^2 = 0.81
+        assert metrics["brier"] > 0.5
 
 
 class TestBatchEvaluatorExtended:
@@ -1807,7 +1827,12 @@ class TestVerificationModule:
         assert result["hit"] is None
 
     def test_verify_prediction_unknown_region(self):
-        """Test verify_prediction with unknown region for fire."""
+        """Test verify_prediction with unknown region for fire.
+
+        修正后语义：无 FIRMS_MAP_KEY 时不得把「无数据」当「无火灾」，
+        应返回 insufficient_data（hit 不计算）。
+        """
+        from earthbench import verification as v
         from earthbench.verification import verify_prediction
 
         prediction = {
@@ -1817,13 +1842,28 @@ class TestVerificationModule:
             "llm_decision": False,
         }
 
-        result = verify_prediction(prediction)
+        # 无 key 场景：insufficient_data，不做无火推断
+        monkeypatch_key = ""
+        original = v.FIRMS_MAP_KEY
+        v.FIRMS_MAP_KEY = monkeypatch_key
+        try:
+            result = verify_prediction(prediction)
+            assert result["category"] == "fire"
+            assert result["verification_status"] == "insufficient_data"
+            assert result["actual"] is None
+            assert result["hit"] is None
+        finally:
+            v.FIRMS_MAP_KEY = original
 
-        assert result["category"] == "fire"
-        assert result["verification_status"] == "verified"
-        # FIRMS will return empty list for unknown region -> actual=False
-        assert result["actual"] is False
-        assert result["hit"] is True  # predicted=False, actual=False -> hit
+        # 有 key 场景：未知区域 FIRMS 返回空 -> actual=False, hit=True
+        v.FIRMS_MAP_KEY = "dummy-key-for-test"
+        try:
+            result = verify_prediction(prediction)
+            assert result["verification_status"] == "verified"
+            assert result["actual"] is False
+            assert result["hit"] is True  # predicted=False, actual=False -> hit
+        finally:
+            v.FIRMS_MAP_KEY = original
 
     def test_build_accuracy_trend(self, tmp_path):
         """Test build_accuracy_trend accumulates verification files correctly."""

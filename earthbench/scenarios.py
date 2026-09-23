@@ -28,7 +28,9 @@ class ScenarioStore:
     """场景数据存储与管理。"""
 
     def __init__(self, data_dir: Path | None = None):
-        self.data_dir = data_dir or Path(__file__).parent.parent / "data"
+        # 包内数据目录（earthbench/data，含 CARS 工件）；
+        # 此前误指 repo 根 /data（不存在）
+        self.data_dir = data_dir or Path(__file__).parent / "data"
         self._cache: dict[str, ScenarioContext] = {}
 
     def register_scenario(self, scenario_id: str, context: ScenarioContext) -> None:
@@ -1019,6 +1021,155 @@ def get_alert_benchmark_suite() -> list[dict[str, Any]]:
     )
 
     return suite
+
+
+def get_adversarial_suite() -> list[dict[str, Any]]:
+    """判别力扩展套件 — 规则引擎线性加权与国标查表真值系统性分歧的硬用例。
+
+    与 get_alert_benchmark_suite() 的基础用例不同，这些用例刻意构造在
+    「线性评分模型高兴度、但标准查表不触�����的决策边界上（多因子次阈值
+    叠加 / AND 条件缺一 / 否定印证因子差一线），用于检验 Agent 能否超越
+    规则 baseline —— baseline 在基础套件上为 100%，在对抗套件上必然漏判。
+
+    设计原则：真值仍由 _gt_fn 独立查表推导（与基础套件同源），
+    对抗性只体现在观测取值的构造上，不改动任何标准阈值。
+    """
+    return [
+        {
+            # FWI=30 属高火险档（22~33），但湿度 40%（未干燥）且风速 8m/s（未大风），
+            # 国标要求高火险必须叠加干燥或大风才预警 → 不预警。
+            # 线性模型：FWI 0.5×0.40 + 湿度 0.6×0.20 + 风速 0.4×0.15，归一后 ≈0.507 ≥ 0.4 → 误报。
+            "case_id": "adv-fire-linear-overweight",
+            "difficulty": "L4",
+            "category": "fire",
+            "region": "Xiangshan-Beijing",
+            "ground_truth": False,
+            "observations": [
+                _make_obs("ECMWF", "FWI", 30.0, "", "2026-07-11T12:00:00+08:00"),
+                _make_obs("Station", "humidity", 40.0, "%", "2026-07-11T12:00:00+08:00"),
+                _make_obs("Station", "wind_speed", 8.0, "m/s", "2026-07-11T12:00:00+08:00"),
+            ],
+            "_gt_fn": infer_fire_ground_truth,
+        },
+        {
+            # 24h=45mm（<50 暴雨线）、6h=28mm（<50）、土壤 0.8（<0.85 饱和线）、水位 8.5m（<10 警戒）
+            # —— 四个因子全部差一线，任一 OR 条件都不触发 → 不预警。
+            # 线性模型四因子同时供分，归一后 ≈0.585 ≥ 0.45 → 误报（OR 逻辑被均值抹平）。
+            "case_id": "adv-flood-subthreshold-mix",
+            "difficulty": "L4",
+            "category": "flood",
+            "region": "Wuhan-Yangtze",
+            "ground_truth": False,
+            "observations": [
+                _make_obs("Station", "rainfall_24h", 45.0, "mm", "2026-07-11T12:00:00+08:00"),
+                _make_obs("Station", "rainfall_6h", 28.0, "mm", "2026-07-11T12:00:00+08:00"),
+                _make_obs("Station", "soil_moisture", 0.80, "", "2026-07-11T12:00:00+08:00"),
+                _make_obs("Station", "water_level", 8.5, "m", "2026-07-11T12:00:00+08:00"),
+            ],
+            "_gt_fn": infer_flood_ground_truth,
+        },
+        {
+            # SPI=-0.6（> -1.0 无旱）、Palmer=-1.5（轻旱，需印证因子），
+            # 湿度 26%（≥25）、月降雨 11mm（≥10）、NDVI 0.31（≥0.3）三个印证因子
+            # 全部差一线 → 不预警。
+            # 线性模型：Palmer 高分 + 月降雨/NDVI 接近满档，归一后 ≈0.433 ≥ 0.4 → 误报。
+            "case_id": "adv-drought-palmer-light-no-confirm",
+            "difficulty": "L4",
+            "category": "drought",
+            "region": "ChangbaiMountain",
+            "ground_truth": False,
+            "observations": [
+                _make_obs("Station", "SPI", -0.60, "", "2026-07-11T12:00:00+08:00"),
+                _make_obs("Station", "palmer_index", -1.50, "", "2026-07-11T12:00:00+08:00"),
+                _make_obs("Station", "humidity", 26.0, "%", "2026-07-11T12:00:00+08:00"),
+                _make_obs("Station", "rainfall_monthly", 11.0, "mm", "2026-07-11T12:00:00+08:00"),
+                _make_obs("Station", "NDVI", 0.31, "", "2026-07-11T12:00:00+08:00"),
+            ],
+            "_gt_fn": infer_drought_ground_truth,
+        },
+        {
+            # 最高温恰 35℃但湿球 23.9℃（<24 黄色湿热印证线）、湿度 69%（<70 闷热线）
+            # —— 黄色预警 AND 条件缺一、闷热 OR 条件缺一 → 不预警。
+            # 线性模型：温度 0.583×0.35 + 时长 0.6×0.25 + 湿球 0.113×0.25 + 湿度 0.38×0.15
+            # ≈ 0.439 ≥ 0.4 → 误报（AND 条件被加权平均稀释）。
+            "case_id": "adv-heat-subthreshold-dry",
+            "difficulty": "L4",
+            "category": "heat",
+            "region": "Chongqing-HotPotato",
+            "ground_truth": False,
+            "observations": [
+                _make_obs("Station", "temperature_max", 35.0, "°C", "2026-07-11T12:00:00+08:00"),
+                _make_obs("Station", "humidity", 69.0, "%", "2026-07-11T12:00:00+08:00"),
+                _make_obs("Station", "wet_bulb_temp", 23.9, "°C", "2026-07-11T12:00:00+08:00"),
+                _make_obs("Station", "heat_duration_days", 3.0, "d", "2026-07-11T12:00:00+08:00"),
+            ],
+            "_gt_fn": infer_heatwave_ground_truth,
+        },
+        # ---------------- 漏报方向（miss）：标准触发但线性评分被稀释 ----------------
+        {
+            # FWI=22.1 恰入高火险档（>22）且湿度 25%（<30 干燥）→ 国标规则 4 触发预警。
+            # 但冬季低温 8℃ 使温度分量归零，线性平均被稀释：
+            # (0.368×0.40 + 0.75×0.20 + 0×0.15)/0.75 ≈ 0.396 < 0.4 → 漏报。
+            "case_id": "adv-fire-colddry-diluted",
+            "difficulty": "L4",
+            "category": "fire",
+            "region": "Kunming-Yunnan",
+            "ground_truth": True,
+            "observations": [
+                _make_obs("ECMWF", "FWI", 22.1, "", "2026-01-11T12:00:00+08:00"),
+                _make_obs("Station", "humidity", 25.0, "%", "2026-01-11T12:00:00+08:00"),
+                _make_obs("Station", "temperature", 8.0, "°C", "2026-01-11T12:00:00+08:00"),
+            ],
+            "_gt_fn": infer_fire_ground_truth,
+        },
+        {
+            # 24h=30mm（恰达中雨线）+ 土壤 0.85（恰达饱和线）→ 国标规则 4（AND）触发预警。
+            # 线性模型两因子各自都不高（0.30 / 0.625），均值 ≈0.298 < 0.45 → 漏报。
+            "case_id": "adv-flood-saturation-and",
+            "difficulty": "L4",
+            "category": "flood",
+            "region": "Guilin-Guangxi",
+            "ground_truth": True,
+            "observations": [
+                _make_obs("Station", "rainfall_24h", 30.0, "mm", "2026-06-11T12:00:00+08:00"),
+                _make_obs("Station", "rainfall_6h", 5.0, "mm", "2026-06-11T12:00:00+08:00"),
+                _make_obs("Station", "soil_moisture", 0.85, "", "2026-06-11T12:00:00+08:00"),
+            ],
+            "_gt_fn": infer_flood_ground_truth,
+        },
+        {
+            # SPI=-1.0 恰达中旱线（<=-1.0）→ 国标 SPI 分级触发预警；
+            # 其余因子正常（Palmer 0 / 湿度 60%）在线性模型中均为 0 分稀释均值
+            # ≈0.107 < 0.4 → 漏报（单一决定性因子被正常因子淹没）。
+            "case_id": "adv-drought-spi-alone",
+            "difficulty": "L4",
+            "category": "drought",
+            "region": "Taiyuan-Shanxi",
+            "ground_truth": True,
+            "observations": [
+                _make_obs("Station", "SPI", -1.00, "", "2026-05-11T12:00:00+08:00"),
+                _make_obs("Station", "palmer_index", 0.00, "", "2026-05-11T12:00:00+08:00"),
+                _make_obs("Station", "humidity", 60.0, "%", "2026-05-11T12:00:00+08:00"),
+            ],
+            "_gt_fn": infer_drought_ground_truth,
+        },
+        {
+            # 最高温 33.5℃（>=33）+ 湿度 70.5%（>=70）→ 国标闷热判据（OR 通道）触发预警；
+            # 线性模型：温度 0.458×0.35 + 时长 0.2×0.25 + 湿球 0×0.25 + 湿度 0.41×0.15
+            # ≈ 0.272 < 0.4 → 漏报（低湿球 + 无持续记录把均值拉低）。
+            "case_id": "adv-heat-muggy-or",
+            "difficulty": "L4",
+            "category": "heat",
+            "region": "Guangzhou-PearlR",
+            "ground_truth": True,
+            "observations": [
+                _make_obs("Station", "temperature_max", 33.5, "°C", "2026-07-11T12:00:00+08:00"),
+                _make_obs("Station", "humidity", 70.5, "%", "2026-07-11T12:00:00+08:00"),
+                _make_obs("Station", "wet_bulb_temp", 20.0, "°C", "2026-07-11T12:00:00+08:00"),
+            ],
+            "_gt_fn": infer_heatwave_ground_truth,
+        },
+    ]
 
 
 # ===========================================================================
