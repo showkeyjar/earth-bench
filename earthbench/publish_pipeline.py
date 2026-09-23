@@ -243,6 +243,146 @@ def run_llm_decisions(suite: list[dict]) -> list[dict]:
 # ============================================================================
 
 
+def _build_cars_section() -> list[str]:
+    """构建 CARS 集合预报板块（数据缺失时返回空，优雅降级）。
+
+    数据来自 earthbench/cars_serve.py::daily_update() 的输出
+    （冻结 CARS t2m 模型 × 当日业务 GEFS f048，30 成员集合，影响优先口径）。
+    附检验闭环摘要（earthbench/cars_verify.py 累积的 Brier/命中/漏报）。
+    """
+    try:
+        from earthbench.cars_serve import out_json_path
+
+        if not out_json_path().exists():
+            return []
+        import json as _json
+
+        doc = _json.loads(out_json_path().read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001 — 发布链路不容错中断
+        logger.warning(f"[CARS] section skipped: {e}")
+        return []
+
+    lines = [
+        "## 📊 48小时气温集合预报（CARS·影响优先）",
+        "",
+        f"> 30 成员集合（冻结 CARS 模型 × 业务 GEFS f048），"
+        f"有效日 **{doc.get('generated_for', '?')}**；"
+        "只播报对人类有害的事件。触发 = P ≥ 30%（期望损失规则 P ≥ C/L）："
+        "🟡 黄色 = P(湿球≥27°C 或 日最高≥35°C) ≥ 30%；"
+        "🟠 橙色 = P(日最高≥37°C) ≥ 60%；"
+        "❄️ 低温 = P(日最低≤0°C) ≥ 30%（仅冬季温暖城市）。"
+        "P(超+2σ) 仅为严重度背景——统计异常 ≠ 有害。",
+        "",
+        "| 城市 | P(湿球≥27°C) | P(日最高≥35°C) | P(日最高≥37°C) | P(低温≤0°C) | 预警 |",
+        "|------|-------------|---------------|---------------|------------|------|",
+    ]
+    for r in doc.get("records", []):
+        name = r.get("name_zh", r["region"])
+        p_wb = r.get("p_harm_wb")
+        p35 = r.get("p_harm_heat", 0.0)
+        p37 = r.get("p_harm_heat_intense", 0.0)
+        p_cold = r.get("p_harm_cold", 0.0)
+        p_main = p_wb if p_wb is not None else p35
+        if p37 >= 0.6:
+            flag = "🟠 橙色"
+        elif p_main >= 0.3:
+            flag = "🟡 黄色"
+        elif r.get("cold_alert_active", True) and p_cold >= 0.3:
+            flag = "❄️ 低温"
+        else:
+            flag = "—"
+        wb_cell = f"{p_wb:.0%}" if p_wb is not None else "n/a"
+        lines.append(
+            f"| {name} | {wb_cell} | {p35:.0%} | {p37:.0%} | {p_cold:.0%} | "
+            f"{flag} |"
+        )
+
+    # 检验闭环摘要（有历史才显示）
+    try:
+        from earthbench.cars_verify import summary as cars_summary
+
+        vs = cars_summary()
+        if vs.get("n", 0) > 0:
+            csi = (f"，CSI {vs['csi']:.2f}" if vs.get("csi") is not None
+                   else "")
+            lines += [
+                "",
+                f"> 🧪 **滚动检验**（{vs['since']} 起，n={vs['n']}，"
+                f"观测源 {'/'.join(vs['obs_sources'])}）："
+                f"Brier {vs['mean_brier']:.3f}；"
+                f"命中 {vs['hit']} / 漏报 {vs['miss']} / 空报 "
+                f"{vs['false_alarm']}{csi}",
+            ]
+    except Exception as e:  # noqa: BLE001
+        logger.debug(f"verification summary skipped: {e}")
+    return lines
+
+
+def _build_cars_impact_section() -> list[str]:
+    """构建 CARS 冲击变量板块（暴雨/大风，数据缺失时返回空，优雅降级）。
+
+    数据来自 earthbench/cars_serve_impact.py::daily_update_impact() 的输出
+    （SeasonalCars 冻结档案 × 当日业务 GEFS，30 成员，判据 v2 尾部档位）。
+    """
+    try:
+        from earthbench.cars_serve_impact import out_json_path as impact_path
+
+        if not impact_path().exists():
+            return []
+        import json as _json
+
+        doc = _json.loads(impact_path().read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001 — 发布链路不容错中断
+        logger.warning(f"[CARS-impact] section skipped: {e}")
+        return []
+
+    p_rain = doc.get("p_trigger", {}).get("rain", 0.3)
+    p_wind = doc.get("p_trigger", {}).get("wind", 0.3)
+    lines = [
+        "## 🌧️ 48小时暴雨/大风概率（CARS·影响优先）",
+        "",
+        f"> 30 成员集合（冻结档案 × 业务 GEFS），有效日 "
+        f"**{doc.get('generated_for', '?')}**。"
+        f"🟡 暴雨 = P(≥50mm) ≥ {p_rain:.0%}；🟠 大暴雨 = P(≥100mm) ≥ {p_rain:.0%}；"
+        f"💨 大风 = P(日均风速≥10.8m/s) ≥ {p_wind:.0%}。"
+        "降水通道含高尾补全（防灾口径：漏报 49%→23%，判据 v2 深破裂）；"
+        "风速通道为校准 raw 档（日均风速是大风弱代理，无阵风数据）。",
+        "",
+        "| 城市 | P(暴雨≥50mm) | P(大暴雨≥100mm) | 成员最大mm | "
+        "P(大风≥10.8m/s) | P(强风≥13.9m/s) | 成员最大m/s | 预警 |",
+        "|------|-------------|----------------|-----------|"
+        "----------------|----------------|------------|------|",
+    ]
+    for r in doc.get("records", []):
+        name = r.get("name_zh", r["region"])
+        p50 = r.get("p_harm_rain", 0.0)
+        p100 = r.get("p_harm_rain_intense", 0.0)
+        pw = r.get("p_harm_wind", 0.0)
+        pwi = r.get("p_harm_wind_intense", 0.0)
+        if p100 >= p_rain:
+            flag = "🟠 大暴雨"
+        elif p50 >= p_rain:
+            flag = "🟡 暴雨"
+        elif pwi >= p_wind:
+            flag = "🟠 强风"
+        elif pw >= p_wind:
+            flag = "💨 大风"
+        else:
+            flag = "—"
+        lines.append(
+            f"| {name} | {p50:.0%} | {p100:.0%} | "
+            f"{r.get('rain_member_max_mm', 0):.0f} | "
+            f"{pw:.0%} | {pwi:.0%} | "
+            f"{r.get('wind_member_max_ms', 0):.1f} | {flag} |"
+        )
+    lines += [
+        "",
+        "> 概率为 30 成员计数（地板 ≈3.3%）；业务 GEFS 与再预报 v12 存在版本"
+        "漂移；降水/大风验证闭环暂缺（t2m 闭环不受影响）。",
+    ]
+    return lines
+
+
 def generate_reports(
     decisions: list[dict], suite: list[dict] | None = None
 ) -> dict[str, str]:
@@ -303,6 +443,16 @@ def generate_reports(
     md_lines.append(f"| 决策准确率 | {accuracy:.0%} ({correct}/{total}) |")
     md_lines.append("")
 
+    # --- CARS 集合预报概率板块（CRPS 研究项目对接，可选）---
+    cars_section = _build_cars_section()
+    if cars_section:
+        md_lines.extend(cars_section)
+    # --- CARS 冲击变量板块（暴雨/大风，判据 v2，可选）---
+    impact_section = _build_cars_impact_section()
+    if impact_section:
+        md_lines.extend(impact_section)
+    md_lines.append("")
+
     # 按类别分组详情
     for cat in PUBLISH_CONFIG["included_categories"]:
         cat_items = [d for d in decisions if d["category"] == cat]
@@ -351,6 +501,45 @@ def generate_reports(
         "average_confidence": round(avg_conf, 4),
         "decisions": decisions,
     }
+
+    # CARS 集合预报块（机器可读 API；缺失时优雅省略）
+    try:
+        from earthbench.cars_serve import out_json_path as _cars_path
+
+        if _cars_path().exists():
+            import json as _json
+
+            _cars = _json.loads(_cars_path().read_text(encoding="utf-8"))
+            _cars_api = {
+                "model": _cars.get("model"),
+                "generated_for": _cars.get("generated_for"),
+                "p_trigger": _cars.get("p_trigger"),
+                "caveats": _cars.get("caveats"),
+                "records": [
+                    {
+                        "region": r["region"], "name_zh": r.get("name_zh"),
+                        "lat": r["lat"], "lon": r["lon"],
+                        "valid_date": r["valid_date"],
+                        "p_harm_wb": r.get("p_harm_wb"),
+                        "p_harm_heat": r.get("p_harm_heat"),
+                        "p_harm_heat_intense": r.get("p_harm_heat_intense"),
+                        "p_harm_cold": r.get("p_harm_cold"),
+                        "t2m_member_mean_k": r.get("t2m_member_mean_k"),
+                    }
+                    for r in _cars.get("records", [])
+                ],
+            }
+            try:
+                from earthbench.cars_verify import summary as _cars_vs
+
+                _vs = _cars_vs()
+                if _vs.get("n", 0) > 0:
+                    _cars_api["verification"] = _vs
+            except Exception:  # noqa: BLE001
+                pass
+            json_data["cars_forecast"] = _cars_api
+    except Exception as e:  # noqa: BLE001
+        logger.debug(f"cars api block skipped: {e}")
 
     json_path = output_dir / f"decisions_{date_tag}.json"
 

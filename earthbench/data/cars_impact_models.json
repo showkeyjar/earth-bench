@@ -1,0 +1,43 @@
+{
+  "_comment": "CARS 冲击变量（tp=暴雨 / wind=大风）冻结服务配置。单一来源：cars_serve_impact.py 读取。超参 = CRPS 滚动回测诚实选择的众数（tp/wind 一致：k30/pca16/alpha0/beta1/w121，各 10/15 年）。尾部档位由漏报深度判据 v2 决定：tp deficit +1.57σ（深破裂）→ 高尾补全=保险+价值；wind +0.52σ（浅越界）→ raw=校准值钱。阈值：暴雨 50mm/日（国标）、大暴雨 100mm/日；大风 10.8 m/s（六级线，日均口径）、强风 13.9 m/s（七级线）。触发成本比：rain=flood 0.3；wind 无既有类别，取 0.3（披露假设）。",
+  "tp": {
+    "archive": "cars_tp_archive.npz",
+    "model": "SeasonalCarsModel",
+    "config": {
+      "members": 30, "k": 30, "pca_components": 16,
+      "alpha_state": 0.0, "beta_forecast": 1.0,
+      "day_window": 121, "seed": 42
+    },
+    "tail_completion": {"mode": "high", "q": 0.2, "infl": 1.5},
+    "clip_min": 0.0,
+    "thresholds": {"hard": 50.0, "intense": 100.0},
+    "units": "mm/day",
+    "provenance": {
+      "selected_in_rolling_years": "10/15 (modal)",
+      "rolling_crps_2002_2016": 2.2346,
+      "crpss_vs_seasonal": 0.0437,
+      "miss_depth_deficit_sigma": 1.57,
+      "value_verdict": "completion wins (mean V 6x vs raw, hard-50mm L=s^2)"
+    }
+  },
+  "wind": {
+    "archive": "cars_wind_archive.npz",
+    "model": "SeasonalCarsModel",
+    "config": {
+      "members": 30, "k": 30, "pca_components": 16,
+      "alpha_state": 0.0, "beta_forecast": 1.0,
+      "day_window": 121, "seed": 42
+    },
+    "tail_completion": null,
+    "clip_min": 0.0,
+    "thresholds": {"hard": 10.8, "intense": 13.9},
+    "units": "m/s (daily mean)",
+    "provenance": {
+      "selected_in_rolling_years": "10/15 (modal)",
+      "rolling_crps_2002_2016": 0.5200,
+      "crpss_vs_seasonal": 0.0357,
+      "miss_depth_deficit_sigma": 0.52,
+      "value_verdict": "calibration wins; completion loses 10-20% mean V (shallow rupture)"
+    }
+  }
+}

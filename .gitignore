@@ -49,6 +49,12 @@ history.json
 feed.xml
 sitemap.xml
 published_reports/
+agent_comparison.json
+earthbench/data/gefs_cache/
+earthbench/data/cars_probabilities_daily.json
+earthbench/data/cars_probabilities_impact_daily.json
+earthbench/data/cars_verification_history.json
+earthbench/data/cars_history/
 
 # Workbuddy memory (本地 AI 助手记忆，非项目代码)
 .workbuddy/

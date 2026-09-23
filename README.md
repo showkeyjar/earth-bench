@@ -25,6 +25,42 @@ We don't just predict numbers — we decide actions: *Should we activate Level 1
 - **Multi-source data fusion**: Satellite (MODIS/FIRMS), meteorological stations (QWeather), hydrological sensors
 - **Transparent reasoning**: Every decision includes full evidence chain and LLM inference trace
 - **Ground truth verification**: Each decision verified against national/international thresholds
+- **Probabilistic forecasting (CARS)** — 30-member ensemble heat probabilities from a frozen, 15-year-validated statistical model; agents can reason over forecast uncertainty, not just current observations
+- **Economic value scoring (V)** — decisions scored by cost-loss value (money), not only accuracy/F1
+
+### CARS Integration (probabilistic decision layer)
+
+Integrated with the CRPS/CARS research project (`D:\code\ai\CRPS`):
+
+| Component | What it does |
+|-----------|--------------|
+| `earthbench/cars_agent.py` | `CarsHeatAgent` / `CarsMultiAgent` — **impact-first rule**: alert iff P(harmful) ≥ C/L (expected-loss rule); harm basis = wet-bulb ≥ 27°C (EarthBench standard) with dry-bulb fallback; +2σ relative anomaly is severity context only, never a trigger |
+| `earthbench/cars_serve.py` | Standalone frozen-model inference (deep NGR direct-load via `crps_cars`, no replica) + daily GEFS f048 fetch (t2m/r2/tmax/tmin) → harm probabilities (wet-bulb Stull, daily max 35/37°C national lines, daily min ≤0°C) + backfill mode (`--valid YYYY-MM-DD`) |
+| `earthbench/cars_serve_impact.py` | **Impact channel (rain/wind)**: SeasonalCars fitted on frozen 2000–2016 archives at load (honest-selected modal hyperparams) + ops GEFS APCP f054–f072 6h-window sum (24h accumulation) & UGRD/VGRD10 5-snapshot mean → P(≥50mm), P(≥100mm), P(daily-mean wind ≥10.8/13.9 m/s). Tail policy per miss-depth criterion v2: tp = high-tail completion (deep rupture, miss 49%→23%), wind = raw (shallow, calibration wins) |
+| `earthbench/cars_verify.py` | **Verification closed loop**: score past forecasts against next-day observations (QWeather now-temp preferred, GEFS f000 fallback), accumulate Brier / hit / miss / false-alarm / CSI per city |
+| `earthbench/data/cars_cities.json` | Ops-editable city config (12 cities, per-city cold-alert gating for warm-winter cities) |
+| `earthbench/eval.py::ValueEvaluator` | Cost-loss economic value scoring: V = (E_clim − E_agent)/(E_clim − E_perfect) |
+| `earthbench/data/cars_t2m_deep_ngr.npz` | Frozen deep-NGR model (2000–2015 train, 2016 early-stop + GPD tail), CRPS ~0.97 K, +7.9% CRPSS vs seasonal (rolling 15y) |
+| `earthbench/data/cars_climo.npz` | Monthly climatology + grid (for the +2σ relative-anomaly threshold) |
+| `scripts/run_agent_comparison.py` | rule vs cars comparison + P_TRIG threshold sensitivity (expected-loss trade-off) |
+| Daily CI | verify step (score past forecasts) → update step (publish new probabilities); history round-trips via gh-pages (`CARS_DATA_DIR=published_reports`); grib cache stays in-package (never deployed) |
+
+Run the comparison:
+
+```bash
+python scripts/run_agent_comparison.py            # accuracy + V score + sensitivity
+python -m earthbench --benchmark --agent cars     # full benchmark with CARS agent
+python -m earthbench --benchmark --adversarial    # adversarial hard-case suite (rule baseline < 100%)
+python -m earthbench.cars_serve                   # regenerate daily probabilities
+python -m earthbench.cars_serve --valid 2026-09-19  # backfill (GEFS retention ~10 days)
+python -m earthbench.cars_verify                  # closed-loop verification of past forecasts
+```
+
+**Adversarial suite (discriminative power)**: the 20 core cases score the rule baseline at 100% — they cannot rank agents that beat the baseline. `scenarios.py::get_adversarial_suite()` adds 8 L4 cases built on decision boundaries where linear weighted scoring systematically diverges from the national-standard lookup tables, in **both directions**: 4 false-alarm traps (sub-threshold factor mixes, AND-conditions missing one input, negated confirmations off by a hair) and 4 miss traps (a decisive factor diluted by normal ones — cold-dry fire weather, saturation-AND at exact thresholds, SPI alone at the drought line, muggy-OR without duration). The rule agent fails all 8 (0%, both FP and FN), while ground truth is still derived by the same independent `_gt_fn` standards. An agent that reasons over AND/OR structure instead of averaging can now measurably separate itself.
+
+Pipeline cadence: D 08:00 publish probabilities for D+2 → D+3 CI scores them against observations (Brier/CSI accumulate in `cars_verification_history.json`, surfaced in the daily panel and `latest.json`).
+
+Disclosed caveats: members are daily-mean t2m perturbations with diurnal peak/valley offsets and humidity taken unperturbed from c00; wet bulb via Stull (2011), typical error <1°C; deep NGR frozen on 2000–2015 training (2016 early-stop + EVT tail); ops GEFS vs reforecast v12 version drift; coverage 100–140°E / 20–50°N (out-of-grid falls back to a 37°C rule with reduced confidence); verification v1 observes via QWeather now-temp (20:00 Beijing ≈ daily-max proxy, 1–3°C error) or GEFS f000 (model-anchored). Impact-first principle: only human-harmful extremes are reported (wet bulb ≥ 27°C / daily max ≥ 35/37°C / daily min ≤ 0°C for warm-winter cities); relative +2σ anomalies are severity context, not triggers.
 
 ### Architecture
 
@@ -43,10 +79,14 @@ Publish Pipeline (Markdown + JSON + RSS + Web Dashboard)
 ```
 earthbench/
 ├── models.py            # Core data structures (Observation, ScenarioContext, DecisionOutput)
-├── scenarios.py          # 20 benchmark test cases + ScenarioStore
+├── scenarios.py          # 20 benchmark test cases + adversarial suite + ScenarioStore
 ├── agents.py             # Rule-based Agents (Fire/Flood/Drought/HeatWave + MultiAlertRouter)
 ├── benchmark.py          # AlertBenchEvaluator — full benchmark engine
-├── eval.py               # BaseEvaluator + BatchEvaluator (accuracy/precision/recall/F1)
+├── eval.py               # BaseEvaluator + BatchEvaluator (accuracy/P/R/F1 + Brier/ECE + ValueEvaluator)
+├── weather.py            # Shared meteorology (Stull wet-bulb + inverse, single source)
+├── llm.py                # Shared LLM YES/NO parsing + domain prompts (single source)
+├── verification.py       # Closed-loop delayed verification (FIRMS/QWeather historical)
+├── calibration.py        # Threshold self-tuning from verification feedback (EWMA)
 ├── templates.py          # DecisionTemplate engine + context validation
 ├── data_collectors.py    # QWeather API + NASA FIRMS satellite fire detection
 ├── enhance_data.py       # Data enhancement & enrichment pipeline

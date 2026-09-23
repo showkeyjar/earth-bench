@@ -66,12 +66,78 @@ jobs:
           ls -1 published_reports/thresholds.json 2>/dev/null || echo "(no thresholds)"
           ls -1 published_reports/calibration_log.json 2>/dev/null || echo "(no calibration log)"
 
+      - name: Fetch CARS history from gh-pages (forecast archive + verification)
+        continue-on-error: true
+        run: |
+          mkdir -p published_reports/cars_history
+          for f in $(curl -s "https://api.github.com/repos/showkeyjar/earth-bench/contents/published_reports?ref=gh-pages" | python3 -c "import sys,json; [print(x['name']) for x in json.load(sys.stdin) if x['name'].startswith('cars_') and x['name'].endswith('.json')]" 2>/dev/null); do
+            curl -s "https://raw.githubusercontent.com/showkeyjar/earth-bench/gh-pages/published_reports/$f" -o "published_reports/$f" || true
+          done
+          for f in $(curl -s "https://api.github.com/repos/showkeyjar/earth-bench/contents/published_reports/cars_history?ref=gh-pages" | python3 -c "import sys,json; [print(x['name']) for x in json.load(sys.stdin) if x['name'].startswith('forecast_')]" 2>/dev/null); do
+            curl -s "https://raw.githubusercontent.com/showkeyjar/earth-bench/gh-pages/published_reports/cars_history/$f" -o "published_reports/cars_history/$f" || true
+          done
+          ls -1 published_reports/cars_*.json 2>/dev/null || echo "(no cars history)"
+
+      - name: Restore GEFS grib cache
+        # f048/f000 �?GRIB �?init 日期命名且不可变；用 append-only 缓存避免每日重下 ~50MB�?
+        uses: actions/cache@v4
+        with:
+          path: earthbench/data/gefs_cache
+          key: gefs-cache-${{ github.run_number }}
+          restore-keys: gefs-cache-
+
+      - name: Install CARS deps (cfgrib/eccodes + crps-cars)
+        # crps-cars 不发布到 PyPI，需�?CRPS 源码安装（仓库变�?CRPS_REPO_URL 可覆盖）�?
+        # 失败 �?CARS 板块自动降级，不阻断主流程�?
+        continue-on-error: true
+        run: |
+          pip install cfgrib eccodes xarray numpy || true
+          if ! python -c "import crps_cars" 2>/dev/null; then
+            CRPS_REPO="${CRPS_REPO_URL:-https://github.com/showkeyjar/CRPS.git}"
+            echo "crps-cars 未安装，�?$CRPS_REPO 安装"
+            if [ ! -d ../CRPS ]; then
+              git clone --depth 1 "$CRPS_REPO" ../CRPS || true
+            fi
+            if [ -d ../CRPS ]; then
+              pip install -e ../CRPS || true
+            fi
+          fi
+
+      - name: CARS verify closed loop (score past forecasts)
+        # 检验闭环：对最近一个已过有效日的预报对答案（Brier/命中/漏报累积）�?
+        # 失败不阻断主流程�?
+        continue-on-error: true
+        env:
+          QWEATHER_API_KEY: ${{ secrets.QWEATHER_API_KEY }}
+          CARS_DATA_DIR: published_reports
+        run: |
+          python -m earthbench.cars_verify || echo "::warning::CARS verify skipped"
+
+      - name: CARS ensemble forecast update (48h harm probabilities)
+        # CRPS 研究项目对接：拉当日业务 GEFS f048（t2m/r2/tmax/tmin）→
+        # 冻结 CARS 模型 �?城市危害概率表（湿球/日最�?日最低口径）�?
+        # 失败时日报自动降级为�?CARS 板块，不阻断主流程�?
+        continue-on-error: true
+        env:
+          CARS_DATA_DIR: published_reports
+        run: |
+          python -m earthbench.cars_serve || echo "::warning::CARS update skipped"
+      - name: CARS impact forecast update (48h rain/wind probabilities)
+        # ��������ڶ�ͨ��������/��磬�о� v2����ʧ��ʱ�ձ��Զ�����������������̡�
+        env:
+          CARS_DATA_DIR: published_reports
+        run: |
+          python -m earthbench.cars_serve_impact || echo "::warning::CARS impact update skipped"
+
       - name: Generate daily report
         env:
           QWEATHER_API_KEY: ${{ secrets.QWEATHER_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
           OLLAMA_BASE_URL: http://localhost:11434
+          # CARS 面板/JSON �?published_reports 读当日新表与检验历�?
+          #（verify/update 两步写入的同目录，随 gh-pages 往返持久化�?
+          CARS_DATA_DIR: published_reports
         run: |
           # Remove today's verification file so it gets regenerated with latest fixes
           TODAY=$(date -u -d "+8 hours" +%Y%m%d)
@@ -81,9 +147,9 @@ jobs:
           python -m earthbench.publish_pipeline --run
 
       - name: Sync UI assets into publish bundle
-        # published_reports 是 gh-pages/Cloudflare 的发布目录；
-        # 每次发布前把 main 根最新的 index.html 与域名/SEO 文件同步进去，
-        # 避免线上 UI 一直停留在旧版本（之前 published_reports/index.html 是 7/26 旧版）。
+        # published_reports �?gh-pages/Cloudflare 的发布目录；
+        # 每次发布前把 main 根最新的 index.html 与域�?SEO 文件同步进去�?
+        # 避免线上 UI 一直停留在旧版本（之前 published_reports/index.html �?7/26 旧版）�?
         run: |
           cp index.html published_reports/index.html
           cp CNAME published_reports/CNAME || true
@@ -102,19 +168,19 @@ jobs:
           commit_message: "📊 Daily report: ${{ github.event.head_commit.timestamp }}"
 
       - name: Deploy to Cloudflare Pages
-        # 恢复原有自动部署：与 GitHub Pages 同一份 published_reports 一起推到 earth-ai.fun
-        # 注意：GitHub Actions 不允许在步骤 if 中使用 secrets 上下文，
-        # 因此这里始终运行，由下方 bash 检查 CLOUDFLARE_ACCOUNT_ID 是否存在；
-        # 缺失则给出清晰警告并正常退出（不部署），不会让 job 失败。
-        # continue-on-error：即使 Cloudflare 部署失败，也绝不阻断上面的 GitHub Pages 部署。
+        # 恢复原有自动部署：与 GitHub Pages 同一�?published_reports 一起推�?earth-ai.fun
+        # 注意：GitHub Actions 不允许在步骤 if 中使�?secrets 上下文，
+        # 因此这里始终运行，由下方 bash 检�?CLOUDFLARE_ACCOUNT_ID 是否存在�?
+        # 缺失则给出清晰警告并正常退出（不部署），不会让 job 失败�?
+        # continue-on-error：即�?Cloudflare 部署失败，也绝不阻断上面�?GitHub Pages 部署�?
         continue-on-error: true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            echo "::warning::CLOUDFLARE_ACCOUNT_ID 未配置；将尝试直接用 CLOUDFLARE_API_TOKEN 部署（若 token 为单账户作用域则可能成功）。"
-            echo "::warning::若失败，请在 Cloudflare 控制台首页复制 Account ID，到仓库 Settings → Secrets and variables → Actions 添加名为 CLOUDFLARE_ACCOUNT_ID 的密钥后重跑。"
+            echo "::warning::CLOUDFLARE_ACCOUNT_ID 未配置；将尝试直接用 CLOUDFLARE_API_TOKEN 部署（若 token 为单账户作用域则可能成功）�?
+            echo "::warning::若失败，请在 Cloudflare 控制台首页复�?Account ID，到仓库 Settings �?Secrets and variables �?Actions 添加名为 CLOUDFLARE_ACCOUNT_ID 的密钥后重跑�?
           fi
           npm install -g wrangler
           wrangler pages deploy published_reports --project-name earth-bench --commit-dirty=true
