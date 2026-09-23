@@ -112,6 +112,12 @@ jobs:
           CARS_DATA_DIR: published_reports
         run: |
           python -m earthbench.cars_verify || echo "::warning::CARS verify skipped"
+      - name: CARS impact verify closed loop (score past rain/wind forecasts)
+        # 冲击变量检验闭环（模型锚定观测：有效日 00z f006-f024）。失败降级。
+        env:
+          CARS_DATA_DIR: published_reports
+        run: |
+          python -m earthbench.cars_verify_impact || echo "::warning::CARS impact verify skipped"
 
       - name: CARS ensemble forecast update (48h harm probabilities)
         # CRPS 鐮旂┒椤圭洰瀵规帴锛氭媺褰撴棩涓氬姟 GEFS f048锛坱2m/r2/tmax/tmin锛夆啋

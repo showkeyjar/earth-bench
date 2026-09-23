@@ -30,7 +30,9 @@
 - 概率为 30 成员计数（地板 1/30 ≈ 3.3%）；t2m 通道是连续 CDF，两通道口径不同。
 - 业务 GEFS 与再预报 v12 存在版本漂移（与 t2m 通道同款风险）。
 - 无阵风（gust）数据：日均风速是大风的弱代理（10.8 m/s 日均已近该格点 p99）。
-- 风验证闭环暂缺（观测源无逐日风/降水存档），t2m 闭环不受影响。
+- 风/降水检验闭环 = cars_verify_impact.py（模型锚定观测：有效日 00z f006-f024，
+  检验的是概率层校准与 48h 相对技巧，非对地球真值的绝对校准——绝对校准由
+  CRPS 侧 ERA5 out-of-sample 审计承担）。
 """
 
 from __future__ import annotations
@@ -256,7 +258,8 @@ def daily_update_impact(valid: date | None = None, hour: str = "00") -> dict:
             "概率为 30 成员计数（地板 1/30≈3.3%），与 t2m 通道连续 CDF 口径不同",
             "业务 GEFS 与再预报 v12 存在版本漂移（与 t2m 通道同款风险）",
             "无阵风数据：日均风速是大风弱代理（10.8 m/s 日均已近格点 p99）",
-            "风/降水验证闭环暂缺（无逐日城市观测存档），t2m 闭环不受影响",
+            "检验闭环为模型锚定观测（cars_verify_impact，有效日 00z 短时效场），"
+            "绝对校准由 CRPS 侧 ERA5 out-of-sample 审计承担",
             "tp 高尾补全档有 +1.7% CRPS 代价（防灾口径：漏报 49%→23%，价值 6×）",
         ],
         "records": _city_records(tp_members, wind_members, valid,

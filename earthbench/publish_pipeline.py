@@ -378,8 +378,34 @@ def _build_cars_impact_section() -> list[str]:
     lines += [
         "",
         "> 概率为 30 成员计数（地板 ≈3.3%）；业务 GEFS 与再预报 v12 存在版本"
-        "漂移；降水/大风验证闭环暂缺（t2m 闭环不受影响）。",
+        "漂移；检验观测为模型锚定（有效日 00z 短时效场，非站点真值，绝对校准"
+        "见 CRPS 侧 ERA5 审计）。",
     ]
+    # 冲击变量检验闭环摘要（模型锚定观测；有历史才显示）
+    try:
+        from earthbench.cars_verify_impact import summary as impact_summary
+
+        vs = impact_summary()
+        if vs.get("n", 0) > 0:
+            parts = []
+            for var, label in (("rain", "暴雨"), ("wind", "大风")):
+                s = vs.get(var) or {}
+                if s.get("n"):
+                    csi = (f"，CSI {s['csi']:.2f}"
+                           if s.get("csi") is not None else "")
+                    parts.append(
+                        f"{label} Brier {s['mean_brier']:.3f}、"
+                        f"命中 {s['hit']}/漏报 {s['miss']}/空报 "
+                        f"{s['false_alarm']}{csi}")
+            if parts:
+                lines += [
+                    "",
+                    f"> 🧪 **冲击变量滚动检验**（{vs['since']} 起，n={vs['n']}，"
+                    f"观测源 {vs['obs_source']}，模型锚定非站点真值）："
+                    + "；".join(parts),
+                ]
+    except Exception as e:  # noqa: BLE001
+        logger.debug(f"impact verification summary skipped: {e}")
     return lines
 
 
