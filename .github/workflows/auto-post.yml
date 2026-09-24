@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # 全量历史：gh-pages 数据直接用 git 取，绕开 raw.githubusercontent 404 错误体落盘
           fetch-depth: 0
