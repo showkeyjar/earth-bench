@@ -84,11 +84,12 @@ jobs:
           restore-keys: gefs-cache-
 
       - name: Install CARS deps (cfgrib/eccodes + crps-cars)
-        # crps-cars 不发布到 PyPI，需从 CRPS 源码安装（仓库变量 CRPS_REPO_URL 可覆盖）。
+        # crps-cars 不发布到 PyPI，需从 CRPS 源码安装（仓库需公开可匿名 clone，
+        # 或设 CRPS_REPO_URL 指向可达镜像）。scipy 为 SeasonalCars 拟合依赖。
         # 失败时 CARS 板块自动降级，不阻断主流程。
         continue-on-error: true
         run: |
-          pip install cfgrib eccodes xarray numpy || true
+          pip install cfgrib eccodes xarray numpy scipy || true
           if ! python -c "import crps_cars" 2>/dev/null; then
             CRPS_REPO="${CRPS_REPO_URL:-https://github.com/showkeyjar/CRPS.git}"
             echo "crps-cars 未安装，从 $CRPS_REPO 安装"
