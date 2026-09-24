@@ -5,10 +5,10 @@ from __future__ import annotations
 import argparse
 import json
 
-from earthbench.scenarios import ScenarioStore
-from earthbench.agents import RuleBasedAgent, MultiAlertAgent
+from earthbench.agents import MultiAlertAgent, RuleBasedAgent
 from earthbench.benchmark import AlertBenchEvaluator
 from earthbench.integrations import CARMBridge
+from earthbench.scenarios import ScenarioStore
 
 
 def main():
@@ -36,14 +36,29 @@ def main():
     )
     parser.add_argument(
         "--category",
-        choices=["all", "fire", "flood", "drought", "heat"],
+        choices=[
+            "all", "fire", "flood", "drought", "heat",
+            "landslide", "typhoon", "cold", "snow",
+        ],
         default="all",
         help="Filter by category (default: all)",
     )
     parser.add_argument(
         "--adversarial",
         action="store_true",
-        help="Run the adversarial hard-case suite (rule baseline scores < 100%)",
+        help="Run the adversarial hard-case suite (rule baseline scores < 100%%)",
+    )
+    parser.add_argument(
+        "--exposure",
+        action="store_true",
+        help="Run the exposure suite (action-level GT: monitor/alert/dispatch)",
+    )
+    parser.add_argument(
+        "--template",
+        type=str,
+        default="alert",
+        choices=["alert", "dispatch", "upgrade", "close", "recover"],
+        help="Run a decision-template suite (dispatch/upgrade/close/recover; default: alert)",
     )
     parser.add_argument(
         "--publish",
@@ -71,7 +86,10 @@ def main():
     elif args.demo:
         run_demo()
     elif args.benchmark:
-        run_alert_benchmark(args.agent, args.carm_root, args.category, args.adversarial)
+        run_alert_benchmark(
+            args.agent, args.carm_root, args.category, args.adversarial,
+            exposure=args.exposure, template=args.template,
+        )
     elif args.eval:
         run_eval_mode(args.eval_input)
 
@@ -150,15 +168,35 @@ def run_alert_benchmark(
     carm_root: str | None,
     category_filter: str = "all",
     adversarial: bool = False,
+    exposure: bool = False,
+    template: str = "alert",
 ):
-    """运行 AlertBench 基准评测（基础套件或对抗套件）。"""
-    from earthbench.scenarios import get_adversarial_suite
+    """运行 AlertBench 基准评测（基础套件 / 对抗套件 / 暴露动作套件 / 模板套件）。"""
+    from earthbench.scenarios import (
+        get_adversarial_suite,
+        get_close_suite,
+        get_dispatch_suite,
+        get_exposure_suite,
+        get_recover_suite,
+        get_upgrade_suite,
+    )
+
+    template_suite_map = {
+        "dispatch": get_dispatch_suite,
+        "upgrade": get_upgrade_suite,
+        "close": get_close_suite,
+        "recover": get_recover_suite,
+    }
 
     print("=" * 60)
-    if adversarial:
+    if template != "alert":
+        print(f"AlertBench — {template.upper()} Template Suite (decision-template closure)")
+    elif exposure:
+        print("AlertBench — Exposure Suite (action-level GT: monitor/alert/dispatch)")
+    elif adversarial:
         print("AlertBench — Adversarial Suite (hard cases, rule baseline < 100%)")
     else:
-        print("AlertBench — Full Benchmark (Fire + Flood + Drought + Heat)")
+        print("AlertBench — Full Benchmark (8 categories: Fire/Flood/Drought/Heat/Landslide/Typhoon/Cold/Snow)")
     print("=" * 60)
 
     # 选择 Agent
@@ -169,7 +207,7 @@ def run_alert_benchmark(
             wind_threshold=12.0,
             rainfall_suppress=10.0,
         )
-        agent_name = "MultiAlertAgent (4 categories)"
+        agent_name = "MultiAlertAgent (8 categories)"
     elif agent_type == "carm":
         if not carm_root:
             print("[ERROR] --agent carm requires --carm-root to be set.")
@@ -190,6 +228,58 @@ def run_alert_benchmark(
     print(f"场景过滤: {category_filter}")
 
     # 运行评测
+    if template != "alert":
+        # Phase C：决策模板闭环套件（dispatch/upgrade/close/recover）
+        bench_eval = AlertBenchEvaluator(suite=template_suite_map[template]())
+        bench_eval.evaluate_agent(agent)
+        results = bench_eval.results
+        ok = [r for r in results if "error" not in r]
+        acc = sum(r["accuracy"] for r in ok) / len(ok) if ok else 0.0
+        fps = [r for r in ok if r["predicted"] and not r["ground_truth"]]
+        fns = [r for r in ok if not r["predicted"] and r["ground_truth"]]
+        print(f"\n{'=' * 55}")
+        print(f"AlertBench {template.upper()} 模板套件评测报告")
+        print(f"{'=' * 55}")
+        print(f"  总场景数：{len(ok)}")
+        print(f"  决策准确率：{acc:.2%}")
+        print(f"  误报 {len(fps)} / 漏报 {len(fns)}")
+        print("\n  用例明细：")
+        for r in ok:
+            mark = "OK " if r["accuracy"] == 1 else "ERR"
+            print(
+                f"    [{mark}] {r['case_id']:34s} "
+                f"gt={str(r['ground_truth']):5s} pred={r['predicted']}"
+            )
+        return
+
+    if exposure:
+        bench_eval = AlertBenchEvaluator(suite=get_exposure_suite())
+        if agent_type != "rule":
+            print("[WARN] --exposure 需要动作级 decide_action 接口，当前仅 rule "
+                  "agent 支持；按 rule 运行。")
+        agent = MultiAlertAgent(
+            fwi_threshold=40.0,
+            humidity_threshold=20.0,
+            wind_threshold=12.0,
+            rainfall_suppress=10.0,
+        )
+        results = bench_eval.evaluate_action_agent(agent)
+        ok = [r for r in results if "action_accuracy" in r]
+        acc = sum(r["action_accuracy"] for r in ok) / len(ok) if ok else 0.0
+        print(f"\n{'=' * 55}")
+        print("AlertBench 暴露套件评测报告（动作级：monitor/alert/dispatch）")
+        print(f"{'=' * 55}")
+        print(f"  总场景数：{len(ok)}")
+        print(f"  动作准确率：{acc:.2%}")
+        print("\n  用例明细：")
+        for r in ok:
+            mark = "OK " if r["action_accuracy"] == 1 else "ERR"
+            print(
+                f"    [{mark}] {r['case_id']:42s} {r['exposure_class']} "
+                f"gt={r['action_gt']:8s} pred={r['action_predicted']}"
+            )
+        return
+
     bench_eval = AlertBenchEvaluator(
         suite=get_adversarial_suite() if adversarial else None
     )
@@ -242,6 +332,7 @@ def run_alert_benchmark(
 def run_eval_mode(eval_input: str | None):
     """独立评测模式：从文件或标准输入加载场景，运行评测。"""
     import sys
+
     from earthbench.models import Observation, ScenarioCategory
 
     # 读取输入

@@ -2,9 +2,18 @@ name: Auto Post Content
 
 on:
   schedule:
-    # 北京时间每天 09:00 - 生成微信草稿 + GitHub release
+    # 北京时间每天 09:00 - 生成周度统计 + GitHub release（周一）
     - cron: '0 1 * * *'
   workflow_dispatch:
+
+# 防止与上一次运行重叠；排队而非取消（统计/发布不希望丢跑）
+concurrency:
+  group: auto-post
+  cancel-in-progress: false
+
+# 显式最小权限：本流程只需创建 release
+permissions:
+  contents: write
 
 jobs:
   auto-post:
@@ -15,6 +24,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          # 全量历史：gh-pages 数据直接用 git 取，绕开 raw.githubusercontent 404 错误体落盘
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -22,25 +32,34 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
 
       - name: Install dependencies
         run: pip install -e .
 
-      - name: Fetch history.json from gh-pages
+      - name: Fetch history + decisions from gh-pages (git, no 404-body pitfalls)
         run: |
           mkdir -p published_reports
-          curl -s "https://raw.githubusercontent.com/showkeyjar/earth-bench/gh-pages/history.json" -o "published_reports/history.json" || true
-          if [ -f published_reports/history.json ]; then
+          if ! git rev-parse --verify origin/gh-pages >/dev/null 2>&1; then
+            echo "No gh-pages branch yet (first run or deploy failure)"
+            exit 0
+          fi
+          # history.json：用 git show 原子读取，不存在的文件会显式失败而不是把 404 页面写进磁盘
+          if git cat-file -e origin/gh-pages:history.json 2>/dev/null; then
+            git show origin/gh-pages:history.json > published_reports/history.json
             echo "history.json fetched successfully"
           else
-            echo "No history.json on gh-pages yet (first run or deploy failure)"
+            echo "No history.json on gh-pages yet"
           fi
+          # decisions_*.json：release 资产来源（此前从未下载，release 资产恒为空）
+          git archive origin/gh-pages | tar -x -C published_reports --wildcards 'decisions_*.json' || true
+          ls -1 published_reports/decisions_*.json 2>/dev/null || echo "(no decisions on gh-pages)"
 
-      - name: Generate weekly summary
+      - name: Generate weekly summary (last 7 days)
         run: |
           python -c "
           import json, os
-          from datetime import datetime
+          from datetime import datetime, timedelta, timezone
 
           # Load history
           history_path = 'published_reports/history.json'
@@ -51,16 +70,19 @@ jobs:
               # history is a dict with 'days' key containing daily records
               days = history.get('days', []) if isinstance(history, dict) else history
 
-              # Calculate weekly stats
-              total_scenarios = sum(h.get('total', 0) for h in days)
-              total_hits = sum(h.get('hits', 0) for h in days)
+              # 只统计最近 7 天（此前误把全部历史累加当周报）
+              cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).strftime('%Y-%m-%d')
+              week = [h for h in days if str(h.get('date', '')) >= cutoff]
+
+              total_scenarios = sum(h.get('total', 0) for h in week)
+              total_hits = sum(h.get('hits', 0) for h in week)
               avg_acc = total_hits / total_scenarios if total_scenarios > 0 else 0
 
-              print(f'Weekly Summary:')
+              print(f'Weekly Summary (since {cutoff}):')
               print(f'  Total scenarios evaluated: {total_scenarios}')
               print(f'  Total correct decisions: {total_hits}')
               print(f'  Overall accuracy: {avg_acc*100:.1f}%')
-              print(f'  Days reporting: {len(days)}')
+              print(f'  Days reporting: {len(week)} / {len(days)} total in history')
 
           else:
               print('No history data found.')
@@ -77,7 +99,16 @@ jobs:
             exit 0
           fi
           TODAY=$(date +%Y-%m-%d)
-          gh release create "weekly-$TODAY" \
-            --title "Weekly Report $TODAY" \
-            --generate-notes \
-            published_reports/decisions_*.json || echo "Release may already exist"
+          # 区分「已存在」与「真失败」，不再用 || echo 一把吞掉
+          if gh release view "weekly-$TODAY" >/dev/null 2>&1; then
+            echo "Release weekly-$TODAY already exists — skip"
+            exit 0
+          fi
+          shopt -s nullglob
+          assets=(published_reports/decisions_*.json)
+          if [ ${#assets[@]} -eq 0 ]; then
+            echo "::warning::gh-pages 上没有 decisions_*.json，创建无资产 release"
+            gh release create "weekly-$TODAY" --title "Weekly Report $TODAY" --generate-notes
+          else
+            gh release create "weekly-$TODAY" --title "Weekly Report $TODAY" --generate-notes "${assets[@]}"
+          fi

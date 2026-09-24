@@ -9,9 +9,9 @@
 from __future__ import annotations
 
 import json
-import os
 import logging
-from datetime import datetime, timezone, timedelta
+import os
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from xml.sax.saxutils import escape as xml_escape
@@ -92,16 +92,29 @@ def collect_data() -> list[dict[str, Any]]:
     # 获取原始 AlertBench 套件作为模板和 fallback
     suite = get_alert_benchmark_suite()
 
+    # 只为发布范围内的灾种采集真实数据（included_categories 默认 4 类）：
+    # weather_to_observations 也只支持这 4 类——landslide/typhoon/cold/snow
+    # 的用例此前是「打满 3 次 API 后必然空返回再 fallback」，白耗配额。
+    included = set(PUBLISH_CONFIG["included_categories"])
+
     # 尝试为每个场景采集真实气象数据
     enhanced_suite = []
     api_success_count = 0
     api_fail_count = 0
+    skipped_count = 0
 
     for item in suite:
         region_key = item.get("region", "")
         category = item.get("category", "fire")
 
-        # 采集该区域的真实气象数据
+        if category not in included:
+            fallback_item = item.copy()
+            fallback_item["_data_source"] = "fallback_alertbench"
+            enhanced_suite.append(fallback_item)
+            skipped_count += 1
+            continue
+
+        # 采集该区域的真实气象数据（区域级 memoize，共享区域不重复打 API）
         real_obs = collect_region_weather(region_key, category)
 
         if real_obs:
@@ -144,7 +157,9 @@ def collect_data() -> list[dict[str, Any]]:
             )
 
     logger.info(
-        f"  Data source summary: {api_success_count} QWeather, {api_fail_count} AlertBench fallback"
+        f"  Data source summary: {api_success_count} QWeather, "
+        f"{api_fail_count} AlertBench fallback, {skipped_count} not-collected "
+        f"(category outside included_categories)"
     )
 
     return enhanced_suite
@@ -159,8 +174,8 @@ def run_llm_decisions(suite: list[dict]) -> list[dict]:
     """对每个场景执行 LLM 决策推理。"""
     logger.info("[Stage 2/6] Running LLM decision inference...")
 
-    import sys
     import os
+    import sys
 
     # Use environment variable or fallback to relative path from project root
     carm_root = os.environ.get(
@@ -170,10 +185,16 @@ def run_llm_decisions(suite: list[dict]) -> list[dict]:
     sys.path.insert(0, carm_root)
     os.environ["OLLAMA_MODEL"] = PUBLISH_CONFIG["ollama_model"]
 
+    from earthbench.agents import MultiAlertAgent
     from earthbench.integrations import CARMBridge
-    from earthbench.models import Observation, DecisionTemplate, ScenarioCategory
+    from earthbench.models import DecisionTemplate, Observation, ScenarioCategory
+    from earthbench.scenarios import ScenarioStore
 
     bridge = CARMBridge(carm_root=carm_root)
+    # 循环外构造一次：此前每场景各建一个 MultiAlertAgent（内部 8 个子 agent
+    # 各读一遍 thresholds.json，20 场景 = 160 次文件读）；ScenarioStore 同理。
+    rule_agent = MultiAlertAgent()
+    store = ScenarioStore()
     results = []
 
     for item in suite:
@@ -185,9 +206,6 @@ def run_llm_decisions(suite: list[dict]) -> list[dict]:
 
         cat = ScenarioCategory.from_string(item["category"])
 
-        from earthbench.scenarios import ScenarioStore
-
-        store = ScenarioStore()
         ctx = store.load_scenario_from_dict(
             scenario_id=item["case_id"],
             region=item["region"],
@@ -207,9 +225,6 @@ def run_llm_decisions(suite: list[dict]) -> list[dict]:
         obs_time = datetime.now(CST).strftime("%Y-%m-%dT%H:%M:%S+08:00")
 
         # 启发式规则引擎的独立决策（用于与 LLM 决策对比）
-        from earthbench.agents import MultiAlertAgent
-
-        rule_agent = MultiAlertAgent()
         rule_output = rule_agent.decide(ctx)
         heuristic_decision = rule_output.decision
 
@@ -338,33 +353,40 @@ def _build_cars_impact_section() -> list[str]:
 
     p_rain = doc.get("p_trigger", {}).get("rain", 0.3)
     p_wind = doc.get("p_trigger", {}).get("wind", 0.3)
+    p_snow = doc.get("p_trigger", {}).get("snow", 0.3)
     lines = [
-        "## 🌧️ 48小时暴雨/大风概率（CARS·影响优先）",
+        "## 🌧️ 48小时暴雨/大风/暴雪概率（CARS·影响优先）",
         "",
         f"> 30 成员集合（冻结档案 × 业务 GEFS），有效日 "
         f"**{doc.get('generated_for', '?')}**。"
         f"🟡 暴雨 = P(≥50mm) ≥ {p_rain:.0%}；🟠 大暴雨 = P(≥100mm) ≥ {p_rain:.0%}；"
-        f"💨 大风 = P(日均风速≥10.8m/s) ≥ {p_wind:.0%}。"
+        f"💨 大风 = P(日均风速≥10.8m/s) ≥ {p_wind:.0%}；"
+        f"🌀 台风级 = P(日均≥17.2m/s) ≥ {p_wind:.0%}；"
+        f"❄️ 暴雪 = P(降雪≥10mm 水当量 × 冻结掩膜) ≥ {p_snow:.0%}。"
         "降水通道含高尾补全（防灾口径：漏报 49%→23%，判据 v2 深破裂）；"
-        "风速通道为校准 raw 档（日均风速是大风弱代理，无阵风数据）。",
+        "风速通道为校准 raw 档（日均风速是大风弱代理，无阵风数据；"
+        "降雪冻结掩膜取未扰动 c00 气温）。",
         "",
         "| 城市 | P(暴雨≥50mm) | P(大暴雨≥100mm) | 成员最大mm | "
-        "P(大风≥10.8m/s) | P(强风≥13.9m/s) | 成员最大m/s | 预警 |",
+        "P(大风≥10.8m/s) | P(台风级≥17.2m/s) | 成员最大m/s | 预警 |",
         "|------|-------------|----------------|-----------|"
-        "----------------|----------------|------------|------|",
+        "----------------|-------------------|------------|------|",
     ]
     for r in doc.get("records", []):
         name = r.get("name_zh", r["region"])
         p50 = r.get("p_harm_rain", 0.0)
         p100 = r.get("p_harm_rain_intense", 0.0)
         pw = r.get("p_harm_wind", 0.0)
-        pwi = r.get("p_harm_wind_intense", 0.0)
-        if p100 >= p_rain:
+        pty = r.get("p_harm_wind_typhoon", 0.0)
+        psw = r.get("p_harm_snow", 0.0)
+        if psw >= p_snow:
+            flag = "❄️ 暴雪"
+        elif p100 >= p_rain:
             flag = "🟠 大暴雨"
+        elif pty >= p_wind:
+            flag = "🌀 台风级大风"
         elif p50 >= p_rain:
             flag = "🟡 暴雨"
-        elif pwi >= p_wind:
-            flag = "🟠 强风"
         elif pw >= p_wind:
             flag = "💨 大风"
         else:
@@ -372,7 +394,7 @@ def _build_cars_impact_section() -> list[str]:
         lines.append(
             f"| {name} | {p50:.0%} | {p100:.0%} | "
             f"{r.get('rain_member_max_mm', 0):.0f} | "
-            f"{pw:.0%} | {pwi:.0%} | "
+            f"{pw:.0%} | {pty:.0%} | "
             f"{r.get('wind_member_max_ms', 0):.1f} | {flag} |"
         )
     lines += [
@@ -388,7 +410,10 @@ def _build_cars_impact_section() -> list[str]:
         vs = impact_summary()
         if vs.get("n", 0) > 0:
             parts = []
-            for var, label in (("rain", "暴雨"), ("wind", "大风")):
+            for var, label in (
+                ("rain", "暴雨"), ("wind", "大风"),
+                ("wind_typhoon", "台风级大风"), ("snow", "暴雪"),
+            ):
                 s = vs.get(var) or {}
                 if s.get("n"):
                     csi = (f"，CSI {s['csi']:.2f}"
@@ -406,6 +431,107 @@ def _build_cars_impact_section() -> list[str]:
                 ]
     except Exception as e:  # noqa: BLE001
         logger.debug(f"impact verification summary skipped: {e}")
+    return lines
+
+
+def _build_benchmark_health_section() -> list[str]:
+    """基准体检段：把全套件判别力写进日报（离线合成套件，无网络依赖）。
+
+    背景：日报主体只覆盖基础套件（规则 baseline 100% 满分——这是设计
+    特性但单独看没有语境）。本段补齐判别力视图：
+
+    - 基础套件：满分标注「无判别力，看下表」；
+    - 对抗套件：规则 baseline + 三个平凡基线（always/never/random）的
+      准确率与 FP/FN——双向全败 vs 单向失败的互补性一目了然；
+    - 模板套件：规则 baseline 逐套件通过率（50-60% 是判别力而非缺陷）；
+    - 暴露套件：动作层准确率（物理层满分不进表，无判别力）；
+    - 历史锚定：七场真实灾害 + 合成对照的真值一致性。
+
+    任何异常都优雅降级（返回空/部分行），不影响日报主流程。
+    """
+    lines: list[str] = []
+    try:
+        from earthbench.agents import MultiAlertAgent
+        from earthbench.benchmark import AlertBenchEvaluator
+        from earthbench.scenarios import (
+            get_adversarial_suite,
+            get_close_suite,
+            get_dispatch_suite,
+            get_exposure_suite,
+            get_historical_validation_suite,
+            get_recover_suite,
+            get_upgrade_suite,
+        )
+        from earthbench.trivial_agents import (
+            AlwaysAlertAgent,
+            NeverAlertAgent,
+            RandomAgent,
+        )
+
+        def _acc_fp_fn(agent, suite) -> tuple[float, int, int]:
+            ev = AlertBenchEvaluator(suite=list(suite))
+            res = [r for r in ev.evaluate_agent(agent) if "error" not in r]
+            acc = sum(r["accuracy"] for r in res) / len(res) if res else 0.0
+            fp = sum(1 for r in res if r["fp"])
+            fn = sum(1 for r in res if r["fn"])
+            return acc, fp, fn
+
+        lines += [
+            "## 📐 基准体检（判别力视图，合成套件离线评测）",
+            "",
+            "> 基础套件规则 baseline 满分（设计特性：基础层无判别力，",
+            "> 分离度来自对抗/模板/暴露套件与平凡基线参照系）。",
+            "",
+            "| 套件 | 规则 baseline | always | never | random | FP/FN(规则) |",
+            "|---|---|---|---|---|---|",
+        ]
+        adv = get_adversarial_suite()
+        rows: list[tuple[str, list]] = [
+            ("对抗 16", adv),
+            ("dispatch 4", get_dispatch_suite()),
+            ("upgrade 4", get_upgrade_suite()),
+            ("close 5", get_close_suite()),
+            ("recover 4", get_recover_suite()),
+        ]
+        for label, suite in rows:
+            acc, fp, fn = _acc_fp_fn(MultiAlertAgent(), suite)
+            a_acc, a_fp, a_fn = _acc_fp_fn(AlwaysAlertAgent(), suite)
+            n_acc, _, _ = _acc_fp_fn(NeverAlertAgent(), suite)
+            r_acc, _, _ = _acc_fp_fn(RandomAgent(), suite)
+            lines.append(
+                f"| {label} | {acc:.0%} | {a_acc:.0%} | {n_acc:.0%} | "
+                f"{r_acc:.0%} | {fp}/{fn} |"
+            )
+            _ = (a_fp, a_fn)  # 保留扩展位
+        # 暴露套件（动作层才是判别指标）
+        exp_ev = AlertBenchEvaluator(suite=list(get_exposure_suite()))
+        act = [r for r in exp_ev.evaluate_action_agent(MultiAlertAgent())
+               if "error" not in r]
+        act_acc = (sum(r["action_accuracy"] for r in act) / len(act)
+                   if act else 0.0)
+        lines += [
+            f"| 暴露-动作层 {len(act)} | {act_acc:.0%} | — | — | — | — |",
+            "",
+        ]
+        # 历史锚定
+        hist = get_historical_validation_suite()
+        n_match = sum(
+            1 for item in hist
+            if item["_gt_fn"](item["observations"])[0] == item["ground_truth"]
+        )
+        n_real = sum(
+            1 for item in hist
+            if not item["case_id"].startswith("hist-control")
+        )
+        lines += [
+            f"> 🧭 **历史锚定**：{len(hist)} 例（{n_real} 真实灾害 + "
+            f"{len(hist) - n_real} 合成对照），真值判定一致 "
+            f"**{n_match}/{len(hist)}**"
+            f"（详见 docs/historical-validation.md）。",
+            "",
+        ]
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"benchmark health section skipped: {e}")
     return lines
 
 
@@ -448,7 +574,9 @@ def generate_reports(
         f"> **发布日期**: {now.strftime('%Y-%m-%d %H:%M')} (北京时间)",
         "> **数据来源**: NASA 卫星、气象站、水文传感器",
         "> **AI 引擎**: AI 决策系统",
-        f"> **覆盖场景**: {total} 个（4 类别 × 5 难度）",
+        f"> **覆盖场景**: {total} 个"
+        f"（{len(set(d['category'] for d in decisions))} 类别；日报仅含"
+        f"已接数据采集的类别，完整 8 类别 83 用例见基准体检段）",
         f"> **数据源**: {real_count} 真实气象 + {fallback_count} 模拟回退",
         f"> **触发预警**: {alert_count} 个",
         f"> **平均置信度**: {avg_conf:.1%}",
@@ -473,10 +601,14 @@ def generate_reports(
     cars_section = _build_cars_section()
     if cars_section:
         md_lines.extend(cars_section)
-    # --- CARS 冲击变量板块（暴雨/大风，判据 v2，可选）---
+    # --- CARS 冲击变量板块（暴雨/大风/暴雪，判据 v2，可选）---
     impact_section = _build_cars_impact_section()
     if impact_section:
         md_lines.extend(impact_section)
+    # --- 基准体检板块（全合成套件判别力 + 平凡基线参照系，离线）---
+    health_section = _build_benchmark_health_section()
+    if health_section:
+        md_lines.extend(health_section)
     md_lines.append("")
 
     # 按类别分组详情
@@ -764,8 +896,8 @@ def run_verification_stage(output_dir: Path) -> dict[str, Any]:
 
     try:
         from earthbench.verification import (
-            run_delayed_verification,
             build_accuracy_trend,
+            run_delayed_verification,
         )
 
         result = run_delayed_verification(output_dir, delay_days=2)
@@ -901,14 +1033,15 @@ def main():
 
     if args.test_publish:
         # 测试单个场景
+        import os
+
         from earthbench.integrations import CARMBridge
         from earthbench.models import (
-            ScenarioContext,
+            DecisionTemplate,
             Observation,
             ScenarioCategory,
-            DecisionTemplate,
+            ScenarioContext,
         )
-        import os
 
         os.environ["OLLAMA_MODEL"] = "qwen3:14b"
 

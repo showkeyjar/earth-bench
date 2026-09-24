@@ -16,9 +16,9 @@ import logging
 import math
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
-from urllib.request import urlopen, Request
+from typing import Any
 from urllib.error import URLError
+from urllib.request import Request, urlopen
 
 logger = logging.getLogger("earthbench.data_collectors")
 
@@ -50,7 +50,8 @@ REGION_LOCATION_MAP: dict[str, dict[str, Any]] = {
     "Kunming-Yunnan": {"location_id": "101290101", "name": "昆明"},
     "Kunming-SpringCity": {"location_id": "101290101", "name": "昆明"},
     "Hangzhou-Zhejiang": {"location_id": "101210101", "name": "杭州"},
-    "Chongqing-HotPotato": {"location_id": "101040100", "name": "重庆"},
+    "Chongqing-HotPotato": {"location_id": "101040100", "lon": 106.55,
+                            "lat": 29.56, "name": "重庆"},
     "Taiyuan-Shanxi": {"location_id": "101170201", "name": "太原"},
     "Lhasa-Tibet": {"location_id": "101260201", "name": "拉萨"},
     "Harbin-Heilongjiang": {"location_id": "101050101", "name": "哈尔滨"},
@@ -58,6 +59,22 @@ REGION_LOCATION_MAP: dict[str, dict[str, Any]] = {
     "Urumqi-Xinjiang": {"location_id": "101130101", "name": "乌鲁木齐"},
     # === Drought / Heat ===
     "ChangbaiMountain": {"lon": 128.08, "lat": 42.02, "name": "长白山"},
+    # === Landslide（Phase A1 扩展，docs/expansion-plan.md）===
+    "Wenchuan-Sichuan": {"lon": 103.58, "lat": 31.48, "name": "汶川"},
+    "Chengdu-Panda": {"lon": 104.07, "lat": 30.57, "name": "成都"},
+    "Guiyang-Guizhou": {"lon": 106.63, "lat": 26.65, "name": "贵阳"},
+    "Yichang-ThreeGorges": {"lon": 111.29, "lat": 30.69, "name": "宜昌"},
+    "Luding-Sichuan": {"lon": 102.23, "lat": 29.91, "name": "泸定"},
+    # === Typhoon（Phase A2 扩展，docs/expansion-plan.md）===
+    "Wenzhou-Zhejiang": {"lon": 120.70, "lat": 27.99, "name": "温州"},
+    "Haikou-Hainan": {"lon": 110.35, "lat": 20.02, "name": "海口"},
+    "Xiamen-Fujian": {"lon": 118.09, "lat": 24.48, "name": "厦门"},
+    # === 历史灾例回填验证（scripts/validate_historical.py，来源见
+    #     scenarios.py::get_historical_validation_suite 各 case 的 provenance）===
+    "Zhengzhou-Henan": {"lon": 113.62, "lat": 34.75, "name": "郑州"},
+    "Fangshan-Beijing": {"lon": 115.98, "lat": 39.76, "name": "北京房山"},
+    "Jinjiang-Fujian": {"lon": 118.55, "lat": 24.78, "name": "晋江"},
+    "Tongliao-InnerMongolia": {"lon": 122.26, "lat": 43.65, "name": "通辽"},
 }
 
 
@@ -519,17 +536,26 @@ def weather_to_observations(
 # 主入口：为单个场景采集气象数据
 # ===========================================================================
 
+# 区域级三件套缓存：同一发布流程内多场景常共享区域（武汉洪涝+热浪、
+# 南京双城等），原实现每场景各打 3 次 API；进程内按区域 memoize 后
+# API 调用量从 N场景×3 降到 N区域×3。测试可用 _REGION_WEATHER_CACHE.clear() 复位。
+_REGION_WEATHER_CACHE: dict[str, dict | None] = {}
 
-def collect_region_weather(region_key: str, category: str) -> list[dict]:
-    """为一个监测区域采集气象观测数据。
 
-    如果和风天气 API 成功，返回真实观测；
-    如果失败，返回空列表（由调用方 fallback 到 AlertBench 场景）。
+def fetch_region_weather_bundle(region_key: str) -> dict | None:
+    """采集单区域的 realtime/hourly/daily 三件套（区域内缓存，与灾种无关）。
+
+    返回 None 表示该区域采集不可用（未知区域 / API 失败），同样会被缓存，
+    避免同一发布流程内对持续失败的区域反复打配额。
     """
+    if region_key in _REGION_WEATHER_CACHE:
+        return _REGION_WEATHER_CACHE[region_key]
+
     loc_info = REGION_LOCATION_MAP.get(region_key)
     if not loc_info:
         logger.warning(f"Unknown region key: {region_key}, skipping")
-        return []
+        _REGION_WEATHER_CACHE[region_key] = None
+        return None
 
     location_id = loc_info.get("location_id")
     lon = loc_info.get("lon")
@@ -537,17 +563,17 @@ def collect_region_weather(region_key: str, category: str) -> list[dict]:
 
     if not location_id and (not lon or not lat):
         logger.warning(f"No valid location for {region_key}: {loc_info}")
-        return []
+        _REGION_WEATHER_CACHE[region_key] = None
+        return None
 
-    # 采集实时天气
     realtime = fetch_realtime_weather(location_id, lon, lat)
     if not realtime:
         logger.warning(
             f"Failed to fetch realtime weather for {loc_info.get('name', region_key)}"
         )
-        return []
+        _REGION_WEATHER_CACHE[region_key] = None
+        return None
 
-    # 采集逐小时和每日预报（location_id 和经纬度均可）
     hourly = []
     daily = []
     location_str = location_id or (f"{lon},{lat}" if lon and lat else "")
@@ -555,11 +581,27 @@ def collect_region_weather(region_key: str, category: str) -> list[dict]:
         hourly = fetch_hourly_forecast(location_str, hours=24)
         daily = fetch_daily_forecast(location_str, days=7)
 
+    bundle = {"loc_info": loc_info, "realtime": realtime, "hourly": hourly, "daily": daily}
+    _REGION_WEATHER_CACHE[region_key] = bundle
+    return bundle
+
+
+def collect_region_weather(region_key: str, category: str) -> list[dict]:
+    """为一个监测区域采集气象观测数据。
+
+    如果和风天气 API 成功，返回真实观测；
+    如果失败，返回空列表（由调用方 fallback 到 AlertBench 场景）。
+    """
+    bundle = fetch_region_weather_bundle(region_key)
+    if bundle is None:
+        return []
+
+    loc_info = bundle["loc_info"]
     # 转换为场景观测列表 — 传递 region_key 以便 FWI 计算时进行水体修正
     obs_list = weather_to_observations(
-        realtime=realtime,
-        hourly=hourly,
-        daily=daily,
+        realtime=bundle["realtime"],
+        hourly=bundle["hourly"],
+        daily=bundle["daily"],
         category=category,
         region_key=region_key,
         region_name=loc_info.get("name", region_key),
@@ -567,8 +609,10 @@ def collect_region_weather(region_key: str, category: str) -> list[dict]:
 
     logger.info(
         f"[{loc_info['name']}] Collected {len(obs_list)} real observations: "
-        f"temp={realtime['temp']}°C, hum={realtime['humidity']}%, "
-        f"wind={realtime.get('wind_speed_ms', 0):.1f}m/s, precip={realtime.get('precip_1h', 0)}mm"
+        f"temp={bundle['realtime']['temp']}°C, "
+        f"hum={bundle['realtime']['humidity']}%, "
+        f"wind={bundle['realtime'].get('wind_speed_ms', 0):.1f}m/s, "
+        f"precip={bundle['realtime'].get('precip_1h', 0)}mm"
     )
 
     return obs_list
@@ -580,7 +624,7 @@ def collect_region_weather(region_key: str, category: str) -> list[dict]:
 
 
 def fallback_to_scenarios(
-    suite: list[dict], category_filter: Optional[list[str]] = None
+    suite: list[dict], category_filter: list[str] | None = None
 ) -> list[dict]:
     """当 QWeather API 不可用时，回退到 AlertBench 内置场景。"""
     results = []
@@ -604,10 +648,17 @@ def fallback_to_scenarios(
 # ===========================================================================
 
 
-def fetch_firms_hotspots(lat: float, lon: float, radius_km: int = 50) -> list[dict]:
-    """使用 NASA FIRMS API 查询指定区域内近7天的卫星热异常（火点）数据。"""
+def fetch_firms_hotspots(lat: float, lon: float, radius_km: int = 50) -> list[dict] | None:
+    """使用 NASA FIRMS API 查询指定区域内近7天的卫星热异常（火点）数据。
+
+    三态语义（与 verification.verify_fire 对齐）：
+    - 返回 None：查询不可用（未配置 FIRMS_MAP_KEY / 网络或解析失败）——调用方
+      绝不能把 None 当「无火」写进验证结论；
+    - 返回 []：查询成功且区域内近 7 天确无火点（可信的阴性）；
+    - 返回非空 list：查询成功且有火点。
+    """
     if not FIRMS_MAP_KEY:
-        return []
+        return None
 
     lat_range = radius_km / 111.0
     lng_range = radius_km / (111.0 * math.cos(math.radians(lat)))
@@ -660,12 +711,15 @@ def fetch_firms_hotspots(lat: float, lon: float, radius_km: int = 50) -> list[di
             return hotspots
     except Exception as e:
         logger.warning(f"FIRMS query failed: {e}")
-        return []
+        return None
 
 
 def has_active_fire(latitude: float, longitude: float, radius_km: int = 20) -> bool:
-    """检查指定区域内是否有活跃火点。"""
+    """检查指定区域内是否有活跃火点（查询不可用时保守返回 False，不推断无火）。"""
     hotspots = fetch_firms_hotspots(latitude, longitude, radius_km)
+    if hotspots is None:
+        logger.warning("[FIRMS] 查询不可用，has_active_fire 保守返回 False")
+        return False
     significant = [
         h
         for h in hotspots
@@ -710,4 +764,4 @@ if __name__ == "__main__":
 
     print("\n--- Testing FIRMS hotspot detection ---")
     hotspots = fetch_firms_hotspots(39.99, 116.16, radius_km=50)
-    print(f"Found {len(hotspots)} hotspots")
+    print(f"Found {len(hotspots) if hotspots is not None else 'N/A (查询不可用)'} hotspots")

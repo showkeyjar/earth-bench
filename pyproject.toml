@@ -15,7 +15,9 @@ authors = [
 dependencies = [
     "pydantic>=2.0",
     "openai>=1.0",
-    "httpx>=0.25",
+    # cars_serve/cars_serve_impact/cars_verify*/tests 均为顶层 import，属核心依赖
+    "numpy>=1.24",
+    # 注：httpx 已移除——全仓库无引用，HTTP 走 urllib.request
 ]
 
 [project.optional-dependencies]
@@ -32,9 +34,26 @@ vision = [
 ]
 cars = [
     # deep-NGR serving; `pip install -e ../CRPS` provides crps-cars (local, not on PyPI)
-    "numpy",
     "scipy",
+    "xarray",
+    "cfgrib",
     "crps-cars",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.ruff.lint]
+# 渐进式规则集：pyflakes/pycodestyle 错误 + import 排序 + bugbear + pyupgrade。
+# 刻意不启用 E501（存量长行多，先不制造大 diff）、BLE（优雅降级路径大量
+# except Exception 是设计选择，见 verification/data_collectors 的降级语义）。
+select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
+ignore = [
+    "B905",   # zip() strict 参数：3.10 兼容噪音
+    "UP015",  # open(..., "r") 显式模式无害
 ]
 
 [project.scripts]

@@ -10,7 +10,9 @@ cars_climo.npz。
 - 危害量（由 c00 的 tmax/tmin 日循环偏移 + r2 湿度派生，偏移不扰动，披露）：
   * p_harm_heat       P(日最高 ≥ 35°C)（国标高温黄色预警线）
   * p_harm_heat_intense P(日最高 ≥ 37°C)（橙色预警线）
-  * p_harm_cold       P(日最低 ≤ 0°C)（结冰/冻害；仅冬季温暖城市启用预警）
+  * p_harm_cold       P(日最低 ≤ 0°C)（结冰/冻害；仅冬季温暖城市启用预警。
+                    口径披露：这是「冻害」绝对低温线，非基准寒潮真值的
+                    「多窗口降幅 OR × 日最低」双条件——跨日降幅需 2-4 日集合配对，暂不服务）
   * p_harm_wb         P(午后湿球 ≥ 27°C)（EarthBench 湿球热应力标准，Stull 公式）
 - 触发：P ≥ 30%（期望损失规则 P ≥ C/L）
 - 当月 +2σ 相对异常仅为严重度背景，不参与触发。
@@ -25,14 +27,13 @@ from __future__ import annotations
 import json
 import logging
 import os
-import urllib.request
 from datetime import date, timedelta
 from pathlib import Path
 
 import numpy as np
 
-from .weather import wet_bulb_stull as _wb_scalar
 from .eval import ValueEvaluator
+from .weather import wet_bulb_stull as _wb_scalar
 
 logger = logging.getLogger(__name__)
 
@@ -130,15 +131,9 @@ def fetch_ops_fields(init: str, hour: str = "00") -> dict[str, np.ndarray]:
     """
     import xarray as xr
 
-    ymd = init.replace("-", "")
-    name = f"gec00.t{hour}z.pgrb2a.0p50.f048"
-    # 缓存固定在包目录（不进 CARS_DATA_DIR，避免 CI 把 50MB grib 发布上网）
-    cache = PACKAGE_DATA / "gefs_cache"
-    cache.mkdir(parents=True, exist_ok=True)
-    local = cache / f"{ymd}{hour}_{name}"
-    if not local.exists():
-        urllib.request.urlretrieve(f"{OPS}/gefs.{ymd}/{hour}/atmos/"
-                                   f"pgrb2ap5/{name}", local)
+    from .gefs_io import fetch_grib
+
+    local = fetch_grib(init, "048", hour)
     ds = xr.open_dataset(
         local, engine="cfgrib", backend_kwargs={"indexpath": ""},
         filter_by_keys={"typeOfLevel": "heightAboveGround", "level": 2},
@@ -224,6 +219,12 @@ def _city_records(members: np.ndarray, fields: dict[str, np.ndarray],
 
 def daily_update(valid: date | None = None) -> dict:
     """主入口：拉 f048（默认有效日 = 今天+2）、推理、写概率表 + 历史归档。"""
+    from .gefs_io import prune_gefs_cache
+
+    try:
+        prune_gefs_cache(keep_days=14)
+    except Exception as e:  # noqa: BLE001 — 清理失败不阻断发布
+        logger.warning(f"gefs cache prune skipped: {e}")
     valid = valid or (date.today() + timedelta(days=2))
     init = valid - timedelta(days=2)
     fields = fetch_ops_fields(init.isoformat())

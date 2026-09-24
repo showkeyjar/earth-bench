@@ -14,10 +14,12 @@ from __future__ import annotations
 import json
 import logging
 import os
+from functools import lru_cache
 from pathlib import Path
 
-from .models import DecisionOutput, ScenarioContext
 from .llm import domain_hint, parse_yes_no
+from .models import DecisionOutput, DecisionTemplate, ScenarioContext
+from .scenarios import infer_exposure_class
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +57,20 @@ def _max_consecutive_days(date_tokens: list[str]) -> int:
 # ============================================================================
 
 
+@lru_cache(maxsize=16)
+def _read_thresholds_cached(threshold_file: str) -> dict:
+    """按文件路径缓存 thresholds.json 内容（发布流程内 8 个子 agent 各读一遍 → 1 遍）。
+
+    抛出的异常由调用方降级处理。测试若就地改写同一路径文件，需 _read_thresholds_cached.cache_clear()。
+    """
+    p = Path(threshold_file)
+    if not p.exists():
+        raise FileNotFoundError(threshold_file)
+    with open(p, encoding="utf-8") as f:
+        data = json.load(f)
+    return data.get("thresholds", {})
+
+
 def _load_calibrated_threshold(category: str, default: float) -> float:
     """从 thresholds.json 读取校准后的阈值。
 
@@ -66,12 +82,7 @@ def _load_calibrated_threshold(category: str, default: float) -> float:
         return default
 
     try:
-        p = Path(threshold_file)
-        if not p.exists():
-            return default
-        with open(p, encoding="utf-8") as f:
-            data = json.load(f)
-        thresholds = data.get("thresholds", {})
+        thresholds = _read_thresholds_cached(threshold_file)
         val = thresholds.get(category)
         if val is not None:
             return float(val)
@@ -576,9 +587,404 @@ class HeatWaveAlertAgent(AlertAgent):
             evidence_summary=evidence,
             rationale=(
                 f"HeatWaveAlert: 最高温={avg_temp:.1f}°C, "
-                f"湿球={'%.1f' % avg_wbt if avg_wbt is not None else 'N/A'}°C, "
+                f"湿球={f'{avg_wbt:.1f}' if avg_wbt is not None else 'N/A'}°C, "
                 f"湿度={avg_hum:.1f}%, 持续≈{heat_duration_days}天, "
                 f"风险分={risk_score:.3f}"
+            ),
+        )
+
+
+# ===========================================================================
+# Landslide Alert Agent
+# ===========================================================================
+
+
+class LandslideAlertAgent(AlertAgent):
+    """滑坡/泥石流预警 Agent（对标地质灾害气象风险预警四级体系）。
+
+    风险评分模型（线性加权 baseline，刻意不复制查表真值的通道结构）：
+    - 1h 激发雨强（权重 0.35）：>= 25mm
+    - 24h 降雨（权重 0.35）：/100mm 大暴雨口径
+    - 土壤湿度（权重 0.10）：饱和度 /0.85
+    - 前 3 日有效降雨（权重 0.10）：前期累积 /150mm
+    - 地质易发性（权重 0.10）：静态分级 /3（3=高/2=中/1=低）
+
+    决策阈值: risk_score >= 0.40 → YES (可被 calibration 模块动态调整)
+
+    判别力说明（对抗套件 adv-landslide-* 锚定的两个失效模式）：
+    - 低易发 + 激发雨强达标：易发性 AND 条件被加权平均抹掉 → 误报
+    - 高易发 + 当日无雨但前期饱和累积：滞后通道权重过低 → 漏报
+    """
+
+    def __init__(self, decision_threshold: float | None = None):
+        super().__init__("LandslideAlertAgent")
+        self.decision_threshold = (
+            decision_threshold
+            if decision_threshold is not None
+            else _load_calibrated_threshold("landslide", 0.40)
+        )
+
+    def decide(self, context: ScenarioContext) -> DecisionOutput:
+        obs = context.observations
+
+        rain1_vals = [o.value for o in obs if o.variable == "rainfall_1h"]
+        rain24_vals = [o.value for o in obs if o.variable == "rainfall_24h"]
+        soil_vals = [o.value for o in obs if o.variable == "soil_moisture"]
+        eff_vals = [o.value for o in obs if o.variable == "effective_rainfall_3d"]
+        suscept_vals = [o.value for o in obs if o.variable == "susceptibility"]
+
+        evidence: dict[str, float] = {}
+        components: list[tuple[float, float, str]] = []
+
+        # 1h 激发雨强
+        if rain1_vals:
+            avg_rain1 = sum(rain1_vals) / len(rain1_vals)
+            rain1_risk = min(avg_rain1 / 25.0, 1.0)
+            components.append((rain1_risk, 0.35, "rainfall_1h"))
+            evidence["rainfall_1h"] = round(rain1_risk, 3)
+
+        # 24h 降雨
+        if rain24_vals:
+            avg_rain24 = sum(rain24_vals) / len(rain24_vals)
+            rain24_risk = min(avg_rain24 / 100.0, 1.0)
+            components.append((rain24_risk, 0.35, "rainfall_24h"))
+            evidence["rainfall_24h"] = round(rain24_risk, 3)
+
+        # 土壤湿度（饱和度）
+        if soil_vals:
+            avg_soil = sum(soil_vals) / len(soil_vals)
+            soil_risk = max(0.0, min(avg_soil / 0.85, 1.0))
+            components.append((soil_risk, 0.10, "soil_moisture"))
+            evidence["soil_moisture"] = round(soil_risk, 3)
+
+        # 前 3 日有效降雨（前期累积）
+        if eff_vals:
+            avg_eff = sum(eff_vals) / len(eff_vals)
+            eff_risk = min(avg_eff / 150.0, 1.0)
+            components.append((eff_risk, 0.10, "effective_rainfall_3d"))
+            evidence["effective_rainfall_3d"] = round(eff_risk, 3)
+
+        # 地质易发性（静态分级 3/2/1）
+        if suscept_vals:
+            avg_suscept = sum(suscept_vals) / len(suscept_vals)
+            suscept_risk = min(avg_suscept / 3.0, 1.0)
+            components.append((suscept_risk, 0.10, "susceptibility"))
+            evidence["susceptibility"] = round(suscept_risk, 3)
+
+        if not components:
+            return DecisionOutput(
+                context=context,
+                decision=False,
+                confidence=0.0,
+                evidence_summary={},
+                rationale="LandslideAlert: no relevant observations",
+            )
+
+        # 动态归一化权重
+        total_weight = sum(w for _, w, _ in components)
+        risk_score = sum(r * (w / total_weight) for r, w, _ in components)
+
+        risk_score = max(0.0, min(risk_score, 1.0))
+        decision = risk_score >= self.decision_threshold
+
+        avg_rain1_val = sum(rain1_vals) / len(rain1_vals) if rain1_vals else 0
+        avg_rain24_val = sum(rain24_vals) / len(rain24_vals) if rain24_vals else 0
+        avg_soil_val = sum(soil_vals) / len(soil_vals) if soil_vals else 0
+        avg_eff_val = sum(eff_vals) / len(eff_vals) if eff_vals else 0
+
+        return DecisionOutput(
+            context=context,
+            decision=decision,
+            confidence=round(risk_score, 3),
+            evidence_summary=evidence,
+            rationale=(
+                f"LandslideAlert: 1h={avg_rain1_val:.1f}mm, "
+                f"24h={avg_rain24_val:.1f}mm, 土壤={avg_soil_val:.2f}, "
+                f"前3日有效降雨={avg_eff_val:.0f}mm, 风险分={risk_score:.3f}"
+            ),
+        )
+
+
+# ===========================================================================
+# Typhoon Alert Agent
+# ===========================================================================
+
+
+class TyphoonAlertAgent(AlertAgent):
+    """台风/大风预警 Agent（对标 GB/T 19201-2006 热带气旋等级蒲福氏分档）。
+
+    风险评分模型（线性加权 baseline，刻意不复制查表真值的通道结构）：
+    - 日均风（权重 0.40）：/17.2 m/s（8 级线）
+    - 阵风（权重 0.25）：/24.5 m/s（10 级临设线）
+    - 24h 降雨（权重 0.35）：/100mm 大暴雨口径（风雨耦合的线性近似）
+
+    决策阈值: risk_score >= 0.45 → YES (可被 calibration 模块动态调整)
+
+    判别力说明（对抗套件 adv-typhoon-* 锚定的两个失效模式）：
+    - 风雨各差一线（8 级线差 0.7、暴雨线差 2mm，AND 缺一）：线性均值
+      把次阈值混合推过阈值 → 误报
+    - 日均低但阵风超标（雷雨大风/飑线）：决定性阵风因子权重被稀释 → 漏报
+    """
+
+    def __init__(self, decision_threshold: float | None = None):
+        super().__init__("TyphoonAlertAgent")
+        self.decision_threshold = (
+            decision_threshold
+            if decision_threshold is not None
+            else _load_calibrated_threshold("typhoon", 0.45)
+        )
+
+    def decide(self, context: ScenarioContext) -> DecisionOutput:
+        obs = context.observations
+
+        wind_vals = [o.value for o in obs if o.variable == "wind_speed"]
+        gust_vals = [o.value for o in obs if o.variable == "wind_gust"]
+        rain24_vals = [o.value for o in obs if o.variable == "rainfall_24h"]
+
+        evidence: dict[str, float] = {}
+        components: list[tuple[float, float, str]] = []
+
+        # 日均风（8 级线口径）
+        if wind_vals:
+            avg_wind = sum(wind_vals) / len(wind_vals)
+            wind_risk = min(avg_wind / 17.2, 1.0)
+            components.append((wind_risk, 0.40, "wind_speed"))
+            evidence["wind_speed"] = round(wind_risk, 3)
+
+        # 阵风（10 级临设线口径）
+        if gust_vals:
+            avg_gust = sum(gust_vals) / len(gust_vals)
+            gust_risk = min(avg_gust / 24.5, 1.0)
+            components.append((gust_risk, 0.25, "wind_gust"))
+            evidence["wind_gust"] = round(gust_risk, 3)
+
+        # 24h 降雨（风雨耦合的线性近似）
+        if rain24_vals:
+            avg_rain24 = sum(rain24_vals) / len(rain24_vals)
+            rain24_risk = min(avg_rain24 / 100.0, 1.0)
+            components.append((rain24_risk, 0.35, "rainfall_24h"))
+            evidence["rainfall_24h"] = round(rain24_risk, 3)
+
+        if not components:
+            return DecisionOutput(
+                context=context,
+                decision=False,
+                confidence=0.0,
+                evidence_summary={},
+                rationale="TyphoonAlert: no relevant observations",
+            )
+
+        # 动态归一化权重
+        total_weight = sum(w for _, w, _ in components)
+        risk_score = sum(r * (w / total_weight) for r, w, _ in components)
+
+        risk_score = max(0.0, min(risk_score, 1.0))
+        decision = risk_score >= self.decision_threshold
+
+        avg_wind_val = sum(wind_vals) / len(wind_vals) if wind_vals else 0
+        avg_gust_val = sum(gust_vals) / len(gust_vals) if gust_vals else 0
+        avg_rain24_val = sum(rain24_vals) / len(rain24_vals) if rain24_vals else 0
+
+        return DecisionOutput(
+            context=context,
+            decision=decision,
+            confidence=round(risk_score, 3),
+            evidence_summary=evidence,
+            rationale=(
+                f"TyphoonAlert: 日均风={avg_wind_val:.1f}m/s, "
+                f"阵风={avg_gust_val:.1f}m/s, 24h降雨={avg_rain24_val:.0f}mm, "
+                f"风险分={risk_score:.3f}"
+            ),
+        )
+
+
+# ===========================================================================
+# ColdWave Alert Agent
+# ===========================================================================
+
+
+class ColdWaveAlertAgent(AlertAgent):
+    """寒潮/冰冻预警 Agent（对标 GB/T 20484-2017《冷空气等级》）。
+
+    风险评分模型（线性加权 baseline，刻意不复制查表真值的 AND 结构）：
+    - 日最低温（权重 0.40）：(4 - tmin)/8，越冷越高
+    - 24h 降温幅度（权重 0.35）：drop/10
+    - 风寒（权重 0.25）：wind/12
+
+    决策阈值: risk_score >= 0.45 → YES (可被 calibration 模块动态调整)
+
+    判别力说明（对抗套件 adv-cold-* 锚定的两个失效模式）：
+    - 北方常态低温无降幅：绝对低温分量饱和主导 → 误报
+      （这正是 cars_cities.json cold_alert_active 按城门控的物理含义）
+    - 双线刚过（降幅 8.5 + 极值 3.8）：AND 双中档被均值稀释 → 漏报
+    """
+
+    def __init__(self, decision_threshold: float | None = None):
+        super().__init__("ColdWaveAlertAgent")
+        self.decision_threshold = (
+            decision_threshold
+            if decision_threshold is not None
+            else _load_calibrated_threshold("cold", 0.45)
+        )
+
+    def decide(self, context: ScenarioContext) -> DecisionOutput:
+        obs = context.observations
+
+        tmin_vals = [o.value for o in obs if o.variable == "temperature_min"]
+        drop_vals = [o.value for o in obs if o.variable == "temperature_drop_24h"]
+        wind_vals = [o.value for o in obs if o.variable == "wind_speed"]
+
+        evidence: dict[str, float] = {}
+        components: list[tuple[float, float, str]] = []
+
+        # 日最低温（越冷越高）
+        if tmin_vals:
+            avg_tmin = sum(tmin_vals) / len(tmin_vals)
+            tmin_risk = max(0.0, min((4.0 - avg_tmin) / 8.0, 1.0))
+            components.append((tmin_risk, 0.40, "temperature_min"))
+            evidence["temperature_min"] = round(tmin_risk, 3)
+
+        # 24h 降温幅度
+        if drop_vals:
+            avg_drop = sum(drop_vals) / len(drop_vals)
+            drop_risk = max(0.0, min(avg_drop / 10.0, 1.0))
+            components.append((drop_risk, 0.35, "temperature_drop_24h"))
+            evidence["temperature_drop_24h"] = round(drop_risk, 3)
+
+        # 风寒
+        if wind_vals:
+            avg_wind = sum(wind_vals) / len(wind_vals)
+            wind_risk = max(0.0, min(avg_wind / 12.0, 1.0))
+            components.append((wind_risk, 0.25, "wind_speed"))
+            evidence["wind_speed"] = round(wind_risk, 3)
+
+        if not components:
+            return DecisionOutput(
+                context=context,
+                decision=False,
+                confidence=0.0,
+                evidence_summary={},
+                rationale="ColdWaveAlert: no relevant observations",
+            )
+
+        # 动态归一化权重
+        total_weight = sum(w for _, w, _ in components)
+        risk_score = sum(r * (w / total_weight) for r, w, _ in components)
+
+        risk_score = max(0.0, min(risk_score, 1.0))
+        decision = risk_score >= self.decision_threshold
+
+        avg_tmin_val = sum(tmin_vals) / len(tmin_vals) if tmin_vals else 0
+        avg_drop_val = sum(drop_vals) / len(drop_vals) if drop_vals else 0
+
+        return DecisionOutput(
+            context=context,
+            decision=decision,
+            confidence=round(risk_score, 3),
+            evidence_summary=evidence,
+            rationale=(
+                f"ColdWaveAlert: 日最低={avg_tmin_val:.1f}°C, "
+                f"24h降幅={avg_drop_val:.1f}°C, 风险分={risk_score:.3f}"
+            ),
+        )
+
+
+# ===========================================================================
+# Snow Alert Agent
+# ===========================================================================
+
+
+class SnowAlertAgent(AlertAgent):
+    """暴雪/道路结冰预警 Agent（对标 GB/T 28592-2012 降雪等级附表）。
+
+    风险评分模型（线性加权 baseline，刻意不复制查表真值的掩膜/AND 结构）：
+    - 24h 降雪量（权重 0.35）：/10mm 暴雪线
+    - 路面温度（权重 0.20）：(0 - road)/10，越冷越高
+    - 24h 降水总量（权重 0.30）：/40mm —— 不区分雨雪的降水口径
+    - 湿度（权重 0.15）：(hum - 50)/50，湿雪附着
+
+    决策阈值: risk_score >= 0.45 → YES (可被 calibration 模块动态调整)
+
+    判别力说明（对抗套件 adv-snow-* 锚定的两个失效模式）：
+    - 雨非雪：冻结掩膜（气温 >= 0.5℃ 降水为雨）缺失，降水总量分量
+      主导 → 误报（雨雪口径混淆）
+    - 结冰双线刚过（中雪 2.6 × 路温 -2）：AND 双中低档被均值稀释 → 漏报
+    """
+
+    def __init__(self, decision_threshold: float | None = None):
+        super().__init__("SnowAlertAgent")
+        self.decision_threshold = (
+            decision_threshold
+            if decision_threshold is not None
+            else _load_calibrated_threshold("snow", 0.45)
+        )
+
+    def decide(self, context: ScenarioContext) -> DecisionOutput:
+        obs = context.observations
+
+        snow_vals = [o.value for o in obs if o.variable == "snowfall_24h"]
+        road_vals = [o.value for o in obs if o.variable == "road_surface_temp"]
+        rain_vals = [o.value for o in obs if o.variable == "rainfall_24h"]
+        hum_vals = [o.value for o in obs if o.variable == "humidity"]
+
+        evidence: dict[str, float] = {}
+        components: list[tuple[float, float, str]] = []
+
+        # 24h 降雪量
+        if snow_vals:
+            avg_snow = sum(snow_vals) / len(snow_vals)
+            snow_risk = max(0.0, min(avg_snow / 10.0, 1.0))
+            components.append((snow_risk, 0.35, "snowfall_24h"))
+            evidence["snowfall_24h"] = round(snow_risk, 3)
+
+        # 路面温度（越冷越高）
+        if road_vals:
+            avg_road = sum(road_vals) / len(road_vals)
+            road_risk = max(0.0, min((0.0 - avg_road) / 10.0, 1.0))
+            components.append((road_risk, 0.20, "road_surface_temp"))
+            evidence["road_surface_temp"] = round(road_risk, 3)
+
+        # 24h 降水总量（不区分雨雪 —— 对抗用例锚定的口径混淆点）
+        if rain_vals:
+            avg_rain = sum(rain_vals) / len(rain_vals)
+            rain_risk = max(0.0, min(avg_rain / 40.0, 1.0))
+            components.append((rain_risk, 0.30, "rainfall_24h"))
+            evidence["rainfall_24h"] = round(rain_risk, 3)
+
+        # 湿度（湿雪附着）
+        if hum_vals:
+            avg_hum = sum(hum_vals) / len(hum_vals)
+            hum_risk = max(0.0, min((avg_hum - 50.0) / 50.0, 1.0))
+            components.append((hum_risk, 0.15, "humidity"))
+            evidence["humidity"] = round(hum_risk, 3)
+
+        if not components:
+            return DecisionOutput(
+                context=context,
+                decision=False,
+                confidence=0.0,
+                evidence_summary={},
+                rationale="SnowAlert: no relevant observations",
+            )
+
+        # 动态归一化权重
+        total_weight = sum(w for _, w, _ in components)
+        risk_score = sum(r * (w / total_weight) for r, w, _ in components)
+
+        risk_score = max(0.0, min(risk_score, 1.0))
+        decision = risk_score >= self.decision_threshold
+
+        avg_snow_val = sum(snow_vals) / len(snow_vals) if snow_vals else 0
+        avg_road_val = sum(road_vals) / len(road_vals) if road_vals else 0
+
+        return DecisionOutput(
+            context=context,
+            decision=decision,
+            confidence=round(risk_score, 3),
+            evidence_summary=evidence,
+            rationale=(
+                f"SnowAlert: 24h降雪={avg_snow_val:.1f}mm, "
+                f"路温={avg_road_val:.1f}°C, 风险分={risk_score:.3f}"
             ),
         )
 
@@ -596,6 +1002,10 @@ class MultiAlertAgent(AlertAgent):
     - category == flood → FloodAlertAgent
     - category == drought → DroughtAlertAgent
     - category == heat/ecology → HeatWaveAlertAgent
+    - category == landslide → LandslideAlertAgent（Phase A1 扩展）
+    - category == typhoon → TyphoonAlertAgent（Phase A2 扩展）
+    - category == cold → ColdWaveAlertAgent（Phase B1 扩展）
+    - category == snow → SnowAlertAgent（Phase B2 扩展）
     - 其他 → 降级为 RuleBasedAgent (仅 fire)
     """
 
@@ -609,6 +1019,10 @@ class MultiAlertAgent(AlertAgent):
         flood_threshold: float | None = None,
         drought_threshold: float | None = None,
         heat_threshold: float | None = None,
+        landslide_threshold: float | None = None,
+        typhoon_threshold: float | None = None,
+        cold_threshold: float | None = None,
+        snow_threshold: float | None = None,
     ):
         super().__init__("MultiAlertAgent")
         self.fire_agent = FireAlertAgent(
@@ -621,15 +1035,29 @@ class MultiAlertAgent(AlertAgent):
         self.flood_agent = FloodAlertAgent(decision_threshold=flood_threshold)
         self.drought_agent = DroughtAlertAgent(decision_threshold=drought_threshold)
         self.heat_agent = HeatWaveAlertAgent(decision_threshold=heat_threshold)
+        self.landslide_agent = LandslideAlertAgent(decision_threshold=landslide_threshold)
+        self.typhoon_agent = TyphoonAlertAgent(decision_threshold=typhoon_threshold)
+        self.cold_agent = ColdWaveAlertAgent(decision_threshold=cold_threshold)
+        self.snow_agent = SnowAlertAgent(decision_threshold=snow_threshold)
 
     def decide(self, context: ScenarioContext) -> DecisionOutput:
-        """根据场景类别路由到对应的专用 Agent。"""
+        """根据决策模板与场景类别路由到对应的决策逻辑。"""
+        if context.template != DecisionTemplate.ALERT:
+            return self.decide_template(context)
+        return self._decide_alert(context)
+
+    def _decide_alert(self, context: ScenarioContext) -> DecisionOutput:
+        """ALERT 模板：根据场景类别路由到对应的专用 Agent。"""
         category_map = {
             "fire": self.fire_agent,
             "flood": self.flood_agent,
             "drought": self.drought_agent,
             "ecology": self.heat_agent,
             "heat": self.heat_agent,
+            "landslide": self.landslide_agent,
+            "typhoon": self.typhoon_agent,
+            "cold": self.cold_agent,
+            "snow": self.snow_agent,
         }
 
         category = (
@@ -644,6 +1072,110 @@ class MultiAlertAgent(AlertAgent):
             agent = self.fire_agent
 
         return agent.decide(context)
+
+    # ------------------------------------------------------------------
+    # 决策模板闭环（Phase C）：dispatch / upgrade / close / recover
+    # 基线统一「线性 ALERT 输出的置信度/判定」做启发式，刻意不复制真值
+    # 的 AND 查表与持续时间窗结构 —— 边界用例因此双向出错，构成判别力。
+    # ------------------------------------------------------------------
+
+    def decide_template(self, context: ScenarioContext) -> DecisionOutput:
+        """按模板分派到对应 baseline 决策（Phase C）。"""
+        handler = {
+            DecisionTemplate.DISPATCH: self._decide_dispatch,
+            DecisionTemplate.UPGRADE: self._decide_upgrade,
+            DecisionTemplate.CLOSE: self._decide_close,
+            DecisionTemplate.RECOVER: self._decide_recover,
+        }
+        fn = handler.get(context.template)
+        if fn is None:
+            return self._decide_alert(context)
+        return fn(context)
+
+    def _decide_dispatch(self, context: ScenarioContext) -> DecisionOutput:
+        """DISPATCH baseline：ALERT 判定且置信度 >= 0.55（忽略 AND 附加条件）。"""
+        base = self._decide_alert(context)
+        decision = base.decision and base.confidence >= 0.55
+        return DecisionOutput(
+            context=context,
+            decision=decision,
+            confidence=base.confidence,
+            evidence_summary=base.evidence_summary,
+            rationale=(
+                f"Dispatch: ALERT={base.decision}, 置信度={base.confidence:.3f} "
+                f"× 阈值 0.55（忽略附加条件 AND 与暴露复合）"
+            ),
+        )
+
+    def _decide_upgrade(self, context: ScenarioContext) -> DecisionOutput:
+        """UPGRADE baseline：ALERT 判定且置信度 >= 0.60（忽略等级比较/趋势）。"""
+        base = self._decide_alert(context)
+        decision = base.decision and base.confidence >= 0.60
+        return DecisionOutput(
+            context=context,
+            decision=decision,
+            confidence=base.confidence,
+            evidence_summary=base.evidence_summary,
+            rationale=(
+                f"Upgrade: ALERT={base.decision}, 置信度={base.confidence:.3f} "
+                f"× 阈值 0.60（忽略等级比较与趋势外推）"
+            ),
+        )
+
+    def _decide_close(self, context: ScenarioContext) -> DecisionOutput:
+        """CLOSE baseline：ALERT 判定且置信度 >= 0.70（忽略关键设施细节）。"""
+        base = self._decide_alert(context)
+        decision = base.decision and base.confidence >= 0.70
+        return DecisionOutput(
+            context=context,
+            decision=decision,
+            confidence=base.confidence,
+            evidence_summary=base.evidence_summary,
+            rationale=(
+                f"Close: ALERT={base.decision}, 置信度={base.confidence:.3f} "
+                f"× 阈值 0.70（忽略危险等级 × 关键设施的矩阵）"
+            ),
+        )
+
+    def _decide_recover(self, context: ScenarioContext) -> DecisionOutput:
+        """RECOVER baseline：「预警解除即恢复」，无持续时间窗校验。
+
+        这是应急管理最常见人命代价来源——「雨停就解除」。真值要求条件解除
+        后持续 N 小时无回弹；baseline 只看当前是否已无预警。
+        """
+        base = self._decide_alert(context)
+        decision = not base.decision
+        return DecisionOutput(
+            context=context,
+            decision=decision,
+            confidence=1.0 - base.confidence,
+            evidence_summary=base.evidence_summary,
+            rationale=(
+                f"Recover: ALERT={base.decision} → 恢复={decision} "
+                f"（无持续窗校验——雨停即解除）"
+            ),
+        )
+
+    # ------------------------------------------------------------------
+    # 动作等级决策（Phase B 暴露层）：monitor / alert / dispatch
+    # ------------------------------------------------------------------
+
+    def decide_action(self, context: ScenarioContext) -> str:
+        """动作等级 baseline：线性置信度作严重度代理 × 暴露分级。
+
+        刻意与真值矩阵不同口径（披露）：
+        - 真值用物理 GT score >= 0.90 判高严重度；
+        - baseline 用自身线性置信度 >= 0.85 作代理（阈值不同 → 边界
+          用例双向出错，构成暴露套件的动作级判别力来源）。
+        """
+        out = self.decide(context)
+        exp_class, _ = infer_exposure_class(context.exposure)
+
+        if not out.decision:
+            return "monitor"
+        if out.confidence >= 0.85:
+            return "dispatch" if exp_class in ("E2", "E3") else "alert"
+        return "dispatch" if exp_class == "E3" else "alert"
 
 
 # ===========================================================================
@@ -778,6 +1310,7 @@ class LLMDecisionAgent(AlertAgent):
 
     def _call_openai(self, prompt: str) -> tuple[str | None, float, str]:
         import os
+
         from openai import OpenAI
 
         base_url = self.base_url or os.environ.get(
@@ -796,9 +1329,9 @@ class LLMDecisionAgent(AlertAgent):
         return self._parse_llm_response(text)
 
     def _call_ollama(self, prompt: str) -> tuple[str | None, float, str]:
+        import json
         import os
         import urllib.request
-        import json
 
         base_url = self.base_url or os.environ.get(
             "OLLAMA_BASE_URL", "http://localhost:11434"

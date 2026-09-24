@@ -7,33 +7,32 @@ from __future__ import annotations
 
 import pytest
 
-from earthbench.models import (
-    ScenarioContext,
-    Observation,
-    DecisionTemplate,
-    ScenarioCategory,
-    DecisionOutput,
-)
-from earthbench.templates import TemplateEngine
-from earthbench.scenarios import (
-    ScenarioStore,
-    get_alert_benchmark_suite,
-    DifficultyLevel,
-    infer_fire_ground_truth,
-    infer_flood_ground_truth,
-    infer_drought_ground_truth,
-    infer_heatwave_ground_truth,
-)
 from earthbench.agents import (
+    DroughtAlertAgent,
     FireAlertAgent,
     FloodAlertAgent,
-    DroughtAlertAgent,
     HeatWaveAlertAgent,
     MultiAlertAgent,
 )
+from earthbench.benchmark import AlertBenchEvaluator, AlertTestCase
 from earthbench.eval import BaseEvaluator, BatchEvaluator
-from earthbench.benchmark import AlertTestCase, AlertBenchEvaluator
-
+from earthbench.models import (
+    DecisionOutput,
+    DecisionTemplate,
+    Observation,
+    ScenarioCategory,
+    ScenarioContext,
+)
+from earthbench.scenarios import (
+    DifficultyLevel,
+    ScenarioStore,
+    get_alert_benchmark_suite,
+    infer_drought_ground_truth,
+    infer_fire_ground_truth,
+    infer_flood_ground_truth,
+    infer_heatwave_ground_truth,
+)
+from earthbench.templates import TemplateEngine
 
 # ============================================================================
 # Template Engine
@@ -321,9 +320,72 @@ class TestGroundTruth:
                 "timestamp": "t",
                 "confidence": 1.0,
             },
+            {
+                "source": "s",
+                "variable": "drought_duration_days",
+                "value": 90.0,
+                "unit": "d",
+                "timestamp": "t",
+                "confidence": 1.0,
+            },
+            {
+                "source": "s",
+                "variable": "affected_area_ratio",
+                "value": 0.5,
+                "unit": "",
+                "timestamp": "t",
+                "confidence": 1.0,
+            },
         ]
         decision, score, explanation = infer_drought_ground_truth(obs)
         assert decision is True
+        assert explanation["impact_gate"] is True
+
+    def test_drought_urban_short_no_impact_gt(self):
+        """城市短旱：指数全红但持续/面积/缺水全未达标 → 不预警。"""
+        obs = [
+            {"source": "s", "variable": "SPI", "value": -2.6, "unit": "",
+             "timestamp": "t", "confidence": 1.0},
+            {"source": "s", "variable": "humidity", "value": 22.0, "unit": "%",
+             "timestamp": "t", "confidence": 1.0},
+            {"source": "s", "variable": "drought_duration_days", "value": 22.0,
+             "unit": "d", "timestamp": "t", "confidence": 1.0},
+            {"source": "s", "variable": "affected_area_ratio", "value": 0.12,
+             "unit": "", "timestamp": "t", "confidence": 1.0},
+            {"source": "s", "variable": "urban_water_deficit_rate", "value": 0.04,
+             "unit": "", "timestamp": "t", "confidence": 1.0},
+        ]
+        decision, score, explanation = infer_drought_ground_truth(obs)
+        assert decision is False
+        assert score == 0.30
+        assert explanation["impact_gate"] is False
+        assert "影响门控未通过" in explanation["detail"]
+
+    def test_drought_impact_missing_obs_no_alert(self):
+        """缺影响观测：气象干旱成立也视为未验证 → 不预警（宁缺毋滥）。"""
+        obs = [
+            {"source": "s", "variable": "SPI", "value": -2.0, "unit": "",
+             "timestamp": "t", "confidence": 1.0},
+        ]
+        decision, score, explanation = infer_drought_ground_truth(obs)
+        assert decision is False
+        assert explanation["impact_gate"] is False
+        assert "无任何影响观测" in explanation["detail"]
+
+    def test_drought_moderate_long_duration_fires(self):
+        """中旱+长旱大面积：指数通道 0.75 × 影响门控通过 → 预警。"""
+        obs = [
+            {"source": "s", "variable": "SPI", "value": -1.2, "unit": "",
+             "timestamp": "t", "confidence": 1.0},
+            {"source": "s", "variable": "drought_duration_days", "value": 95.0,
+             "unit": "d", "timestamp": "t", "confidence": 1.0},
+            {"source": "s", "variable": "affected_area_ratio", "value": 0.55,
+             "unit": "", "timestamp": "t", "confidence": 1.0},
+        ]
+        decision, score, explanation = infer_drought_ground_truth(obs)
+        assert decision is True
+        assert score == 0.75
+        assert explanation["impact_gate"] is True
 
     def test_heatwave_extreme_gt(self):
         obs = [
@@ -368,12 +430,15 @@ class TestBenchmarkSuite:
 
     def test_suite_size(self):
         suite = get_alert_benchmark_suite()
-        assert len(suite) == 20
+        assert len(suite) == 40
 
     def test_suite_categories(self):
         suite = get_alert_benchmark_suite()
         categories = {item["category"] for item in suite}
-        assert categories == {"fire", "flood", "drought", "heat"}
+        assert categories == {
+            "fire", "flood", "drought", "heat",
+            "landslide", "typhoon", "cold", "snow",
+        }
 
     def test_suite_difficulty_levels(self):
         suite = get_alert_benchmark_suite()
@@ -401,7 +466,10 @@ class TestBenchmarkSuite:
 
     def test_suite_all_difficulties_per_category(self):
         suite = get_alert_benchmark_suite()
-        for cat in ["fire", "flood", "drought", "heat"]:
+        for cat in [
+            "fire", "flood", "drought", "heat",
+            "landslide", "typhoon", "cold", "snow",
+        ]:
             cat_items = [i for i in suite if i["category"] == cat]
             assert len(cat_items) == 5
             difficulties_found = [i["difficulty"] for i in cat_items]
@@ -1429,19 +1497,22 @@ class TestAlertBenchEvaluator:
         return AlertBenchEvaluator()
 
     def test_bench_initialization(self, bench):
-        assert len(bench.test_cases) == 20
+        assert len(bench.test_cases) == 40
 
     def test_bench_agent_evaluation(self, bench):
         agent = MultiAlertAgent()
         results = bench.evaluate_agent(agent)
-        assert len(results) == 20
+        assert len(results) == 40
         assert all("accuracy" in r for r in results if "error" not in r)
 
     def test_bench_category_breakdown(self, bench):
         agent = MultiAlertAgent()
         bench.evaluate_agent(agent)
         breakdown = bench.category_breakdown()
-        for cat in ["fire", "flood", "drought", "heat"]:
+        for cat in [
+            "fire", "flood", "drought", "heat",
+            "landslide", "typhoon", "cold", "snow",
+        ]:
             assert cat in breakdown
             assert breakdown[cat]["total"] == 5
 
@@ -1460,7 +1531,7 @@ class TestAlertBenchEvaluator:
         report = bench.summary_report()
         assert report["benchmark"] == "AlertBench"
         assert report["version"] == "0.3.0"
-        assert report["total_cases"] == 20
+        assert report["total_cases"] == 40
         assert "overall_accuracy" in report
         assert "by_category" in report
         assert "by_difficulty" in report
@@ -1766,7 +1837,7 @@ class TestRegionPolygons:
                 )
 
     def test_enhance_decision_uses_real_polygon(self):
-        from earthbench.enhance_data import enhance_decision, REGION_POLYGONS
+        from earthbench.enhance_data import REGION_POLYGONS, enhance_decision
 
         decision = {
             "region": "Xiangshan-Beijing",
@@ -1855,23 +1926,23 @@ class TestVerificationModule:
         finally:
             v.FIRMS_MAP_KEY = original
 
-        # 有 key 场景：未知区域 FIRMS 返回空 -> actual=False, hit=True
+        # 有 key 场景：未知区域 FIRMS 无法查询 -> insufficient_data，不做无火推断
         v.FIRMS_MAP_KEY = "dummy-key-for-test"
         try:
             result = verify_prediction(prediction)
-            assert result["verification_status"] == "verified"
-            assert result["actual"] is False
-            assert result["hit"] is True  # predicted=False, actual=False -> hit
+            assert result["verification_status"] == "insufficient_data"
+            assert result["actual"] is None
+            assert result["hit"] is None
         finally:
             v.FIRMS_MAP_KEY = original
 
     def test_build_accuracy_trend(self, tmp_path):
         """Test build_accuracy_trend accumulates verification files correctly."""
-        from earthbench.verification import build_accuracy_trend
-
         # Create mock verification files
         import json
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timedelta, timezone
+
+        from earthbench.verification import build_accuracy_trend
 
         CST = timezone(timedelta(hours=8))
         now = datetime.now(CST)
@@ -2005,9 +2076,9 @@ class TestVerificationModule:
     def test_run_delayed_verification_skip_existing(self, tmp_path):
         """Test run_delayed_verification skips when verification file exists."""
         import json
-        from earthbench.verification import run_delayed_verification
+        from datetime import datetime, timedelta, timezone
 
-        from datetime import datetime, timezone, timedelta
+        from earthbench.verification import run_delayed_verification
 
         CST = timezone(timedelta(hours=8))
         now = datetime.now(CST)
@@ -2051,7 +2122,7 @@ class TestCalibrationModule:
 
     def test_load_thresholds_default(self, tmp_path):
         """Test load_thresholds returns defaults when no file exists."""
-        from earthbench.calibration import load_thresholds, DEFAULT_THRESHOLDS
+        from earthbench.calibration import DEFAULT_THRESHOLDS, load_thresholds
 
         result = load_thresholds(tmp_path)
         assert result == DEFAULT_THRESHOLDS
@@ -2059,6 +2130,7 @@ class TestCalibrationModule:
     def test_load_thresholds_from_file(self, tmp_path):
         """Test load_thresholds reads from existing file."""
         import json
+
         from earthbench.calibration import load_thresholds
 
         data = {
@@ -2078,7 +2150,7 @@ class TestCalibrationModule:
 
     def test_save_and_load_roundtrip(self, tmp_path):
         """Test save then load returns same values."""
-        from earthbench.calibration import save_thresholds, load_thresholds
+        from earthbench.calibration import load_thresholds, save_thresholds
 
         thresholds = {"fire": 0.38, "flood": 0.47, "drought": 0.42, "heat": 0.39}
         save_thresholds(tmp_path, thresholds)
@@ -2123,7 +2195,7 @@ class TestCalibrationModule:
 
     def test_compute_adjustment_max_step(self):
         """Test adjustment is capped at MAX_STEP."""
-        from earthbench.calibration import compute_adjustment, MAX_STEP
+        from earthbench.calibration import MAX_STEP, compute_adjustment
 
         # Extreme FP vs FN ratio
         result = compute_adjustment("fire", fp=10, fn=0, tn=0, tp=0)
@@ -2141,8 +2213,9 @@ class TestCalibrationModule:
     def test_run_calibration_with_fp(self, tmp_path):
         """Test run_calibration adjusts thresholds based on FP-heavy verification."""
         import json
-        from earthbench.calibration import run_calibration, load_thresholds
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timedelta, timezone
+
+        from earthbench.calibration import load_thresholds, run_calibration
 
         CST = timezone(timedelta(hours=8))
         now = datetime.now(CST)
@@ -2190,12 +2263,13 @@ class TestCalibrationModule:
     def test_run_calibration_safety_bounds(self, tmp_path):
         """Test that calibration respects MIN/MAX thresholds."""
         import json
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timedelta, timezone
+
         from earthbench.calibration import (
+            MAX_THRESHOLD,
+            load_thresholds,
             run_calibration,
             save_thresholds,
-            load_thresholds,
-            MAX_THRESHOLD,
         )
 
         # Set fire threshold near max
@@ -2235,8 +2309,9 @@ class TestCalibrationModule:
 
     def test_run_calibration_writes_status_file(self, tmp_path):
         """Test that calibration_status.json is written."""
-        from earthbench.calibration import run_calibration
         import json
+
+        from earthbench.calibration import run_calibration
 
         run_calibration(tmp_path)
 
@@ -2252,8 +2327,9 @@ class TestCalibrationModule:
     def test_run_calibration_writes_log(self, tmp_path):
         """Test that calibration_log.json is written when adjustment occurs."""
         import json
+        from datetime import datetime, timedelta, timezone
+
         from earthbench.calibration import run_calibration
-        from datetime import datetime, timezone, timedelta
 
         CST = timezone(timedelta(hours=8))
         now = datetime.now(CST)
@@ -2330,6 +2406,7 @@ class TestAgentDynamicThreshold:
         """Test agents read calibrated thresholds from EARTHBENCH_THRESHOLDS_JSON."""
         import json
         import os
+
         from earthbench.agents import FireAlertAgent
 
         # Write a thresholds.json

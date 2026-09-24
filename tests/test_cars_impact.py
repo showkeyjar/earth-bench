@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """冲击变量服务（cars_serve_impact：暴雨/大风）测试。
 
 模型相关用例依赖 crps_cars（与 t2m 通道同款环境约定：本地 PYTHONPATH 指
@@ -16,9 +15,11 @@ from earthbench.cars_serve_impact import (
     GRID_LAT,
     GRID_LON,
     RAIN_P_TRIG,
+    SNOW_P_TRIG,
     WIND_P_TRIG,
     _city_records,
     load_impact_config,
+    snowfall_members,
 )
 
 CITIES = [
@@ -30,6 +31,7 @@ CITIES = [
 def test_triggers_use_expected_cost_ratios():
     assert RAIN_P_TRIG == 0.3      # flood 成本比
     assert WIND_P_TRIG == 0.3      # 披露假设（无既有类别）
+    assert SNOW_P_TRIG == 0.3      # snow 成本比（eval 构造性同步）
 
 
 def test_impact_config_single_source():
@@ -49,36 +51,98 @@ def test_impact_config_single_source():
     assert cfg["wind"]["tail_completion"] is None
     assert cfg["tp"]["thresholds"]["hard"] == 50.0
     assert cfg["wind"]["thresholds"]["hard"] == 10.8
+    # Phase D：wind 高档位与基准台风真值同口径（单一来源断言）
+    from earthbench.scenarios import WIND_LEVEL_8, WIND_LEVEL_10
+    assert cfg["wind"]["thresholds"]["typhoon"] == WIND_LEVEL_8 == 17.2
+    assert cfg["wind"]["thresholds"]["extreme"] == WIND_LEVEL_10 == 24.5
+
+
+def test_impact_config_snow_channel_syncs_benchmark():
+    """Phase D：snow 派生通道阈值/冻结掩膜与基准暴雪真值同口径。"""
+    from earthbench.scenarios import (
+        SNOW_BLIZZARD,
+        SNOW_FREEZE_MASK_C,
+        SNOW_HEAVY_BLIZZARD,
+    )
+    cfg = load_impact_config()
+    snow = cfg["snow"]
+    assert snow["derived_from"] == "tp"
+    assert snow["thresholds"]["hard"] == SNOW_BLIZZARD == 10.0
+    assert snow["thresholds"]["intense"] == SNOW_HEAVY_BLIZZARD == 20.0
+    assert snow["freeze_mask_c"] == SNOW_FREEZE_MASK_C == 0.5
+    assert "disclosed" in snow["provenance"]
+
+
+def test_snowfall_members_freeze_mask():
+    """冻结掩膜单元：< 0.5°C 计雪，>= 0.5°C 归零；支持标量与网格广播。"""
+    tp = np.array([30.0, 5.0, 0.0])
+    assert np.allclose(snowfall_members(tp, -5.0), tp)      # 冻结 → 原样
+    assert np.allclose(snowfall_members(tp, 10.0), 0.0)     # 暖 → 雨，不计雪
+    assert np.allclose(snowfall_members(tp, 0.5), 0.0)      # 边界严等号
+    # 网格广播：(1,30,1,31,41) 成员 × (31,41) 掩膜
+    grid = np.full((31, 41), 10.0, dtype=np.float32)
+    grid[0, 0] = -5.0
+    m = np.ones((1, 30, 1, 31, 41), dtype=np.float32)
+    out = snowfall_members(m, grid)
+    assert float(out[0, 0, 0, 0, 0]) == 1.0   # 冻结格点保留
+    assert float(out[0, 0, 0, 5, 5]) == 0.0   # 暖格点归零
+    assert out.dtype == np.float32
 
 
 def test_city_records_member_fractions():
-    """成员计数概率与统计摘要（合成成员，无模型依赖）。"""
+    """成员计数概率与统计摘要（合成成员，无模型依赖）。
+
+    Phase D 扩展：wind 高档位（typhoon 17.2/extreme 24.5）+ snow 冻结掩膜
+    （测试城 -5°C 冻结计雪、北城 +10°C 暖归零）。
+    """
     iy = int(np.argmin(np.abs(GRID_LAT - 30.0)))
     ix = int(np.argmin(np.abs(GRID_LON - 110.0)))
+    iy_n = int(np.argmin(np.abs(GRID_LAT - 45.0)))
+    ix_n = int(np.argmin(np.abs(GRID_LON - 120.0)))
     rng = np.random.default_rng(0)
     mt = rng.uniform(0, 120, 30)          # mm/day
     mw = rng.uniform(0, 16, 30)           # m/s
     mt[:15] = 60.0                        # 15/30 ≥ 50mm
-    mt[15:] = 10.0                        # 其余明确低于阈值（不随机）
+    mt[15:] = 5.0                         # 其余明确低于雨/雪阈值（不随机）
     mw[:6] = 12.0                         # 6/30 ≥ 10.8 m/s
     mw[6:] = 5.0
-    tp_mem = np.zeros((1, 30, 1, 31, 41)); tp_mem[0, :, 0, iy, ix] = mt
-    wd_mem = np.zeros((1, 30, 1, 31, 41)); wd_mem[0, :, 0, iy, ix] = mw
+    tp_mem = np.zeros((1, 30, 1, 31, 41))
+    tp_mem[0, :, 0, iy, ix] = mt
+    wd_mem = np.zeros((1, 30, 1, 31, 41))
+    wd_mem[0, :, 0, iy, ix] = mw
+
+    t2m = np.full((31, 41), 10.0, dtype=np.float32)  # 暖（默认雨）
+    t2m[iy, ix] = -5.0                               # 测试城冻结
+    t2m[iy_n, ix_n] = 10.0                           # 北城暖
+    snow_cfg = {"thresholds": {"hard": 10.0, "intense": 20.0},
+                "freeze_mask_c": 0.5}
 
     class _P:  # 最小配置桩
         thresholds = {"hard": 50.0, "intense": 100.0}
     class _W:
-        thresholds = {"hard": 10.8, "intense": 13.9}
+        thresholds = {"hard": 10.8, "intense": 13.9,
+                      "typhoon": 17.2, "extreme": 24.5}
 
-    recs = _city_records(tp_mem, wd_mem, date(2026, 9, 25), _P(), _W(), CITIES)
+    recs = _city_records(tp_mem, wd_mem, date(2026, 9, 25), _P(), _W(), CITIES,
+                         t2m_mean_c=t2m, snow_cfg=snow_cfg)
     r = recs[0]
     assert r["p_harm_rain"] == 0.5
     assert r["p_harm_wind"] == round(6 / 30, 3)
     assert r["rain_member_max_mm"] == round(float(mt.max()), 1)
     assert r["wind_member_max_ms"] == round(float(mw.max()), 1)
     assert r["valid_date"] == "2026-09-25"
-    # 北城格点全 0 → 概率 0，不越界
+    # wind 高档位：成员最大 12 < 17.2 → 0
+    assert r["p_harm_wind_typhoon"] == 0.0
+    assert r["p_harm_wind_extreme"] == 0.0
+    # snow：测试城冻结 → 15/30 成员 60mm ≥ 10mm（且 ≥ 20mm）
+    assert r["snow_freeze_mask_on"] is True
+    assert r["t2m_mean_c"] == -5.0
+    assert r["p_harm_snow"] == 0.5
+    assert r["p_harm_snow_intense"] == 0.5
+    # 北城格点全 0 → 概率 0，不越界；暖 → 掩膜关
     assert recs[1]["p_harm_rain"] == 0.0
+    assert recs[1]["snow_freeze_mask_on"] is False
+    assert recs[1]["p_harm_snow"] == 0.0
 
 
 def test_panel_renders_from_json(tmp_path, monkeypatch):
@@ -99,7 +163,7 @@ def test_panel_renders_from_json(tmp_path, monkeypatch):
         json.dumps(doc), encoding="utf-8")
     monkeypatch.setenv("CARS_DATA_DIR", str(tmp_path))
     lines = pp._build_cars_impact_section()
-    assert any("48小时暴雨/大风概率" in ln for ln in lines)
+    assert any("48小时暴雨/大风/暴雪概率" in ln for ln in lines)
     assert any("测试城" in ln for ln in lines)
     assert any("🟡 暴雨" in ln for ln in lines)      # 0.4 ≥ 0.3，未到 100mm 线
     # 大风旗：P(≥10.8)=0.1 < 0.3 不触发 → 该行无 💨
@@ -192,16 +256,26 @@ def test_daily_update_impact_end_to_end(tmp_path, monkeypatch):
     monkeypatch.setattr(si, "fetch_ops_wind",
                         lambda init, hour="00": rng.uniform(
                             3.0, 9.0, (31, 41)).astype(np.float32))
+    # Phase D：注入冻结掩膜气温场（北城 -3°C 冻结、测试城 15°C 暖）
+    t2m = np.full((31, 41), 15.0, dtype=np.float32)
+    t2m[int(np.argmin(np.abs(GRID_LAT - 45.0))),
+        int(np.argmin(np.abs(GRID_LON - 120.0)))] = -3.0
+    monkeypatch.setattr(si, "fetch_ops_t2m_mean",
+                        lambda init, hour="00": t2m)
 
     doc = si.daily_update_impact(date(2026, 9, 25))
     assert doc["generated_for"] == "2026-09-25"
     assert len(doc["records"]) == 2
     r = doc["records"][0]
     for k in ("p_harm_rain", "p_harm_rain_intense",
-              "p_harm_wind", "p_harm_wind_intense"):
+              "p_harm_wind", "p_harm_wind_intense",
+              "p_harm_wind_typhoon", "p_harm_wind_extreme",
+              "p_harm_snow", "p_harm_snow_intense"):
         assert 0.0 <= r[k] <= 1.0
     assert (tmp_path / "cars_probabilities_impact_daily.json").exists()
     assert (tmp_path / "cars_history" /
             "forecast_impact_2026-09-25.json").exists()
-    assert doc["p_trigger"] == {"rain": 0.3, "wind": 0.3}
+    assert doc["p_trigger"] == {"rain": 0.3, "wind": 0.3, "snow": 0.3}
     assert "tail_policy" in doc and "provenance" in doc
+    # 暖城（测试城）：掩膜关 → 暴雪 0（雨雪相位分离生效）
+    assert r["snow_freeze_mask_on"] is False and r["p_harm_snow"] == 0.0

@@ -24,12 +24,23 @@
 - p_harm_rain_intense P(≥ 100 mm)（大暴雨线）
 - p_harm_wind        P(日均风速 ≥ 10.8 m/s)（六级大风线，日均口径弱代理，披露）
 - p_harm_wind_intense P(≥ 13.9 m/s)（七级线）
-- 触发：P ≥ 30%（rain 用 flood 成本比；wind 无既有类别取 0.3，披露假设）。
+- p_harm_wind_typhoon P(≥ 17.2 m/s)（八级线：交通停运/户外作业停止，
+                       GB/T 19201-2006，Phase D 与基准台风真值同口径同步）
+- p_harm_wind_extreme P(≥ 24.5 m/s)（十级线：临设/塔吊安全参考档，日均口径）
+- p_harm_snow        P(降雪 ≥ 10 mm 水当量)（GB/T 28592-2012 暴雪线；
+                       APCP × 冻结掩膜 t2m < 0.5°C，Phase D 新增）
+- p_harm_snow_intense P(≥ 20 mm)（大暴雪线）
+- 触发：P ≥ 30%（rain 用 flood 成本比；wind/snow 无既有类别取 0.3，披露假设；
+  snow 与 eval.ValueEvaluator["snow"] 构造性同步）。
 
 诚实披露（caveats 一并写入 JSON）：
 - 概率为 30 成员计数（地板 1/30 ≈ 3.3%）；t2m 通道是连续 CDF，两通道口径不同。
 - 业务 GEFS 与再预报 v12 存在版本漂移（与 t2m 通道同款风险）。
-- 无阵风（gust）数据：日均风速是大风的弱代理（10.8 m/s 日均已近该格点 p99）。
+- 无阵风（gust）数据：日均风速是大风的弱代理（10.8 m/s 日均已近该格点 p99）；
+  17.2/24.5 高档位同为日均口径（日均 ≥17.2 已是灾害性持续大风；基准阵风
+  安全线 GUST 24.5 无法由本通道服务，披露）。
+- 降雪冻结掩膜取未扰动 c00 日均气温（确定性判定，非逐成员扰动）——
+  概率仅来自 tp 成员散布，冻结/降雨相位不确定性未入集合（披露）。
 - 风/降水检验闭环 = cars_verify_impact.py（模型锚定观测：有效日 00z f006-f024，
   检验的是概率层校准与 48h 相对技巧，非对地球真值的绝对校准——绝对校准由
   CRPS 侧 ERA5 out-of-sample 审计承担）。
@@ -40,7 +51,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-import urllib.request
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -60,6 +70,10 @@ WIND_STEPS = ("048", "054", "060", "066", "072")  # 6h×5 瞬时快照均值
 
 RAIN_P_TRIG = ValueEvaluator.DEFAULT_COST_RATIO["flood"]  # 0.3
 WIND_P_TRIG = 0.3  # 无既有成本类别，取 flood 同值（披露假设）
+# Phase D：snow 触发线与基准成本比构造性同步（eval.ValueEvaluator 单一来源）
+SNOW_P_TRIG = ValueEvaluator.DEFAULT_COST_RATIO["snow"]  # 0.3
+# 冻结掩膜阈值：与基准暴雪真值同口径（scenarios.py SNOW_FREEZE_MASK_C）
+SNOW_FREEZE_C = 0.5
 
 GRID_LAT = np.arange(50.0, 19.99, -1.0)
 GRID_LON = np.arange(100.0, 140.01, 1.0)
@@ -91,32 +105,16 @@ def load_impact_config() -> dict:
 
 def _fetch_grib(init: str, step: str, hour: str = "00") -> Path:
     """下载并缓存一个业务 f 文件（pgrb2a 0p50，单时效多变量）。"""
-    ymd = init.replace("-", "")
-    name = f"gec00.t{hour}z.pgrb2a.0p50.f{step}"
-    cache = PACKAGE_DATA / "gefs_cache"   # 固定包内（不进 CARS_DATA_DIR，防 CI 发布）
-    cache.mkdir(parents=True, exist_ok=True)
-    local = cache / f"{ymd}{hour}_{name}"
-    if not local.exists():
-        urllib.request.urlretrieve(f"{OPS}/gefs.{ymd}/{hour}/atmos/"
-                                   f"pgrb2ap5/{name}", local)
-    return local
+    from .gefs_io import fetch_grib
+
+    return fetch_grib(init, step, hour)
 
 
 def _read_field(path: Path, keys: dict, var_hint: tuple[str, ...]) -> np.ndarray:
     """读一个 grib 消息 → 域内 1° 网格 (31,41) float32。"""
-    import xarray as xr
+    from .gefs_io import read_field
 
-    ds = xr.open_dataset(path, engine="cfgrib",
-                         backend_kwargs={"indexpath": ""}, filter_by_keys=keys)
-    try:
-        names = [n for n in ds.data_vars if n not in ("lat", "lon")]
-        pick = next((n for n in names if n.startswith(var_hint)), names[0])
-        f = ds[pick].sel(latitude=slice(50.0, 20.0), longitude=slice(100.0, 140.0))
-        out = f.interp(latitude=GRID_LAT, longitude=GRID_LON
-                       ).values.astype(np.float32)
-        return out
-    finally:
-        ds.close()
+    return read_field(path, keys, var_hint)
 
 
 def fetch_ops_apcp(init: str, hour: str = "00") -> np.ndarray:
@@ -131,15 +129,46 @@ def fetch_ops_apcp(init: str, hour: str = "00") -> np.ndarray:
 
 def fetch_ops_wind(init: str, hour: str = "00") -> np.ndarray:
     """业务 c00 5 快照 10m 风速均值 → 日均风速近似（m/s）。"""
+    from .gefs_io import read_fields
+
     speeds = []
     for s in WIND_STEPS:
         p = _fetch_grib(init, s, hour)
-        u = _read_field(p, {"typeOfLevel": "heightAboveGround", "level": 10},
-                        ("u10", "u"))
-        v = _read_field(p, {"typeOfLevel": "heightAboveGround", "level": 10},
-                        ("v10", "v"))
-        speeds.append(np.sqrt(u.astype(np.float64) ** 2 + v ** 2))
+        w = read_fields(p, {"typeOfLevel": "heightAboveGround", "level": 10},
+                        {"u": ("u10", "u"), "v": ("v10", "v")})
+        speeds.append(np.sqrt(w["u"].astype(np.float64) ** 2 + w["v"] ** 2))
     return np.mean(speeds, axis=0).astype(np.float32)
+
+
+def fetch_ops_t2m_mean(init: str, hour: str = "00") -> np.ndarray:
+    """业务 c00 5 快照 2m 气温均值 → 冻结掩膜用日均气温近似（°C）。
+
+    与 fetch_ops_wind 读同一批已缓存 grib（pgrb2a 含 heightAboveGround=2
+    的 t2m），无额外下载。Phase D：snowfall 通道的确定性冻结判据。
+    """
+    vals = []
+    for s in WIND_STEPS:
+        p = _fetch_grib(init, s, hour)
+        t = _read_field(p, {"typeOfLevel": "heightAboveGround", "level": 2},
+                        ("t2m", "t"))
+        vals.append(t.astype(np.float64) - 273.15)
+    return np.mean(vals, axis=0).astype(np.float32)
+
+
+def snowfall_members(
+    tp_members: np.ndarray, t2m_mean_c: np.ndarray | float,
+    freeze_c: float = SNOW_FREEZE_C,
+) -> np.ndarray:
+    """冻结掩膜：t2m < freeze_c 处降水计为降雪（mm 水当量），否则 0。
+
+    Phase D 新增，与基准暴雪真值同口径（scenarios.py 的 SNOW_FREEZE_MASK_C
+    掩膜逻辑：气温 ≥ 0.5°C 的降水是雨不是雪）。支持任意可广播形状：
+    t2m_mean_c可为 (31,41) 网格、标量，或与 tp_members 逐成员对齐的数组
+    （若未来有逐成员气温，掩膜自动升级为逐成员判定）。
+    """
+    mask = (np.asarray(t2m_mean_c) < freeze_c).astype(
+        np.asarray(tp_members).dtype)
+    return (np.asarray(tp_members) * mask).astype(np.float32)
 
 
 class ImpactCars:
@@ -204,7 +233,9 @@ def _frac_ge(m: np.ndarray, thr: float) -> float:
 
 def _city_records(tp_members: np.ndarray, wind_members: np.ndarray,
                   valid: date, tp: ImpactCars, wind: ImpactCars,
-                  cities: list[dict]) -> list[dict]:
+                  cities: list[dict],
+                  t2m_mean_c: np.ndarray | None = None,
+                  snow_cfg: dict | None = None) -> list[dict]:
     records = []
     for c in cities:
         ix = int(np.argmin(np.abs(GRID_LON - c["lon"])))
@@ -212,7 +243,7 @@ def _city_records(tp_members: np.ndarray, wind_members: np.ndarray,
         mt = tp_members[0, :, 0, iy, ix].astype(np.float64)   # mm/day
         mw = wind_members[0, :, 0, iy, ix].astype(np.float64)  # m/s
         rt, wt = tp.thresholds, wind.thresholds
-        records.append({
+        rec = {
             "region": c["region"], "lat": c["lat"], "lon": c["lon"],
             "name_zh": c.get("name_zh", c["region"]),
             "valid_date": valid.isoformat(), "covered": True,
@@ -225,16 +256,45 @@ def _city_records(tp_members: np.ndarray, wind_members: np.ndarray,
             "wind_member_max_ms": round(float(mw.max()), 1),
             "p_harm_wind": round(_frac_ge(mw, wt["hard"]), 3),
             "p_harm_wind_intense": round(_frac_ge(mw, wt["intense"]), 3),
-        })
+        }
+        # Phase D：wind 高档位（17.2/24.5，与基准台风真值同口径；
+        # 旧配置缺键时优雅跳过）
+        wty, wex = wt.get("typhoon"), wt.get("extreme")
+        if wty is not None:
+            rec["p_harm_wind_typhoon"] = round(_frac_ge(mw, wty), 3)
+        if wex is not None:
+            rec["p_harm_wind_extreme"] = round(_frac_ge(mw, wex), 3)
+        # Phase D：snowfall 通道（APCP × 冻结掩膜；需 t2m 场与 snow 配置）
+        if snow_cfg is not None and t2m_mean_c is not None:
+            st = snow_cfg["thresholds"]
+            freeze_c = float(snow_cfg.get("freeze_mask_c", SNOW_FREEZE_C))
+            t2m_c = float(t2m_mean_c[iy, ix])
+            snow = snowfall_members(mt, t2m_c, freeze_c)
+            rec["t2m_mean_c"] = round(t2m_c, 1)
+            rec["snow_freeze_mask_on"] = bool(t2m_c < freeze_c)
+            rec["p_harm_snow"] = round(_frac_ge(snow, st["hard"]), 3)
+            rec["p_harm_snow_intense"] = round(_frac_ge(snow, st["intense"]), 3)
+        records.append(rec)
     return records
 
 
 def daily_update_impact(valid: date | None = None, hour: str = "00") -> dict:
-    """主入口：拉业务 GEFS（默认有效日 = 今天+2）、双变量推理、写概率表+历史。"""
+    """主入口：拉业务 GEFS（默认有效日 = 今天+2）、双变量推理、写概率表+历史。
+
+    Phase D：同批 grib 加读 2m 气温（冻结掩膜），输出 snowfall 通道与
+    wind 高档位（17.2/24.5）。
+    """
+    from .gefs_io import prune_gefs_cache
+
+    try:
+        prune_gefs_cache(keep_days=14)
+    except Exception as e:  # noqa: BLE001 — 清理失败不阻断发布
+        logger.warning(f"gefs cache prune skipped: {e}")
     valid = valid or (date.today() + timedelta(days=2))
     init = valid - timedelta(days=2)
     tp_fc = fetch_ops_apcp(init.isoformat(), hour)[None, None]   # (1,1,31,41)
     wd_fc = fetch_ops_wind(init.isoformat(), hour)[None, None]
+    t2m_fc = fetch_ops_t2m_mean(init.isoformat(), hour)          # (31,41) °C
 
     tp = ImpactCars("tp")
     wind = ImpactCars("wind")
@@ -250,20 +310,27 @@ def daily_update_impact(valid: date | None = None, hour: str = "00") -> dict:
                        "calibration wins). Criterion v2.",
         "forecast_source": f"NOAA ops GEFS c00 pgrb2a 0p50 "
                            f"APCP f{'+'.join(TP_STEPS)} sum; "
-                           f"UGRD/VGRD10 f{'+'.join(WIND_STEPS)} mean",
+                           f"UGRD/VGRD10 f{'+'.join(WIND_STEPS)} mean; "
+                           f"T2M f{'+'.join(WIND_STEPS)} mean (freeze mask)",
         "generated_for": valid.isoformat(),
-        "p_trigger": {"rain": RAIN_P_TRIG, "wind": WIND_P_TRIG},
+        "p_trigger": {"rain": RAIN_P_TRIG, "wind": WIND_P_TRIG,
+                      "snow": SNOW_P_TRIG},
         "provenance": {v: cfg_all[v]["provenance"] for v in ("tp", "wind")},
         "caveats": [
             "概率为 30 成员计数（地板 1/30≈3.3%），与 t2m 通道连续 CDF 口径不同",
             "业务 GEFS 与再预报 v12 存在版本漂移（与 t2m 通道同款风险）",
-            "无阵风数据：日均风速是大风弱代理（10.8 m/s 日均已近格点 p99）",
+            "无阵风数据：日均风速是大风弱代理；17.2/24.5 高档位同为日均口径"
+            "（基准阵风安全线 GUST 24.5 无法由本通道服务）",
+            "降雪冻结掩膜取未扰动 c00 日均气温（确定性，非逐成员）——概率仅"
+            "来自 tp 成员散布，雨雪相位不确定性未入集合",
             "检验闭环为模型锚定观测（cars_verify_impact，有效日 00z 短时效场），"
             "绝对校准由 CRPS 侧 ERA5 out-of-sample 审计承担",
             "tp 高尾补全档有 +1.7% CRPS 代价（防灾口径：漏报 49%→23%，价值 6×）",
         ],
         "records": _city_records(tp_members, wind_members, valid,
-                                 tp, wind, load_cities()),
+                                 tp, wind, load_cities(),
+                                 t2m_mean_c=t2m_fc,
+                                 snow_cfg=cfg_all.get("snow")),
     }
     out = out_json_path()
     out.parent.mkdir(parents=True, exist_ok=True)

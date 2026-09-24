@@ -7,31 +7,39 @@ on:
     # 北京时间每天 20:00 (UTC 12:00)
     - cron: '0 12 * * *'
   push:
+    branches: [main]
     paths:
       - 'earthbench/**'
       - 'pyproject.toml'
       - '.github/workflows/daily-report.yml'
   workflow_dispatch:  # 允许手动触发
 
+# 同一时间只允许一条发布流水线：两次 force_orphan 推 gh-pages 并发互踩会丢历史。
+# 不取消进行中的运行（排队的等当前跑完），避免丢掉定时报告。
+concurrency:
+  group: daily-report
+  cancel-in-progress: false
+
+# id-token 已移除：本流水线未使用 OIDC / 云角色联邦
 permissions:
   contents: write
   pages: write
-  id-token: write
 
 jobs:
   generate-report:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    defaults:
-      run:
-        working-directory: .
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          # 全量历史：gh-pages 往返数据用 git archive 直接取，绕开 API 限流
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute cache keys
+        id: date
+        run: echo "week=$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -44,57 +52,46 @@ jobs:
           pip install --upgrade pip
           pip install -e .
 
-      - name: Fetch prior data from gh-pages (decisions + verification + accuracy + thresholds)
+      - name: Fetch prior data from gh-pages (git archive, no API rate limits)
+        # 用本地已 fetch 的 gh-pages 树单次流式导出，替代 30+ 次匿名 contents API + 逐文件 curl：
+        # 无限流、无 404 错误体落盘、状态原子一致。文件不存在时 tar 静默跳过（首次运行安全）。
         continue-on-error: true
         run: |
           mkdir -p published_reports
-          # Fetch historical decision files (for history tracking)
-          for f in $(curl -s "https://api.github.com/repos/showkeyjar/earth-bench/contents/?ref=gh-pages" | python3 -c "import sys,json; [print(x['name']) for x in json.load(sys.stdin) if x['name'].startswith('decisions_') and x['name'].endswith('.json')]" 2>/dev/null); do
-            curl -s "https://raw.githubusercontent.com/showkeyjar/earth-bench/gh-pages/$f" -o "published_reports/$f" || true
-          done
-          # Fetch prior verification files (so accuracy_trend can accumulate)
-          for f in $(curl -s "https://api.github.com/repos/showkeyjar/earth-bench/contents/?ref=gh-pages" | python3 -c "import sys,json; [print(x['name']) for x in json.load(sys.stdin) if x['name'].startswith('verification_') and x['name'].endswith('.json')]" 2>/dev/null); do
-            curl -s "https://raw.githubusercontent.com/showkeyjar/earth-bench/gh-pages/$f" -o "published_reports/$f" || true
-          done
-          # Fetch prior calibration data (thresholds + log + status)
-          for f in thresholds.json calibration_log.json calibration_status.json accuracy_trend.json; do
-            curl -s "https://raw.githubusercontent.com/showkeyjar/earth-bench/gh-pages/$f" -o "published_reports/$f" || true
-          done
+          if ! git rev-parse --verify origin/gh-pages >/dev/null 2>&1; then
+            echo "::warning::gh-pages 分支不存在（首次运行），从零开始"
+            exit 0
+          fi
+          # decisions/verification/校准与精度历史位于 gh-pages 根；
+          # CARS 历史随 peaceiris 发布同样落在根（cars_*.json + cars_history/）。
+          git archive origin/gh-pages | tar -x -C published_reports --wildcards \
+            'decisions_*.json' 'verification_*.json' \
+            thresholds.json calibration_log.json calibration_status.json accuracy_trend.json \
+            'cars_*.json' 'cars_history/*' || true
           echo "Prior data ready:"
           ls -1 published_reports/decisions_*.json 2>/dev/null || echo "(no decisions)"
           ls -1 published_reports/verification_*.json 2>/dev/null || echo "(no verifications)"
           ls -1 published_reports/thresholds.json 2>/dev/null || echo "(no thresholds)"
-          ls -1 published_reports/calibration_log.json 2>/dev/null || echo "(no calibration log)"
-
-      - name: Fetch CARS history from gh-pages (forecast archive + verification)
-        continue-on-error: true
-        run: |
-          mkdir -p published_reports/cars_history
-          for f in $(curl -s "https://api.github.com/repos/showkeyjar/earth-bench/contents/published_reports?ref=gh-pages" | python3 -c "import sys,json; [print(x['name']) for x in json.load(sys.stdin) if x['name'].startswith('cars_') and x['name'].endswith('.json')]" 2>/dev/null); do
-            curl -s "https://raw.githubusercontent.com/showkeyjar/earth-bench/gh-pages/published_reports/$f" -o "published_reports/$f" || true
-          done
-          for f in $(curl -s "https://api.github.com/repos/showkeyjar/earth-bench/contents/published_reports/cars_history?ref=gh-pages" | python3 -c "import sys,json; [print(x['name']) for x in json.load(sys.stdin) if x['name'].startswith('forecast_')]" 2>/dev/null); do
-            curl -s "https://raw.githubusercontent.com/showkeyjar/earth-bench/gh-pages/published_reports/cars_history/$f" -o "published_reports/cars_history/$f" || true
-          done
           ls -1 published_reports/cars_*.json 2>/dev/null || echo "(no cars history)"
 
       - name: Restore GEFS grib cache
-        # f048/f000 �?GRIB �?init 日期命名且不可变；用 append-only 缓存避免每日重下 ~50MB�?
+        # f048/f000 等 GRIB 按 init 日期命名且不可变；append-only 缓存避免每日重下 ~50MB。
+        # 缓存键按周滚动：一周内命中精确键不再重复上传全量缓存，restore-keys 前缀兜底跨周增量。
         uses: actions/cache@v4
         with:
           path: earthbench/data/gefs_cache
-          key: gefs-cache-${{ github.run_number }}
+          key: gefs-cache-${{ steps.date.outputs.week }}
           restore-keys: gefs-cache-
 
       - name: Install CARS deps (cfgrib/eccodes + crps-cars)
-        # crps-cars 不发布到 PyPI，需�?CRPS 源码安装（仓库变�?CRPS_REPO_URL 可覆盖）�?
-        # 失败 �?CARS 板块自动降级，不阻断主流程�?
+        # crps-cars 不发布到 PyPI，需从 CRPS 源码安装（仓库变量 CRPS_REPO_URL 可覆盖）。
+        # 失败时 CARS 板块自动降级，不阻断主流程。
         continue-on-error: true
         run: |
           pip install cfgrib eccodes xarray numpy || true
           if ! python -c "import crps_cars" 2>/dev/null; then
             CRPS_REPO="${CRPS_REPO_URL:-https://github.com/showkeyjar/CRPS.git}"
-            echo "crps-cars 未安装，�?$CRPS_REPO 安装"
+            echo "crps-cars 未安装，从 $CRPS_REPO 安装"
             if [ ! -d ../CRPS ]; then
               git clone --depth 1 "$CRPS_REPO" ../CRPS || true
             fi
@@ -104,16 +101,19 @@ jobs:
           fi
 
       - name: CARS verify closed loop (score past forecasts)
-        # 检验闭环：对最近一个已过有效日的预报对答案（Brier/命中/漏报累积）�?
-        # 失败不阻断主流程�?
+        # 检验闭环：对最近一个已过有效日的预报对答案（Brier/命中/漏报累积）。
+        # 失败不阻断主流程。
         continue-on-error: true
         env:
           QWEATHER_API_KEY: ${{ secrets.QWEATHER_API_KEY }}
           CARS_DATA_DIR: published_reports
         run: |
           python -m earthbench.cars_verify || echo "::warning::CARS verify skipped"
+
       - name: CARS impact verify closed loop (score past rain/wind forecasts)
-        # �����������ջ���ģ��ê���۲⣺��Ч�� 00z f006-f024����ʧ�ܽ�����
+        # 冲击变量检验闭环（模型锚定观测）：有效日 00z f006-f024 APCP 求和 = 24h 雨量。
+        # 失败不阻断主流程（continue-on-error 与注释意图对齐）。
+        continue-on-error: true
         env:
           CARS_DATA_DIR: published_reports
         run: |
@@ -121,15 +121,17 @@ jobs:
 
       - name: CARS ensemble forecast update (48h harm probabilities)
         # CRPS 研究项目对接：拉当日业务 GEFS f048（t2m/r2/tmax/tmin）→
-        # 冻结 CARS 模型 �?城市危害概率表（湿球/日最�?日最低口径）�?
-        # 失败时日报自动降级为�?CARS 板块，不阻断主流程�?
+        # 冻结 CARS 模型出城市危害概率表（湿球/日最高/日最低口径）。
+        # 失败时日报自动降级为无 CARS 板块，不阻断主流程。
         continue-on-error: true
         env:
           CARS_DATA_DIR: published_reports
         run: |
           python -m earthbench.cars_serve || echo "::warning::CARS update skipped"
+
       - name: CARS impact forecast update (48h rain/wind probabilities)
-        # ��������ڶ�ͨ��������/��磬�о� v2����ʧ��ʱ�ձ��Զ�����������������̡�
+        # 冲击变量第二服务通道（暴雨/大风，判据 v2）。失败时日报自动降级，不阻断主流程。
+        continue-on-error: true
         env:
           CARS_DATA_DIR: published_reports
         run: |
@@ -141,21 +143,20 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
           OLLAMA_BASE_URL: http://localhost:11434
-          # CARS 面板/JSON �?published_reports 读当日新表与检验历�?
-          #（verify/update 两步写入的同目录，随 gh-pages 往返持久化�?
+          # CARS 面板/JSON 从 published_reports 读当日新表与检验历史
+          #（verify/update 两步写入的同目录，随 gh-pages 往返持久化）。
           CARS_DATA_DIR: published_reports
         run: |
-          # Remove today's verification file so it gets regenerated with latest fixes
-          TODAY=$(date -u -d "+8 hours" +%Y%m%d)
+          # 删除 D-2 验证文件以用最新修复重新生成（历史修正机制）
           TARGET=$(date -u -d "+8 hours -2 days" +%Y%m%d)
           rm -f "published_reports/verification_${TARGET}.json" 2>/dev/null || true
           echo "Removed verification_${TARGET}.json for re-generation"
           python -m earthbench.publish_pipeline --run
 
       - name: Sync UI assets into publish bundle
-        # published_reports �?gh-pages/Cloudflare 的发布目录；
-        # 每次发布前把 main 根最新的 index.html 与域�?SEO 文件同步进去�?
-        # 避免线上 UI 一直停留在旧版本（之前 published_reports/index.html �?7/26 旧版）�?
+        # published_reports 是 gh-pages/Cloudflare 的发布目录；
+        # 每次发布前把 main 根最新的 index.html 与域名/SEO 文件同步进去，
+        # 避免线上 UI 一直停留在旧版本。
         run: |
           cp index.html published_reports/index.html
           cp CNAME published_reports/CNAME || true
@@ -171,22 +172,24 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./published_reports
           force_orphan: true
-          commit_message: "📊 Daily report: ${{ github.event.head_commit.timestamp }}"
+          # 定时触发没有 head_commit，回退到运行开始时间
+          commit_message: "📊 Daily report: ${{ github.event.head_commit.timestamp || github.run_started_at }}"
 
       - name: Deploy to Cloudflare Pages
-        # 恢复原有自动部署：与 GitHub Pages 同一�?published_reports 一起推�?earth-ai.fun
-        # 注意：GitHub Actions 不允许在步骤 if 中使�?secrets 上下文，
-        # 因此这里始终运行，由下方 bash 检�?CLOUDFLARE_ACCOUNT_ID 是否存在�?
-        # 缺失则给出清晰警告并正常退出（不部署），不会让 job 失败�?
-        # continue-on-error：即�?Cloudflare 部署失败，也绝不阻断上面�?GitHub Pages 部署�?
+        # 与 GitHub Pages 同一份 published_reports 一起推 earth-ai.fun。
+        # GitHub Actions 不允许在步骤 if 中使用 secrets 上下文，
+        # 因此这里始终运行，由下方 bash 检查 CLOUDFLARE_ACCOUNT_ID 是否存在，
+        # 缺失则给出清晰警告并正常退出（不部署），不会让 job 失败。
+        # continue-on-error：即使 Cloudflare 部署失败，也绝不影响上面的 GitHub Pages 部署。
         continue-on-error: true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            echo "::warning::CLOUDFLARE_ACCOUNT_ID 未配置；将尝试直接用 CLOUDFLARE_API_TOKEN 部署（若 token 为单账户作用域则可能成功）�?
-            echo "::warning::若失败，请在 Cloudflare 控制台首页复�?Account ID，到仓库 Settings �?Secrets and variables �?Actions 添加名为 CLOUDFLARE_ACCOUNT_ID 的密钥后重跑�?
+            echo "::warning::CLOUDFLARE_ACCOUNT_ID 未配置；将尝试直接用 CLOUDFLARE_API_TOKEN 部署（若 token 为单账户作用域则可能成功）。"
+            echo "::warning::若失败，请在 Cloudflare 控制台首页复制 Account ID，到仓库 Settings → Secrets and variables → Actions 添加名为 CLOUDFLARE_ACCOUNT_ID 的密钥后重跑。"
           fi
-          npm install -g wrangler
+          # 固定 wrangler 大版本，避免 latest 破坏性更新弄坏每日部署
+          npm install -g wrangler@4
           wrangler pages deploy published_reports --project-name earth-bench --commit-dirty=true

@@ -1,0 +1,17 @@
+version: 2
+updates:
+  # GitHub Actions 版本更新（actions 固定 tag，dependabot 提 PR 升级）
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(ci)"
+
+  # Python 依赖更新（dev/test 依赖为主，运行时依赖谨慎跟进）
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"

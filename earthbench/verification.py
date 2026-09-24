@@ -20,8 +20,7 @@ from __future__ import annotations
 
 import json
 import logging
-import math
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -93,14 +92,16 @@ def fetch_historical_weather(location_id: str, date_str: str) -> dict[str, Any]:
     }
 
 
-def fetch_firms_fire_data(region_id: str) -> list[dict]:
+def fetch_firms_fire_data(region_id: str) -> list[dict] | None:
     """获取 NASA FIRMS 卫星火点数据 (复用 data_collectors 中的函数)。
 
-    返回该区域附近的近7天火点列表。
+    返回该区域附近的近7天火点列表；区域未注册坐标或查询不可用时返回 None
+    （调用方不得把 None 当「无火」——那是不可验证，不是阴性）。
     """
     coords = REGION_COORDS.get(region_id)
     if not coords:
-        return []
+        logger.warning(f"[FIRMS] 区域 {region_id} 未注册坐标，无法查询火点")
+        return None
 
     lat = float(coords["lat"])
     lng = float(coords["lng"])
@@ -118,8 +119,9 @@ def verify_fire(prediction: dict[str, Any], region_id: str) -> dict[str, Any]:
     """验证火灾预测: 用 NASA FIRMS 卫星火点数据验证。
 
     关键修正：FIRMS 未探测到火点 ≠ 一定无火（受卫星探测下限/云遮挡影响）；
-    当无 FIRMS 密钥或查询失败时，绝不能把「无数据」当「无火灾」。
-    - 无 FIRMS_MAP_KEY → insufficient_data（此前 CI 不配 key，导致每次火险预测被误判为漏报）
+    当无 FIRMS 密钥、查询失败或区域未注册时，绝不能把「无数据」当「无火灾」。
+    - 无 FIRMS_MAP_KEY / 查询失败 / 未知区域 → insufficient_data（此前 CI 不配 key，
+      导致每次火险预测被误判为漏报；网络失败误判为实际无火、已验证）
     - 有数据且 0 火点 → actual=False（verified，附带探测下限 caveat）
     """
     if not FIRMS_MAP_KEY:
@@ -132,6 +134,15 @@ def verify_fire(prediction: dict[str, Any], region_id: str) -> dict[str, Any]:
         }
 
     firms_data = fetch_firms_fire_data(region_id)
+
+    if firms_data is None:
+        return {
+            "actual": None,
+            "verification_source": "NASA FIRMS",
+            "verification_evidence": "FIRMS 查询失败或区域未注册坐标，无法验证火险（不做无火推断）",
+            "verification_status": "insufficient_data",
+            "fire_count": None,
+        }
 
     if firms_data:
         return {

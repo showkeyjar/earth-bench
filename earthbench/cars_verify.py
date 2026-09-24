@@ -31,7 +31,6 @@ import numpy as np
 
 from .cars_serve import (
     HEAT_MAX_C,
-    PACKAGE_DATA,
     P_TRIG,
     data_dir,
     history_dir,
@@ -86,20 +85,13 @@ def _obs_gefs_f000(valid: date, cities: list[dict]) -> tuple[dict[str, float], d
     """GEFS c00 当日 00z f000：返回 (t2m 读数°C, tmax 场°C)。"""
     import xarray as xr
 
-    ymd = valid.isoformat().replace("-", "")
-    name = "gec00.t00z.pgrb2a.0p50.f000"
-    cache = PACKAGE_DATA / "gefs_cache"
-    cache.mkdir(parents=True, exist_ok=True)
-    local = cache / f"{ymd}00_{name}"
-    if not local.exists():
-        urllib.request.urlretrieve(
-            f"https://noaa-gefs-pds.s3.amazonaws.com/gefs.{ymd}/00/atmos/"
-            f"pgrb2ap5/{name}", local)
+    from .gefs_io import fetch_grib
+
+    local = fetch_grib(valid.isoformat(), "000")
     ds = xr.open_dataset(
         local, engine="cfgrib", backend_kwargs={"indexpath": ""},
         filter_by_keys={"typeOfLevel": "heightAboveGround", "level": 2},
     )
-    sel = dict(latitude=slice(50.0, 20.0), longitude=slice(100.0, 140.0))
     t2m: dict[str, float] = {}
     tmax: dict[str, float] = {}
     for c in cities:
