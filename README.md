@@ -32,7 +32,7 @@ We don't just predict numbers — we decide actions: *Should we activate Level 1
 
 ### CARS Integration (probabilistic decision layer)
 
-Integrated with the CRPS/CARS research project (`D:\code\ai\CRPS`):
+Integrated with the CRPS/CARS research project ([github.com/showkeyjar/CRPS](https://github.com/showkeyjar/CRPS)，本地 `D:\code\ai\CRPS`):
 
 | Component | What it does |
 |-----------|--------------|
