@@ -30,6 +30,10 @@ class ScenarioCategory(str, Enum):
     DROUGHT = "drought"  # 干旱
     HEAT = "heat"  # 高温热浪
     ECOLOGY = "ecology"  # 生态风险
+    LANDSLIDE = "landslide"  # 滑坡/泥石流（Phase A1 扩展）
+    TYPHOON = "typhoon"  # 台风/大风（Phase A2 扩展）
+    COLD = "cold"  # 寒潮/冰冻（Phase B1 扩展）
+    SNOW = "snow"  # 暴雪/道路结冰（Phase B2 扩展）
 
     @classmethod
     def from_string(cls, value: str) -> ScenarioCategory:
@@ -42,7 +46,7 @@ class ScenarioCategory(str, Enum):
         if cat is None:
             logging.getLogger(__name__).warning(
                 "Unknown scenario category %r — falling back to FIRE "
-                "(expected one of: fire/flood/drought/heat/ecology)",
+                "(expected one of: fire/flood/drought/heat/ecology/landslide/typhoon/cold/snow)",
                 value,
             )
             return cls.FIRE
@@ -55,6 +59,10 @@ _CATEGORY_MAP: dict[str, ScenarioCategory] = {
     "drought": ScenarioCategory.DROUGHT,
     "heat": ScenarioCategory.HEAT,
     "ecology": ScenarioCategory.ECOLOGY,
+    "landslide": ScenarioCategory.LANDSLIDE,
+    "typhoon": ScenarioCategory.TYPHOON,
+    "cold": ScenarioCategory.COLD,
+    "snow": ScenarioCategory.SNOW,
 }
 
 
@@ -69,6 +77,23 @@ class Observation(BaseModel):
     confidence: float = 1.0  # 0-1
 
 
+class ExposureProfile(BaseModel):
+    """暴露与脆弱性画像（Phase B 扩展，docs/expansion-plan.md 层 2）。
+
+    设计不变量：暴露只调制「该采取哪个层级的动作」（alert/dispatch），
+    不改写物理真值——FWI 52 在无人区依然是极高火险，但动作等级不同。
+
+    全部字段可选/缺省，向后兼容：不提供 exposure 的场景行为完全不变。
+    分级查表（E0-E3）见 scenarios.py::infer_exposure_class（披露假设）。
+    """
+
+    population_density_class: str = "unknown"  # high / mid / low / none
+    land_use: str = "unknown"  # urban / rural / forest / farmland
+    critical_infrastructure: list[str] = Field(default_factory=list)  # 如 ["hospital"]
+    vulnerable_group_ratio: float | None = Field(default=None, ge=0.0, le=1.0)
+    outdoor_activity_level: str = "unknown"  # high(假期/农忙) / normal / low
+
+
 class ScenarioContext(BaseModel):
     """场景上下文 — 多源时序观测集合。"""
 
@@ -77,6 +102,7 @@ class ScenarioContext(BaseModel):
     observations: list[Observation]
     region: str
     horizon_hours: int = 72  # 决策时间窗口
+    exposure: ExposureProfile | None = None  # 缺省 → 无暴露画像，行为不变
 
 
 class DecisionOutput(BaseModel):

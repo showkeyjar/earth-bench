@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
 """阈值自校准（earthbench.calibration）存储测试。"""
 from __future__ import annotations
 
 import json
 
 from earthbench.calibration import (
-    save_thresholds,
     append_calibration_log,
     load_thresholds,
+    save_thresholds,
 )
 
 

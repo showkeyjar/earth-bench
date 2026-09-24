@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 """共享湿球公式（earthbench.weather）测试。"""
 from __future__ import annotations
 
-from earthbench.weather import wet_bulb_stull, wet_bulb_inv
+from earthbench.weather import wet_bulb_inv, wet_bulb_stull
 
 
 def test_wet_bulb_reference_points():

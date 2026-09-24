@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """判别力扩展套件（adversarial suite）测试。
 
 核心断言：规则 baseline 在基础套件上 100%，但在对抗套件上必然漏判 ——

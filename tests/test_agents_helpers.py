@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """agents 辅助函数（连续高温天数推断）测试。"""
 from __future__ import annotations
 

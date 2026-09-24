@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 """LLM 决策解析（earthbench.llm.parse_yes_no）测试。"""
 from __future__ import annotations
 
-from earthbench.llm import parse_yes_no, domain_hint
+from earthbench.llm import domain_hint, parse_yes_no
 
 
 def test_explicit_decision():

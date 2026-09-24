@@ -1,5 +1,5 @@
 {
-  "_comment": "CARS 冲击变量（tp=暴雨 / wind=大风）冻结服务配置。单一来源：cars_serve_impact.py 读取。超参 = CRPS 滚动回测诚实选择的众数（tp/wind 一致：k30/pca16/alpha0/beta1/w121，各 10/15 年）。尾部档位由漏报深度判据 v2 决定：tp deficit +1.57σ（深破裂）→ 高尾补全=保险+价值；wind +0.52σ（浅越界）→ raw=校准值钱。阈值：暴雨 50mm/日（国标）、大暴雨 100mm/日；大风 10.8 m/s（六级线，日均口径）、强风 13.9 m/s（七级线）。触发成本比：rain=flood 0.3；wind 无既有类别，取 0.3（披露假设）。",
+  "_comment": "CARS 冲击变量（tp=暴雨 / wind=大风 / snow=暴雪派生）冻结服务配置。单一来源：cars_serve_impact.py 读取。超参 = CRPS 滚动回测诚实选择的众数（tp/wind 一致：k30/pca16/alpha0/beta1/w121，各 10/15 年）。尾部档位由漏报深度判据 v2 决定：tp deficit +1.57σ（深破裂）→ 高尾补全=保险+价值；wind +0.52σ（浅越界）→ raw=校准值钱。阈值：暴雨 50mm/日（国标）、大暴雨 100mm/日；大风 10.8 m/s（六级线，日均口径）、强风 13.9 m/s（七级线）、台风级 17.2 m/s（八级交通停运线，GB/T 19201-2006，Phase D 与基准台风真值同口径）、极端 24.5 m/s（十级临设参考档，日均口径）。snow 为 tp 的派生通道（APCP × 冻结掩膜 t2m<0.5°C，GB/T 28592-2012 降雪等级水当量口径，与基准暴雪真值同口径；冻结掩膜取未扰动 c00 日均气温，确定性判定，披露）。触发成本比：rain=flood 0.3；wind 无既有类别取 0.3（披露假设）；snow=eval snow 0.3（构造性同步）。",
   "tp": {
     "archive": "cars_tp_archive.npz",
     "model": "SeasonalCarsModel",
@@ -30,14 +30,25 @@
     },
     "tail_completion": null,
     "clip_min": 0.0,
-    "thresholds": {"hard": 10.8, "intense": 13.9},
+    "thresholds": {"hard": 10.8, "intense": 13.9, "typhoon": 17.2, "extreme": 24.5},
     "units": "m/s (daily mean)",
     "provenance": {
       "selected_in_rolling_years": "10/15 (modal)",
       "rolling_crps_2002_2016": 0.5200,
       "crpss_vs_seasonal": 0.0357,
       "miss_depth_deficit_sigma": 0.52,
-      "value_verdict": "calibration wins; completion loses 10-20% mean V (shallow rupture)"
+      "value_verdict": "calibration wins; completion loses 10-20% mean V (shallow rupture)",
+      "phase_d_tiers": "typhoon 17.2 / extreme 24.5 = GB/T 19201-2006 八级/十级下限（日均口径代理，与基准台风真值同口径；阵风 GUST 24.5 无数据，披露）"
+    }
+  },
+  "snow": {
+    "derived_from": "tp",
+    "thresholds": {"hard": 10.0, "intense": 20.0},
+    "freeze_mask_c": 0.5,
+    "units": "mm/day water-equivalent (APCP × freeze mask)",
+    "provenance": {
+      "basis": "GB/T 28592-2012 降雪等级（暴雪 10 / 大暴雪 20 mm 水当量）；冻结掩膜 t2m < 0.5°C 与基准暴雪真值同口径（Phase D）",
+      "disclosed": "冻结掩膜取未扰动 c00 日均气温（确定性，非逐成员扰动）；概率仅来自 tp 成员散布；APCP 为水当量（积雪深度需雪水比换算，未做）"
     }
   }
 }

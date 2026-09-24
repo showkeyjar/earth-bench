@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Agent 对比报告：rule vs cars（准确率 + 经济价值 V）。
 
 用法:
@@ -22,7 +21,8 @@ from earthbench.eval import ValueEvaluator
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--category", default="all",
-                    choices=["all", "fire", "flood", "drought", "heat"])
+                    choices=["all", "fire", "flood", "drought", "heat", "landslide",
+                             "typhoon", "cold", "snow"])
     args = ap.parse_args()
 
     bench = AlertBenchEvaluator()

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
-from .models import ScenarioContext, DecisionOutput
+from .models import DecisionOutput, ScenarioContext
 from .templates import TemplateEngine
 
 
@@ -197,12 +197,42 @@ class ValueEvaluator:
         "drought": 0.1, # 干旱缓解措施便宜，损失巨大
         "heat": 0.3,
         "ecology": 0.3,
+        # 披露假设：滑坡转移避险成本/损失比，暂沿 wind 通道 0.3 先例
+        # （docs/expansion-plan.md 层 2.5：待历史灾损数据校准）
+        "landslide": 0.3,
+        # 披露假设：台风防风加固/停工停运成本/损失比，暂沿 wind 通道 0.3 先例
+        "typhoon": 0.3,
+        # 披露假设：寒潮防寒保暖/农业防冻成本/损失比，暂沿 0.3 先例
+        "cold": 0.3,
+        # 披露假设：暴雪除雪/交通管制成本/损失比，暂沿 0.3 先例
+        "snow": 0.3,
     }
 
-    def __init__(self, cost_ratio: dict[str, float] | None = None):
+    # 暴露分级损失权重（披露假设）：高暴露场景漏报罚分更重——
+    # 「在哪儿对了」和「对了多少」一样重要（docs/expansion-plan.md 4.3）
+    DEFAULT_EXPOSURE_LOSS_WEIGHT = {
+        "E0": 1.0,
+        "E1": 1.0,
+        "E2": 1.2,
+        "E3": 1.5,
+    }
+
+    def __init__(
+        self,
+        cost_ratio: dict[str, float] | None = None,
+        exposure_weighted: bool = False,
+    ):
         self.cost_ratio = dict(self.DEFAULT_COST_RATIO)
         if cost_ratio:
             self.cost_ratio.update(cost_ratio)
+        self.exposure_weighted = exposure_weighted
+        self.exposure_loss_weight = dict(self.DEFAULT_EXPOSURE_LOSS_WEIGHT)
+
+    def _loss_weight(self, row: dict) -> float:
+        """行级损失权重：未开启暴露加权或行无暴露分级时恒为 1.0。"""
+        if not self.exposure_weighted:
+            return 1.0
+        return self.exposure_loss_weight.get(row.get("exposure_class", "E0"), 1.0)
 
     def _expense(self, acted: bool, event: bool, ratio: float) -> float:
         if acted:
@@ -224,15 +254,20 @@ class ValueEvaluator:
             ratio = self.cost_ratio.get(cat, 0.3)
             acted = bool(r["predicted"])
             event = bool(r["ground_truth"])
-            exp_agent += self._expense(acted, event, ratio)
-            exp_perf += min(ratio, 1.0 if event else 0.0)
+            w = self._loss_weight(r)
+            if acted:
+                exp_agent += self._expense(acted, event, ratio)
+            elif event:
+                # 漏报：按暴露分级加权（E3 漏报更贵；默认恒为 1.0）
+                exp_agent += w
+            exp_perf += min(ratio, w if event else 0.0)
         # 气候学基准：样本内更优的常数策略（永远预警 vs 永不预警二选一）
         n = len(rows)
         base_rate = sum(1 for r in rows if r["ground_truth"]) / n
         clim_always = sum(
             self.cost_ratio.get(r.get("category", "heat"), 0.3) for r in rows
         )
-        clim_never = sum(1.0 for r in rows if r["ground_truth"])
+        clim_never = sum(self._loss_weight(r) for r in rows if r["ground_truth"])
         exp_clim = min(clim_always, clim_never)
 
         v = (
@@ -248,3 +283,53 @@ class ValueEvaluator:
             "base_rate": round(base_rate, 3),
             "cost_ratio": self.cost_ratio,
         }
+
+
+class SectorValueEvaluator(ValueEvaluator):
+    """分行业经济价值评分（Phase B 层 2.5，docs/expansion-plan.md §5）。
+
+    同一组决策对不同行业的 cost-loss 结构不同（卫生 vs 交通 vs 农业
+    vs 能源）。首批行业成本比全部为**披露假设**（illustrative），待用
+    应急管理部门公开灾损年报校准；接口与 ValueEvaluator 完全兼容：
+    未指定行业或行业未登记时回退到灾种级默认成本比。
+    """
+
+    # 披露假设表：{行业: {灾种: 触发成本/损失比}}（覆盖灾种回退默认值）
+    SECTOR_COST_RATIO: dict[str, dict[str, float]] = {
+        "health": {
+            "heat": 0.15,   # 高温卫生应急便宜，健康损失巨大
+            "cold": 0.20,
+            "flood": 0.25,
+        },
+        "transport": {
+            "typhoon": 0.20,  # 停运成本相对事故损失低
+            "snow": 0.25,
+            "fog": 0.25,
+        },
+        "agriculture": {
+            "drought": 0.05,  # 灌溉便宜，绝收损失巨大
+            "flood": 0.25,
+            "cold": 0.20,
+            "snow": 0.25,
+        },
+        "energy": {
+            "cold": 0.35,     # 保供调度昂贵，缺电损失也大
+            "typhoon": 0.25,
+            "heat": 0.25,
+        },
+    }
+
+    def __init__(
+        self,
+        sector: str = "transport",
+        exposure_weighted: bool = False,
+    ):
+        ratios = {**ValueEvaluator.DEFAULT_COST_RATIO}
+        ratios.update(self.SECTOR_COST_RATIO.get(sector, {}))
+        super().__init__(cost_ratio=ratios, exposure_weighted=exposure_weighted)
+        self.sector = sector
+
+    def score(self, results: list[dict]) -> dict:
+        out = super().score(results)
+        out["sector"] = self.sector
+        return out

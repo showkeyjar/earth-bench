@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 """检验闭环（cars_verify）与湿球公式（cars_serve）测试。"""
 from __future__ import annotations
 
 import json
 
 import numpy as np
-import pytest
 
 from earthbench.cars_serve import wet_bulb_stull
 from earthbench.cars_verify import summary, verify

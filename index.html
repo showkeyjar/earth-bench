@@ -6,9 +6,9 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
 <!-- SEO Meta Tags -->
-<title>EarthBench — 每日环境风险AI预警 | 火灾·洪水·干旱·热浪</title>
-<meta name="description" content="EarthBench是全球首个地球决策智能基准测试框架。基于多源时空观测数据（卫星+气象站+传感器），每日自动生成中国20+区域的森林火险、洪涝、干旱和高温热浪风险预警。Decision > Prediction。">
-<meta name="keywords" content="EarthBench,AI决策,环境风险预警,森林火险,洪水预警,干旱监测,热浪预警,遥感,AI防灾减灾,地球科学,big data,benchmark,LLM Agent">
+<title>EarthBench — 环境风险AI预警与决策基准 | 8类灾种·83用例·历史锚定</title>
+<meta name="description" content="EarthBench 是地球决策智能基准测试框架：8 类灾种（火险·洪涝·干旱·热浪·台风·寒潮·暴雪·滑坡）、83 个测试用例、16 个对抗性判别用例，真值锚定 7 场真实灾害（郑州7·20、杜苏芮、通辽寒潮暴雪、重庆高温火险等），并提供本地 Qwen3.6-35B 的 LLM 评测赛道。Decision > Prediction。">
+<meta name="keywords" content="EarthBench,AI决策,环境风险预警,森林火险,洪水预警,干旱监测,热浪预警,台风路径,寒潮预警,暴雪预警,滑坡风险,遥感,AI防灾减灾,地球科学,benchmark,LLM Agent,决策基准">
 <meta name="author" content="Kejia Shao / EarthBench Team">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://earth-ai.fun/">
@@ -18,7 +18,7 @@
 <meta property="og:site_name" content="EarthBench">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:title" content="EarthBench — 每日环境风险AI预警日报">
-<meta property="og:description" content="基于多源时空观测数据的AI决策智能评测框架。今日监测XX个区域，触发XX次预警，准确率XX%。">
+<meta property="og:description" content="8 类灾种决策基准：83 用例 + 16 对抗判别用例，真值锚定郑州7·20、杜苏芮等 7 场真实灾害（8/8 一致），本地 Qwen3.6-35B LLM 赛道首跑对抗 62% vs 规则基线 0%。">
 <meta property="og:url" content="https://earth-ai.fun/">
 <meta property="og:image" content="https://earth-ai.fun/og-banner.png">
 <meta property="og:image:width" content="1200">
@@ -46,7 +46,7 @@
   "name": "EarthBench - Earth Decision Intelligence Benchmark",
   "alternateName": ["EarthBench", "地球决策智能基准测试"],
   "url": "https://earth-ai.fun/",
-  "description": "全球首个地球决策智能基准测试框架，测试AI能否利用多源时空观测数据做出真实世界的环境风险二元决策。",
+  "description": "地球决策智能基准测试框架：测试 AI 能否利用多源时空观测数据，对照国标阈值做出真实世界的环境风险二元决策；8 类灾种 83 用例，真值锚定 7 场真实灾害，含本地 LLM 评测赛道。",
   "author": {
     "@type": "Person",
     "name": "Kejia Shao"
@@ -70,11 +70,11 @@
   "@context": "https://schema.org",
   "@type": "Dataset",
   "name": "AlertBenchmarkSuite",
-  "description": "EarthBench AlertBench测试套件 — 覆盖森林火险、洪涝灾害、干旱、高温热浪四类灾种，L1-L4四级难度共20个测试用例的AI决策基准数据集。",
+  "description": "EarthBench AlertBench 测试套件 — 覆盖森林火险、洪涝、干旱、高温热浪、台风、寒潮、暴雪、滑坡八类灾种，L1-L4 四级难度共 83 个测试用例（含 16 个对抗性判别用例、17 个决策模板用例、10 个暴露物理用例），并以 7 场真实灾害的公开记录锚定真值函数的 AI 决策基准数据集。",
   "url": "https://github.com/showkeyjar/earth-bench",
   "license": "https://creativecommons.org/licenses/by/4.0/",
   "distribution": "api",
-  "keywords": "AI benchmark, Earth science decision intelligence, multi-hazard alert system"
+  "keywords": "AI benchmark, Earth science decision intelligence, multi-hazard alert system, adversarial evaluation, LLM evaluation"
 }
 </script>
 
@@ -97,7 +97,7 @@ body { font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
 }
 .header h1 { font-size: 1.3em; }
 .header .meta { font-size: 0.8em; opacity: 0.8; text-align: right; }
-.publication-badge { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 16px; border-radius: 20px; font-weight: bold; font-size: 0.9em; white-space: nowrap; box-shadow: 0 2px 8px rgba(102,126,234,0.4); }
+.publication-badge { background: #4a5568; color: white; padding: 4px 16px; border-radius: 20px; font-weight: bold; font-size: 0.9em; white-space: nowrap; }
 
 /* Mini Stats */
 .mini-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 10px; }
@@ -836,13 +836,21 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
   color: #a0aec0;
   line-height: 1.5;
 }
+/* 八类灾种表 / 基准矩阵表 — 克制的线条风 */
+.hazard-table-wrap { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow: hidden; margin-bottom: 20px; }
+.hazard-table { width: 100%; border-collapse: collapse; font-size: 0.88em; }
+.hazard-table th { background: #f7fafc; color: #2d3748; padding: 9px 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #e2e8f0; }
+.hazard-table td { padding: 8px 12px; border-bottom: 1px solid #edf2f7; color: #4a5568; vertical-align: top; line-height: 1.55; }
+.hazard-table tr:last-child td { border-bottom: none; }
+.hazard-table td:first-child { font-weight: 600; color: #2d3748; white-space: nowrap; }
+.bench-sub { font-size: 1.1em; color: #2d3748; margin: 26px 0 12px; }
 </style>
 </head>
 <body>
 <div class="dashboard">
   <div class="header">
     <div>
-      <h1>🌍 EarthBench · 每日环境风险预警</h1>
+      <h1>EarthBench · 每日环境风险预警</h1>
       <div style="font-size:0.75em;opacity:0.85;margin-top:2px;">Decision &gt; Prediction — AI 地球决策智能基准测试框架</div>
     </div>
     <div class="meta" id="header-meta"></div>
@@ -859,13 +867,13 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
   <!-- Social Share Bar -->
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
     <span style="font-size:0.8em;color:#718096;">分享今日报告:</span>
-    <button onclick="shareReport()" style="background:#667eea;color:white;border:none;padding:4px 12px;border-radius:15px;font-size:0.75em;cursor:pointer;">📤 复制链接</button>
-    <button onclick="copyToClipboard('telegram')" style="background:#0088cc;color:white;border:none;padding:4px 12px;border-radius:15px;font-size:0.75em;cursor:pointer;">✈️ Telegram</button>
-    <button onclick="copyToClipboard('twitter')" style="background:#1DA1F2;color:white;border:none;padding:4px 12px;border-radius:15px;font-size:0.75em;cursor:pointer;">🐦 Twitter</button>
+    <button onclick="shareReport()" style="background:#4a5568;color:white;border:none;padding:4px 12px;border-radius:15px;font-size:0.75em;cursor:pointer;">复制链接</button>
+    <button onclick="copyToClipboard('telegram')" style="background:#4a5568;color:white;border:none;padding:4px 12px;border-radius:15px;font-size:0.75em;cursor:pointer;">Telegram</button>
+    <button onclick="copyToClipboard('twitter')" style="background:#4a5568;color:white;border:none;padding:4px 12px;border-radius:15px;font-size:0.75em;cursor:pointer;">X / Twitter</button>
   </div>
 
   <div class="mini-stats">
-    <div class="mini-stat"><div class="num" style="color:#667eea;" id="s-total">-</div><div class="label">监测区域</div></div>
+    <div class="mini-stat"><div class="num" style="color:#4a5568;" id="s-total">-</div><div class="label">监测区域</div></div>
     <div class="mini-stat"><div class="num" style="color:#e53e3e;" id="s-alert">-</div><div class="label">有风险</div></div>
     <div class="mini-stat"><div class="num" style="color:#38a169;" id="s-safe">-</div><div class="label">安全</div></div>
     <div class="mini-stat"><div class="num" style="color:#dd6b20;" id="s-conf">-</div><div class="label">平均风险</div></div>
@@ -877,7 +885,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
   <!-- Global Overview Map -->
   <div class="overview-map-section">
     <div class="overview-map-header">
-      <span>🗺️ 全局风险总览</span>
+      <span>全局风险总览</span>
       <span id="overview-update-time" style="font-size:0.8em;color:#a0aec0;font-weight:normal;"></span>
     </div>
     <div id="overview-map"></div>
@@ -892,7 +900,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
   <!-- History Date Picker -->
   <div class="history-picker-section">
     <div class="history-picker-header">
-      <span>📅 历史报告核查</span>
+      <span>历史报告核查</span>
       <span style="font-size:0.78em;color:#a0aec0;font-weight:normal;">点击日期查看该日完整决策记录</span>
     </div>
     <div id="history-date-list" class="history-date-list"></div>
@@ -908,7 +916,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
   <!-- Verification / Accuracy Panel -->
   <div class="verification-section">
     <div class="verification-header">
-      <span>🎯 预测精度验证</span>
+      <span>预测精度验证</span>
       <span style="font-size:0.78em;color:#a0aec0;font-weight:normal;" id="verification-update-time"></span>
     </div>
     <div class="verification-stats" id="verification-stats">
@@ -929,7 +937,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
   <!-- Calibration / Threshold Panel -->
   <div class="calibration-section" id="calibration-panel" style="display:none;">
     <div class="calibration-header">
-      <span>🔧 模型自校准</span>
+      <span>模型自校准</span>
       <span style="font-size:0.78em;color:#a0aec0;font-weight:normal;" id="calibration-update-time"></span>
     </div>
     <div class="calibration-body">
@@ -945,7 +953,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
   <!-- Main grid -->
   <div class="main-grid">
     <div class="alert-section">
-      <div class="section-title-bar">📋 今日监测结果（点击行展开详细证据和推理过程）</div>
+      <div class="section-title-bar">今日监测结果（点击行展开详细证据和推理过程）</div>
       <div class="table-scroll">
         <table>
           <thead>
@@ -966,20 +974,20 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
 
     <!-- 近期预警（今日无预警时回看历史时间范围） -->
     <div class="recent-alerts-card" id="recent-alerts-card" style="display:none;margin-top:14px;">
-      <div class="section-title-bar">📡 近期环境风险预警（近 14 天）</div>
+      <div class="section-title-bar">近期环境风险预警（近 14 天）</div>
       <div id="recent-alerts-body"></div>
     </div>
 
     <div class="side-panel">
       <!-- 联动地图 — 固定在侧栏顶部 -->
       <div class="detail-map-section" id="side-map-container">
-        <div class="side-map-header">📍 当前选中区域</div>
+        <div class="side-map-header">当前选中区域</div>
         <div id="side-map"></div>
         <div class="side-map-empty" id="side-map-empty">点击左侧行查看地图</div>
       </div>
 
       <div class="history-card">
-        <h3>📊 历史 7 天战绩</h3>
+        <h3>历史 7 天战绩</h3>
         <div class="history-chart" id="history-chart"></div>
         <div class="history-summary" id="history-summary"></div>
         <div style="font-size:0.8em;color:#4a5568;margin-bottom:4px;">今日命中详情：</div>
@@ -987,35 +995,35 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
       </div>
 
       <div class="info-box">
-        <h3>⚠️ 风险等级说明</h3>
-        <div class="info-item"><strong>🔴 高风险 (≥85%)：</strong>需要立即关注，建议启动应急预案</div>
-        <div class="info-item"><strong>🟡 中风险 (75%-84%)：</strong>需持续监控，建议加强巡查</div>
-        <div class="info-item"><strong>🟢 低风险 (&lt;75%)：</strong>暂时无需特殊措施</div>
+        <h3>风险等级说明</h3>
+        <div class="info-item"><strong style="color:#e53e3e;">高风险 (≥85%)：</strong>需要立即关注，建议启动应急预案</div>
+        <div class="info-item"><strong style="color:#d69e2e;">中风险 (75%-84%)：</strong>需持续监控，建议加强巡查</div>
+        <div class="info-item"><strong style="color:#38a169;">低风险 (&lt;75%)：</strong>暂时无需特殊措施</div>
       </div>
 
       <div class="source-box">
-        <h3>🛰️ 数据来源</h3>
-        <div class="source-item"><span class="source-icon">🛰️</span><div><strong>NASA MODIS 卫星</strong><br><span style="color:#718096;">地表温度、植被指数(NDVI)</span></div></div>
-        <div class="source-item"><span class="source-icon">🌬️</span><div><strong>ECMWF 数值预报</strong><br><span style="color:#718096;">火险指数(FWI)、气象预报</span></div></div>
-        <div class="source-item"><span class="source-icon">🏭</span><div><strong>中国气象局(CMA)</strong><br><span style="color:#718096;">降水量、SPI/Palmer干旱指数</span></div></div>
-        <div class="source-item"><span class="source-icon">📡</span><div><strong>地面气象站</strong><br><span style="color:#718096;">湿度、风速、温度、湿球温度</span></div></div>
-        <div class="source-item"><span class="source-icon">💧</span><div><strong>水文传感器</strong><br><span style="color:#718096;">水位、土壤含水率实时监测</span></div></div>
+        <h3>数据来源</h3>
+        <div class="source-item"><div><strong>NASA MODIS 卫星</strong><br><span style="color:#718096;">地表温度、植被指数(NDVI)</span></div></div>
+        <div class="source-item"><div><strong>ECMWF 数值预报</strong><br><span style="color:#718096;">火险指数(FWI)、气象预报</span></div></div>
+        <div class="source-item"><div><strong>中国气象局(CMA)</strong><br><span style="color:#718096;">降水量、SPI/Palmer干旱指数</span></div></div>
+        <div class="source-item"><div><strong>地面气象站</strong><br><span style="color:#718096;">湿度、风速、温度、湿球温度</span></div></div>
+        <div class="source-item"><div><strong>水文传感器</strong><br><span style="color:#718096;">水位、土壤含水率实时监测</span></div></div>
       </div>
 
       <div class="faq-box">
-        <h3>💡 快速了解</h3>
-        <div class="info-item"><strong>这是什么？</strong><br>AI 帮您提前知道哪里可能有火灾、洪水、干旱或高温热浪。</div>
-        <div class="info-item"><strong>怎么判断的？</strong><br>多源数据融合：卫星+气象站+传感器，AI 综合分析各指标是否超过国标阈值。</div>
+        <h3>快速了解</h3>
+        <div class="info-item"><strong>这是什么？</strong><br>AI 帮您提前知道哪里可能有火灾、洪水、干旱、热浪、台风、寒潮、暴雪或滑坡风险；基准全量覆盖 8 类灾种、83 个用例。</div>
+        <div class="info-item"><strong>怎么判断的？</strong><br>多源数据融合：卫星+气象站+传感器，AI 对照国标阈值做二元决策（预警/不预警），并给出完整推理链。</div>
         <div class="info-item"><strong>为什么只显示部分区域？</strong><br>默认只展示有风险的预警；安全区域可点下方按钮展开查看全部监测状态。</div>
-        <div class="info-item"><strong>准不准？</strong><br>过去7天平均准确率见右侧战绩面板，每条预警都标注是否命中。</div>
+        <div class="info-item"><strong>准不准？</strong><br>过去7天平均准确率见右侧战绩面板；此外每条真值函数都用 7 场真实灾害的历史记录做过锚定验证（8/8 判定一致）。</div>
       </div>
 
       <div class="contact-box">
-        <h3>📬 关于与联系</h3>
-        <div class="info-item"><strong>EarthBench</strong> — 基于 AI 的自然灾害预警系统，每天自动分析全国 20+ 监测区域的火灾、洪涝、干旱和高温热浪风险。</div>
+        <h3>关于与联系</h3>
+        <div class="info-item"><strong>EarthBench</strong> — 基于 AI 的自然灾害预警与决策基准系统，每天自动分析全国 20+ 监测区域，基准测试覆盖 8 类灾种。</div>
         <div class="contact-links">
-          <a href="mailto:zergskj@163.com" class="contact-link">📧 zergskj@163.com</a>
-          <a href="https://github.com/showkeyjar/earth-bench" target="_blank" class="contact-link">🔗 GitHub 项目仓库</a>
+          <a href="mailto:zergskj@163.com" class="contact-link">zergskj@163.com</a>
+          <a href="https://github.com/showkeyjar/earth-bench" target="_blank" class="contact-link">GitHub 项目仓库</a>
         </div>
         <div class="info-item" style="margin-top:6px;font-size:0.75em;color:#a0aec0;">如有数据合作、技术咨询或问题反馈，欢迎通过以上方式联系。</div>
       </div>
@@ -1027,9 +1035,9 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
   <!-- 导航栏 -->
   <nav class="info-nav" id="info-nav">
     <a href="#about" class="nav-link">关于</a>
-    <a href="#hazards" class="nav-link">四大灾种</a>
+    <a href="#hazards" class="nav-link">八类灾种</a>
     <a href="#howitworks" class="nav-link">工作原理</a>
-    <a href="#difficulty" class="nav-link">难度体系</a>
+    <a href="#benchmark" class="nav-link">基准矩阵</a>
     <a href="#regions" class="nav-link">监测区域</a>
     <a href="#api" class="nav-link">开放数据</a>
     <a href="#tech" class="nav-link">技术栈</a>
@@ -1037,27 +1045,23 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
 
   <!-- 1. 关于 EarthBench -->
   <section class="info-section" id="about">
-    <h2 class="section-heading">🌐 关于 EarthBench</h2>
+    <h2 class="section-heading">关于 EarthBench</h2>
     <div class="about-grid">
       <div class="about-card">
-        <div class="about-icon">🎯</div>
         <h3>决策优先</h3>
         <p>传统气象系统回答"明天降雨多少毫米"，EarthBench 回答"今天是否应该启动洪水应急预案"。我们不预测数字，我们做决策。</p>
       </div>
       <div class="about-card">
-        <div class="about-icon">🔬</div>
         <h3>多源融合</h3>
         <p>卫星遥感（NASA MODIS）、数值预报（ECMWF）、气象站（和风天气 API）、水文传感器——四类数据源交叉验证，单一来源的偏差被系统性修正。</p>
       </div>
       <div class="about-card">
-        <div class="about-icon">🧠</div>
         <h3>AI 推理透明</h3>
         <p>每条预警不是黑箱输出。系统记录从数据采集到阈值对比、加权评分、最终决策的完整推理链，用户可以逐条审查 AI 的判断依据。</p>
       </div>
       <div class="about-card">
-        <div class="about-icon">✅</div>
-        <h3>每日验证</h3>
-        <p>每条决策都标注是否与 Ground Truth（基于国标阈值推导的标准答案）一致。命中、误报、漏报一目了然，准确率持续追踪。</p>
+        <h3>每日验证 · 历史锚定</h3>
+        <p>每条决策都标注是否与 Ground Truth（基于国标阈值推导的标准答案）一致。真值函数另以 7 场真实灾害的公开记录回放验证——郑州 7·20、杜苏芮、通辽寒潮暴雪、重庆高温火险等，8/8 判定与现实一致。</p>
       </div>
     </div>
     <div class="comparison-box">
@@ -1077,82 +1081,39 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
     </div>
   </section>
 
-  <!-- 2. 四大灾种监测 -->
+  <!-- 2. 八类灾种监测 -->
   <section class="info-section" id="hazards">
-    <h2 class="section-heading">🔥🌊🏜️☀️ 四大灾种监测</h2>
-    <div class="hazard-grid">
-      <div class="hazard-card hazard-fire">
-        <div class="hazard-header">
-          <span class="hazard-emoji">🔥</span>
-          <span class="hazard-name">森林火险</span>
-        </div>
-        <div class="hazard-body">
-          <p class="hazard-desc">基于加拿大 FWI（火险天气指数）体系，综合风速、湿度、温度和降雨量评估火灾风险。FWI 大于 40 即进入高风险区间。</p>
-          <div class="hazard-metrics">
-            <div class="metric"><span class="metric-label">核心指标</span><span class="metric-value">FWI 火险指数</span></div>
-            <div class="metric"><span class="metric-label">预警阈值</span><span class="metric-value">FWI 大于等于 40</span></div>
-            <div class="metric"><span class="metric-label">辅助指标</span><span class="metric-value">湿度、风速、温度、降雨</span></div>
-            <div class="metric"><span class="metric-label">数据来源</span><span class="metric-value">ECMWF + 地面站 + NASA MODIS</span></div>
-          </div>
-        </div>
-      </div>
-      <div class="hazard-card hazard-flood">
-        <div class="hazard-header">
-          <span class="hazard-emoji">🌊</span>
-          <span class="hazard-name">洪涝灾害</span>
-        </div>
-        <div class="hazard-body">
-          <p class="hazard-desc">对标《国家防汛抗旱应急预案》暴雨标准。24 小时降雨达 100mm 或 6 小时达 50mm 即触发预警，同时监测土壤饱和度和水位趋势。</p>
-          <div class="hazard-metrics">
-            <div class="metric"><span class="metric-label">核心指标</span><span class="metric-value">24h 累计降雨量</span></div>
-            <div class="metric"><span class="metric-label">预警阈值</span><span class="metric-value">24h 大于等于 100mm</span></div>
-            <div class="metric"><span class="metric-label">辅助指标</span><span class="metric-value">6h 降雨、土壤湿度、水位</span></div>
-            <div class="metric"><span class="metric-label">数据来源</span><span class="metric-value">QWeather 逐小时预报 + 水文站</span></div>
-          </div>
-        </div>
-      </div>
-      <div class="hazard-card hazard-drought">
-        <div class="hazard-header">
-          <span class="hazard-emoji">🏜️</span>
-          <span class="hazard-name">干旱监测</span>
-        </div>
-        <div class="hazard-body">
-          <p class="hazard-desc">基于 SPI（标准化降水指数）和 Palmer 干旱指数双指标体系。SPI 小于 -1.5 或 Palmer 小于 -1.0 即为严重干旱，同时考虑月降雨亏缺和植被状态。</p>
-          <div class="hazard-metrics">
-            <div class="metric"><span class="metric-label">核心指标</span><span class="metric-value">SPI + Palmer 指数</span></div>
-            <div class="metric"><span class="metric-label">预警阈值</span><span class="metric-value">SPI 小于 -1.5 或 Palmer 小于 -1.0</span></div>
-            <div class="metric"><span class="metric-label">辅助指标</span><span class="metric-value">湿度、月降雨量、NDVI</span></div>
-            <div class="metric"><span class="metric-label">数据来源</span><span class="metric-value">QWeather + ECMWF + MODIS NDVI</span></div>
-          </div>
-        </div>
-      </div>
-      <div class="hazard-card hazard-heat">
-        <div class="hazard-header">
-          <span class="hazard-emoji">☀️</span>
-          <span class="hazard-name">高温热浪</span>
-        </div>
-        <div class="hazard-body">
-          <p class="hazard-desc">对标中央气象台高温预警信号。湿球温度大于 27 度为危险阈值，持续 3 天最高温大于等于 35 度即构成典型热浪环境。湿热组合比单纯高温更危险。</p>
-          <div class="hazard-metrics">
-            <div class="metric"><span class="metric-label">核心指标</span><span class="metric-value">湿球温度 + 持续天数</span></div>
-            <div class="metric"><span class="metric-label">预警阈值</span><span class="metric-value">湿球温度大于 27 度</span></div>
-            <div class="metric"><span class="metric-label">辅助指标</span><span class="metric-value">最高温、湿度、持续天数</span></div>
-            <div class="metric"><span class="metric-label">数据来源</span><span class="metric-value">QWeather 实时 + 逐日预报</span></div>
-          </div>
-        </div>
-      </div>
+    <h2 class="section-heading">八类灾种监测</h2>
+    <p class="section-intro">每类灾种的真值（Ground Truth）都由独立的国标查表函数给出，与被测 Agent 解耦——不存在自证循环。下表为当前判定点位：</p>
+    <div class="hazard-table-wrap">
+      <table class="hazard-table">
+        <thead>
+          <tr><th>灾种</th><th>触发通道（阈值）</th><th>标准锚点</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>森林火险</td><td>FWI &gt; 33 极高火险；FWI 22–33 且湿度 &lt;30% 或风速 ≥12 m/s；24h 降雨 ≥30 mm 强制不预警</td><td>加拿大 FWI 体系（简化估算器，口径披露）</td></tr>
+          <tr><td>洪涝</td><td>24h 降雨 ≥100 mm 特大暴雨；6h ≥50 mm 短时强降雨；≥30 mm 且土壤湿度 ≥0.85 饱和复合；水位 ≥10 m</td><td>GB/T 28592 暴雨等级</td></tr>
+          <tr><td>干旱</td><td>SPI ≤ −2.0 特旱 / ≤ −1.5 重旱 / ≤ −1.0 中旱，且影响门控通过：持续 ≥60 天 或 受旱面积 ≥40% 或 城市缺水率 ≥10%（短时局地城市干旱不预警）</td><td>GB/T 20481 × SL 424 城市旱情线（披露）</td></tr>
+          <tr><td>高温热浪</td><td>日最高 ≥40 °C 红色；≥37 °C 橙色；≥33 °C 且湿度 ≥70% 闷热；湿球 ≥27 °C 热应激</td><td>中央气象台高温预警信号</td></tr>
+          <tr><td>台风</td><td>持续风 ≥32.7 m/s（12 级）；阵风 ≥24.5 m/s（临建/塔吊安全线）；持续风 ≥17.2 m/s 且 24h 降雨 ≥50 mm 风雨耦合</td><td>GB/T 19201 热带气旋等级</td></tr>
+          <tr><td>寒潮</td><td>24h 降温 ≥8 °C 或 48h ≥10 °C 或 72h ≥12 °C（任一窗口），且日最低 ≤4 °C（AND 双条件）</td><td>GB/T 20484-2017 寒潮等级</td></tr>
+          <tr><td>暴雪</td><td>24h 水当量 ≥30 mm 特大暴雪；≥10 mm 暴雪；道路结冰复合：降雪 ≥2.5 mm 且路温 ≤0 °C</td><td>GB/T 28592-2012 降雪等级</td></tr>
+          <tr><td>滑坡</td><td>1h 雨强 ≥25 mm 或 3h ≥50 mm 激发；3 日有效降雨 ≥100 mm 且土壤湿度 ≥0.80</td><td>经验阈值（披露口径）</td></tr>
+        </tbody>
+      </table>
     </div>
+    <p class="section-intro" style="margin-top:12px;">注：日报在线监测当前运行火险、洪涝、干旱、热浪四类（20 区域）；台风、寒潮、暴雪、滑坡四类已进入基准测试与历史锚定验证，其中滑坡与干旱的逐日指数归档在公开渠道缺失，相关用例以披露口径处理（详见仓库 <code>docs/historical-validation.md</code>）。</p>
   </section>
 
   <!-- 3. 工作原理 -->
   <section class="info-section" id="howitworks">
-    <h2 class="section-heading">⚙️ 工作原理</h2>
+    <h2 class="section-heading">工作原理</h2>
     <p class="section-intro">每天 UTC 00:00 和 12:00（北京时间 08:00 和 20:00），系统自动执行四阶段流水线：</p>
     <div class="pipeline-container">
       <div class="pipeline-stage">
         <div class="stage-number">1</div>
         <div class="stage-content">
-          <h3>📡 数据采集</h3>
+          <h3>数据采集</h3>
           <p>从 QWeather API 获取 20 个监测区域的实时天气数据（温度、湿度、风速、降雨量），同时拉取逐小时和逐日预报用于趋势分析。QWeather 不可用时自动降级到内置场景数据。</p>
           <div class="stage-tags"><span class="stage-tag">QWeather API</span><span class="stage-tag">实时观测</span><span class="stage-tag">逐小时预报</span><span class="stage-tag">逐日预报</span></div>
         </div>
@@ -1161,16 +1122,16 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
       <div class="pipeline-stage">
         <div class="stage-number">2</div>
         <div class="stage-content">
-          <h3>🧠 AI 决策</h3>
-          <p>规则引擎首先基于国标阈值计算风险评分（动态权重归一化），然后将完整证据链传递给 LLM（Qwen3 14B via Ollama）做二次判断。LLM 可升级规则引擎的决策，但不能降级。</p>
-          <div class="stage-tags"><span class="stage-tag">规则引擎</span><span class="stage-tag">动态权重</span><span class="stage-tag">Qwen3 14B</span><span class="stage-tag">Ollama</span></div>
+          <h3>AI 决策</h3>
+          <p>规则引擎首先基于国标阈值查表计算风险评分（动态权重归一化），完整证据链随决策归档。LLM 赛道独立运行：本地 Qwen3.6-35B（llama.cpp，无云调用）对同一场景做二次判定，与规则基线、平凡基线同表对比。</p>
+          <div class="stage-tags"><span class="stage-tag">规则引擎</span><span class="stage-tag">国标阈值查表</span><span class="stage-tag">Qwen3.6-35B</span><span class="stage-tag">LLM 评测赛道</span></div>
         </div>
       </div>
       <div class="pipeline-connector">↓</div>
       <div class="pipeline-stage">
         <div class="stage-number">3</div>
         <div class="stage-content">
-          <h3>📝 报告生成</h3>
+          <h3>报告生成</h3>
           <p>为每个监测区域生成结构化决策记录，包含详细证据卡片（阈值对比 + 状态判定）、推理链条（从数据到决策的完整步骤）和 Ground Truth 验证结果。最终输出 Markdown 报告 + JSON 数据 + Atom Feed。</p>
           <div class="stage-tags"><span class="stage-tag">Markdown</span><span class="stage-tag">JSON</span><span class="stage-tag">Atom RSS</span><span class="stage-tag">证据卡片</span></div>
         </div>
@@ -1179,7 +1140,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
       <div class="pipeline-stage">
         <div class="stage-number">4</div>
         <div class="stage-content">
-          <h3>📡 分发部署</h3>
+          <h3>分发部署</h3>
           <p>报告自动部署到 GitHub Pages（gh-pages 分支），通过 Cloudflare CDN 加速到 earth-ai.fun。Atom Feed 供 RSS 阅读器订阅，JSON API 供第三方系统消费，微信公众号草稿待人工审核后发布。</p>
           <div class="stage-tags"><span class="stage-tag">GitHub Pages</span><span class="stage-tag">Cloudflare CDN</span><span class="stage-tag">RSS Feed</span><span class="stage-tag">JSON API</span></div>
         </div>
@@ -1187,45 +1148,66 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
     </div>
   </section>
 
-  <!-- 4. 难度体系 -->
-  <section class="info-section" id="difficulty">
-    <h2 class="section-heading">📊 难度体系</h2>
-    <p class="section-intro">20 个测试场景按 L1-L4 四级难度递进，每级考验 AI 不同层面的决策能力：</p>
-    <div class="difficulty-grid">
-      <div class="difficulty-card diff-l1">
-        <div class="diff-badge">L1</div>
-        <h3>简单 — 明确极端值</h3>
-        <p>观测值远超或远低于阈值，决策方向明确无歧义。如 FWI=70（远超 40 阈值）或 24h 降雨=0mm。</p>
-        <div class="diff-skill">考验：阈值判断基础能力</div>
-      </div>
-      <div class="difficulty-card diff-l2">
-        <div class="diff-badge">L2</div>
-        <h3>中等 — 边界值 + 次要因素</h3>
-        <p>主要指标接近阈值，次要因素成为决定性变量。如 FWI=49 但降雨 25mm 抑制了火险——降雨是否足够抑制？</p>
-        <div class="diff-skill">考验：多变量综合权衡能力</div>
-      </div>
-      <div class="difficulty-card diff-l3">
-        <div class="diff-badge">L3</div>
-        <h3>困难 — 信号冲突</h3>
-        <p>不同指标给出矛盾信号。如 SPI 正常但 Palmer 显示干旱，或沿海高湿但 FWI 中等——哪个指标优先？</p>
-        <div class="diff-skill">考验：冲突解决与优先级判断</div>
-      </div>
-      <div class="difficulty-card diff-l4">
-        <div class="diff-badge">L4</div>
-        <h3>超越 — 边缘案例</h3>
-        <p>需要从时序趋势推断隐含信号，或处理极端组合场景。如连续升温趋势是否构成热浪？水位持续上涨是否即将超警？</p>
-        <div class="diff-skill">考验：时序推理与趋势预判</div>
-      </div>
+  <!-- 4. 基准矩阵 -->
+  <section class="info-section" id="benchmark">
+    <h2 class="section-heading">基准矩阵</h2>
+    <p class="section-intro">83 个计分用例按判别目标分层，另有 8 例历史锚定回放（不计分）。全部真值由独立国标查表函数给出，与被测 Agent 解耦：</p>
+    <div class="hazard-table-wrap">
+      <table class="hazard-table">
+        <thead><tr><th>套件</th><th>用例</th><th>考什么</th></tr></thead>
+        <tbody>
+          <tr><td>基础</td><td>40</td><td>国标阈值基本盘（规则基线 100% 满分层，无排序力）</td></tr>
+          <tr><td>对抗</td><td>16</td><td>AND 缺一 / 阈值边界 / 常态陷阱——线性加权系统性失败之处，判别力主战场</td></tr>
+          <tr><td>决策模板</td><td>17</td><td>dispatch 4 · upgrade 4 · close 5 · recover 4（预警之外的决策语义）</td></tr>
+          <tr><td>暴露物理</td><td>10</td><td>人口密度 / 用地类型 / 脆弱群体构成的行动层判定</td></tr>
+          <tr><td>历史锚定</td><td>8</td><td>真实灾害记录回放进真值函数（7 真实 + 1 合成对照，判定须与现实一致）</td></tr>
+        </tbody>
+      </table>
     </div>
+
+    <h3 class="bench-sub">判别力：对抗 16 例上的准确率</h3>
+    <div class="hazard-table-wrap">
+      <table class="hazard-table">
+        <thead><tr><th>Agent</th><th>准确率</th><th>失败模式</th></tr></thead>
+        <tbody>
+          <tr><td>规则基线（线性加权）</td><td><strong>0%</strong></td><td>8 误报 + 8 漏报——加权平均系统性稀释 AND 复合条件</td></tr>
+          <tr><td>LLM（Qwen3.6-35B 本地）</td><td><strong>62%</strong></td><td>0 误报 / 6 漏报（保守偏向）</td></tr>
+          <tr><td>全预警</td><td>50%</td><td>8 误报，单向失败</td></tr>
+          <tr><td>全不预警</td><td>50%</td><td>8 漏报，单向失败</td></tr>
+          <tr><td>随机</td><td>56%</td><td>参照下限</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="section-intro" style="margin-top:12px;">规则基线 0% 不是缺陷而是设计：对抗套件专为分离「查表推理」与「加权平均」两类 Agent 而建——互补的单向失败模式（全预警 vs 全不预警）也证明这不是类别不平衡伪影。首个本地 LLM 首跑即与规则基线拉开 62 个百分点。</p>
+
+    <h3 class="bench-sub">历史锚定：8/8 判定一致</h3>
+    <div class="hazard-table-wrap">
+      <table class="hazard-table">
+        <thead><tr><th>事件</th><th>公开记录观测</th><th>真值通道</th></tr></thead>
+        <tbody>
+          <tr><td>郑州 7·20（2021）</td><td>24h 降雨 645.6 mm（1951 年建站以来极值）</td><td>特大暴雨 → 0.95（现实：一级防汛响应）</td></tr>
+          <tr><td>北京 23·7（2023）</td><td>小时雨强 111.8 mm/h（6h 通道严格下界）</td><td>短时强降雨 → 0.85（现实：红色暴雨预警）</td></tr>
+          <tr><td>台风杜苏芮（2023）</td><td>晋江登陆持续风 50 m/s</td><td>12 级台风通道 → 0.95（63 年来最强登陆台风）</td></tr>
+          <tr><td>通辽寒潮（2021）</td><td>日最低 4.6 → −6.2 °C（24h 降幅 10.8 °C）</td><td>寒潮顶档 → 0.95（GB/T 20484-2017）</td></tr>
+          <tr><td>通辽暴雪（2021）</td><td>24h 水当量 44.6 mm（逐时归档求和）</td><td>特大暴雪 → 0.95（积雪 27 → 59 cm）</td></tr>
+          <tr><td>重庆高温（2022）</td><td>沙坪坝站 43.1 °C</td><td>高温红色 → 0.95（北碚 45 °C 破纪录）</td></tr>
+          <tr><td>重庆火险（2022）</td><td>FWI 70.5（披露估算器，快照稳健）</td><td>极高火险 → 0.95（卫星多点火点）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="section-intro" style="margin-top:12px;">每个数字均有来源引用，完整口径与三项披露（寒潮标准修齐、滑坡雨强无公开归档、干旱指数无公开归档）见仓库 <a href="https://github.com/showkeyjar/earth-bench/blob/main/docs/historical-validation.md" target="_blank">docs/historical-validation.md</a>。</p>
+
+    <h3 class="bench-sub">LLM 赛道</h3>
+    <p class="section-intro">基准的真正使用方是 LLM Agent。提供两种信息口径：<strong>informed</strong>（给与真值同源的阈值表但不给判定——纯考推理组合）与 <strong>blind</strong>（不给阈值——考内化的标准知识）。后端为本地 Qwen3.6-35B（llama.cpp / Vulkan，无云调用）。首跑快照（informed，温度 0）：对抗 62%、基础 78%、全 83 例 0 解析失败；完整提示词与原始输出见 <a href="https://github.com/showkeyjar/earth-bench/blob/main/docs/llm-eval-carm.md" target="_blank">docs/llm-eval-carm.md</a>。</p>
   </section>
 
   <!-- 5. 监测区域 -->
   <section class="info-section" id="regions">
-    <h2 class="section-heading">🗺️ 监测区域</h2>
-    <p class="section-intro">覆盖全国 20 个代表性区域，横跨 4 大灾种、4 级难度：</p>
+    <h2 class="section-heading">监测区域</h2>
+    <p class="section-intro">日报在线监测 20 个代表性区域、4 类灾种、4 级难度（基准全量另含台风/寒潮/暴雪/滑坡对抗用例区域，如重庆、通辽）：</p>
     <div class="region-grid">
       <div class="region-cat-col">
-        <h3 class="region-col-title cat-fire-bg">🔥 火险（5 区域）</h3>
+        <h3 class="region-col-title cat-fire-bg">火险（5 区域）</h3>
         <div class="region-list">
           <div class="region-item"><span class="region-name">北京·香山</span><span class="region-diff">L1</span></div>
           <div class="region-item"><span class="region-name">杭州·西湖</span><span class="region-diff">L1</span></div>
@@ -1235,7 +1217,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
         </div>
       </div>
       <div class="region-cat-col">
-        <h3 class="region-col-title cat-flood-bg">🌊 洪涝（5 区域）</h3>
+        <h3 class="region-col-title cat-flood-bg">洪涝（5 区域）</h3>
         <div class="region-list">
           <div class="region-item"><span class="region-name">武汉·长江</span><span class="region-diff">L1</span></div>
           <div class="region-item"><span class="region-name">拉萨·西藏</span><span class="region-diff">L1</span></div>
@@ -1245,7 +1227,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
         </div>
       </div>
       <div class="region-cat-col">
-        <h3 class="region-col-title cat-drought-bg">🏜️ 干旱（5 区域）</h3>
+        <h3 class="region-col-title cat-drought-bg">干旱（5 区域）</h3>
         <div class="region-list">
           <div class="region-item"><span class="region-name">昆明·云南</span><span class="region-diff">L1</span></div>
           <div class="region-item"><span class="region-name">杭州·浙江</span><span class="region-diff">L1</span></div>
@@ -1255,7 +1237,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
         </div>
       </div>
       <div class="region-cat-col">
-        <h3 class="region-col-title cat-heat-bg">☀️ 热浪（5 区域）</h3>
+        <h3 class="region-col-title cat-heat-bg">热浪（5 区域）</h3>
         <div class="region-list">
           <div class="region-item"><span class="region-name">重庆</span><span class="region-diff">L1</span></div>
           <div class="region-item"><span class="region-name">昆明·春城</span><span class="region-diff">L1</span></div>
@@ -1269,11 +1251,11 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
 
   <!-- 6. 开放数据与 API -->
   <section class="info-section" id="api">
-    <h2 class="section-heading">📦 开放数据与 API</h2>
+    <h2 class="section-heading">开放数据与 API</h2>
     <p class="section-intro">所有数据以 CC BY 4.0 许可开放，欢迎研究者、开发者和防灾减灾机构自由使用。</p>
     <div class="api-grid">
       <div class="api-card">
-        <div class="api-header"><span class="api-icon">📊</span><h3>JSON API</h3></div>
+        <div class="api-header"><h3>JSON API</h3></div>
         <p class="api-desc">今日全部 20 个区域的决策数据，包含每个场景的详细证据、推理链和验证结果。</p>
         <div class="api-url">GET https://earth-ai.fun/latest.json</div>
         <div class="api-fields">
@@ -1281,7 +1263,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
         </div>
       </div>
       <div class="api-card">
-        <div class="api-header"><span class="api-icon">📡</span><h3>RSS / Atom Feed</h3></div>
+        <div class="api-header"><h3>RSS / Atom Feed</h3></div>
         <p class="api-desc">每日预警 Atom 格式订阅源，支持 RSS 阅读器（如 Feedly、Inoreader）自动推送。</p>
         <div class="api-url">GET https://earth-ai.fun/feed.xml</div>
         <div class="api-fields">
@@ -1289,7 +1271,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
         </div>
       </div>
       <div class="api-card">
-        <div class="api-header"><span class="api-icon">📈</span><h3>历史数据</h3></div>
+        <div class="api-header"><h3>历史数据</h3></div>
         <p class="api-desc">过去 7 天的决策历史和准确率统计，含每日命中/误报/漏报明细。</p>
         <div class="api-url">GET https://earth-ai.fun/history.json</div>
         <div class="api-fields">
@@ -1297,7 +1279,7 @@ footer { text-align: center; padding: 8px; color: #cbd5e0; font-size: 0.75em; }
         </div>
       </div>
       <div class="api-card">
-        <div class="api-header"><span class="api-icon">💻</span><h3>GitHub 开源</h3></div>
+        <div class="api-header"><h3>GitHub 开源</h3></div>
         <p class="api-desc">完整源代码、测试用例、CI/CD 配置、场景定义和 Ground Truth 推导函数全部开源。</p>
         <div class="api-url">github.com/showkeyjar/earth-bench</div>
         <div class="api-fields">
@@ -1323,45 +1305,37 @@ https://earth-ai.fun/feed.xml</code></pre>
 
   <!-- 7. 技术栈 -->
   <section class="info-section" id="tech">
-    <h2 class="section-heading">🔧 技术栈</h2>
+    <h2 class="section-heading">技术栈</h2>
     <div class="tech-grid">
       <div class="tech-card">
-        <div class="tech-icon">🐍</div>
         <div class="tech-name">Python 3.12</div>
-        <div class="tech-desc">核心框架，12 个模块覆盖数据采集、推理引擎、评测系统和发布流水线</div>
+        <div class="tech-desc">核心框架：数据采集、国标真值函数、规则与 LLM Agent、评测系统、发布流水线</div>
       </div>
       <div class="tech-card">
-        <div class="tech-icon">🌤️</div>
         <div class="tech-name">QWeather API</div>
         <div class="tech-desc">和风天气商业 API，提供实时气象观测、逐小时和逐日预报数据</div>
       </div>
       <div class="tech-card">
-        <div class="tech-icon">🦙</div>
-        <div class="tech-name">Ollama + Qwen3</div>
-        <div class="tech-desc">本地部署 Qwen3 14B 大模型，执行自然语言推理和二次决策升级</div>
+        <div class="tech-name">Qwen3.6-35B（本地）</div>
+        <div class="tech-desc">本地 llama.cpp / Vulkan 推理的开源 35B 模型，驱动 LLM 评测赛道（informed/blind 双口径），无云调用</div>
       </div>
       <div class="tech-card">
-        <div class="tech-icon">🛰️</div>
         <div class="tech-name">NASA FIRMS + MODIS</div>
         <div class="tech-desc">卫星火点检测和植被指数（NDVI），补充地面站无法覆盖的遥感数据</div>
       </div>
       <div class="tech-card">
-        <div class="tech-icon">🔄</div>
         <div class="tech-name">GitHub Actions CI/CD</div>
-        <div class="tech-desc">每日自动流水线：数据采集 → AI 决策 → 报告生成 → 部署发布，全程无人值守</div>
+        <div class="tech-desc">每日自动流水线：数据采集 → AI 决策 → 报告生成 → 部署发布，测试与历史验证门禁全程无人值守</div>
       </div>
       <div class="tech-card">
-        <div class="tech-icon">🌐</div>
         <div class="tech-name">Cloudflare CDN</div>
         <div class="tech-desc">全球 CDN 加速，自定义域名 earth-ai.fun，自动 HTTPS 和边缘缓存</div>
       </div>
       <div class="tech-card">
-        <div class="tech-icon">📄</div>
         <div class="tech-name">GitHub Pages</div>
         <div class="tech-desc">gh-pages 分支托管 JSON API、Atom Feed 和静态资源，配合 CDN 实现高可用</div>
       </div>
       <div class="tech-card">
-        <div class="tech-icon">🗺️</div>
         <div class="tech-name">Leaflet + 高德地图</div>
         <div class="tech-desc">前端地图引擎，支持区域定位、影响范围多边形渲染和交互式标注</div>
       </div>
@@ -1371,9 +1345,9 @@ https://earth-ai.fun/feed.xml</code></pre>
   <footer>
     © 2026 EarthBench · 地球决策智能基准测试框架 | Powered by AI · 每天自动更新
     <div style="margin-top:4px;display:flex;justify-content:center;gap:12px;">
-      <a href="mailto:zergskj@163.com" style="color:#a0aec0;text-decoration:none;">📧 Email</a>
-      <a href="https://github.com/showkeyjar/earth-bench" target="_blank" style="color:#a0aec0;text-decoration:none;">🔗 GitHub</a>
-      <a href="feed.xml" target="_blank" style="color:#a0aec0;text-decoration:none;">📡 RSS Feed</a>
+      <a href="mailto:zergskj@163.com" style="color:#a0aec0;text-decoration:none;">Email</a>
+      <a href="https://github.com/showkeyjar/earth-bench" target="_blank" style="color:#a0aec0;text-decoration:none;">GitHub</a>
+      <a href="feed.xml" target="_blank" style="color:#a0aec0;text-decoration:none;">RSS Feed</a>
     </div>
   </footer>
 </div>
@@ -1381,10 +1355,10 @@ https://earth-ai.fun/feed.xml</code></pre>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const categoryIcons = {
-  'fire':   { label: '🔥 火',   cls: 'cat-fire' },
-  'flood':  { label: '🌊 洪',   cls: 'cat-flood' },
-  'drought':{ label: '🏜️ 旱',   cls: 'cat-drought' },
-  'heat':   { label: '☀️ 热',   cls: 'cat-heat' }
+  'fire':   { label: '火',   cls: 'cat-fire' },
+  'flood':  { label: '洪',   cls: 'cat-flood' },
+  'drought':{ label: '旱',   cls: 'cat-drought' },
+  'heat':   { label: '热',   cls: 'cat-heat' }
 };
 const categoryNames = { fire: '森林火险', flood: '洪涝灾害', drought: '干旱', heat: '高温热浪' };
 const suggestions = { fire: '注意防火', flood: '远离低洼', drought: '节约用水', heat: '减少户外' };
@@ -1407,7 +1381,7 @@ function shareReport() {
 
 function copyToClipboard(platform) {
   const url = encodeURIComponent(window.location.href);
-  const text = encodeURIComponent('🌍 EarthBench 每日环境风险预警 — 基于AI的多源时空数据决策智能基准测试框架\n\n' + window.location.href);
+  const text = encodeURIComponent('EarthBench 每日环境风险预警 — 8类灾种决策基准，真值锚定真实灾害\n\n' + window.location.href);
   let shareUrl = '';
   if (platform === 'telegram') {
     shareUrl = `https://t.me/share/url?url=${url}&text=${text}`;
@@ -1626,7 +1600,7 @@ function buildDetailPanel(d, idx) {
 
   // 详细证据
   if (d.detailed_evidence && d.detailed_evidence.length > 0) {
-    html += '<div style="font-weight:600;font-size:0.85em;margin-bottom:6px;color:#2d3748;">🔬 原始观测数据与阈值分析</div>';
+    html += '<div style="font-weight:600;font-size:0.85em;margin-bottom:6px;color:#2d3748;">原始观测数据与阈值分析</div>';
     html += '<div class="evidence-grid">';
     d.detailed_evidence.forEach(ev => {
       const valDisplay = ev.value + ev.unit;
@@ -1671,7 +1645,7 @@ function buildDetailPanel(d, idx) {
     });
     const multiPoint = Object.values(grouped).filter(arr => arr.length >= 2);
     if (multiPoint.length > 0) {
-      html += '<div style="font-weight:600;font-size:0.85em;margin:8px 0 4px;color:#2d3748;">📈 时序趋势（L4 场景）</div>';
+      html += '<div style="font-weight:600;font-size:0.85em;margin:8px 0 4px;color:#2d3748;">时序趋势（L4 场景）</div>';
       html += '<div style="font-size:0.78em;color:#4a5568;line-height:1.6;">';
       multiPoint.forEach(arr => {
         const varName = signalLabels[arr[0].variable] || arr[0].variable;
@@ -1686,9 +1660,9 @@ function buildDetailPanel(d, idx) {
   // 推理链条
   if (d.reasoning_chain && d.reasoning_chain.length > 0) {
     html += '<div class="reasoning-chain">';
-    html += '<div class="chain-title">🧠 AI 推理过程</div>';
+    html += '<div class="chain-title">AI 推理过程</div>';
     d.reasoning_chain.forEach(step => {
-      const iconMap = { intro: '📋', evidence: '📊', analysis: '⚖️', decision: d.llm_decision ? '⚠️' : '✅' };
+      const iconMap = { intro: '▸', evidence: '▸', analysis: '▸', decision: d.llm_decision ? '⚠️' : '✅' };
       html += `<div class="chain-step">
         <div class="chain-num ${step.type}">${step.step}</div>
         <div class="chain-text">${iconMap[step.type] || ''} ${step.text}</div>
@@ -1700,7 +1674,7 @@ function buildDetailPanel(d, idx) {
   // 建议措施
   if (d.llm_decision) {
     html += `<div style="margin-top:8px;padding:8px 10px;background:#fff5f5;border-radius:6px;font-size:0.82em;">
-      <strong>📌 建议:</strong> ${suggestions[d.category] || '-'} — ${getAdvice(d.category)}
+      <strong>建议:</strong> ${suggestions[d.category] || '-'} — ${getAdvice(d.category)}
     </div>`;
   }
 
@@ -1861,7 +1835,7 @@ function showSideMap(d, idx) {
 
   // 更新标题
   lastMapData = d;
-  document.querySelector('.side-map-header').textContent = `📍 ${d.region_cn}`;
+  document.querySelector('.side-map-header').textContent = d.region_cn;
 }
 
 // ===================== History =====================
@@ -2062,7 +2036,7 @@ async function loadHistoryReport(dateTag, dateLabel) {
   const title = document.getElementById('history-report-title');
   const body = document.getElementById('history-report-body');
 
-  title.textContent = `📅 ${dateLabel} 决策报告`;
+  title.textContent = `${dateLabel} 决策报告`;
   body.innerHTML = '<div style="text-align:center;padding:20px;color:#a0aec0;">加载中...</div>';
   container.style.display = 'block';
 

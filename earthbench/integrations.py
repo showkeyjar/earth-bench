@@ -12,14 +12,12 @@ Phase 2 目标：让 EarthBench 的 Alert 决策场景通过 CARM 推理框架�
 from __future__ import annotations
 
 import logging
-import re
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
-
-from .models import DecisionOutput, ScenarioContext
 from .llm import domain_hint, parse_yes_no
+from .models import DecisionOutput, ScenarioContext
 
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # 数据适配器：ScenarioContext → CARM prompt
@@ -92,8 +90,8 @@ class CARMBridge:
         if not self.carm_root:
             return False
         try:
-            import sys
             import os as _os
+            import sys
 
             # 统一路径格式：转换为纯正 Windows 绝对路径
             must_str = str(self.carm_root)

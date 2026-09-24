@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """models.ScenarioCategory.from_string 告警行为测试。"""
 from __future__ import annotations
 

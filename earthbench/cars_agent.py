@@ -39,6 +39,11 @@ DATA_FILE = Path(__file__).parent / "data" / "cars_probabilities.json"
 #   当月 +2σ 相对异常仅作为严重度背景信息保留，不参与触发——
 #   高原/凉爽城市的"相对暖日"统计上极端但无害（昆明 p2σ=0.33 而 p_harm=0）。
 # 冬季对应：有害低温日 = 日最低 ≤ 0°C（结冰/冻害风险）。
+# 口径区分（披露，Phase D 收尾）：CARS 的 p_harm_cold 服务的是「冻害」
+# （绝对低温线，GB/T 20484 日最低档近似），与基准寒潮真值（24h 降幅 ×
+# 日最低 AND（多窗口降幅 OR）是**两个不同的问题**——常态寒冷城市持续 ≤0°C 触发
+# 冻害预警但并非寒潮（无骤降）。跨日降幅需前后两日集合配对，本通道
+# 暂不服务，见 docs/expansion-plan.md「风险与开放问题」。
 # P_TRIG = 热浪成本比 C/L（期望损失规则 act iff P(事件) ≥ C/L）。
 # 单一来源：eval.ValueEvaluator.DEFAULT_COST_RATIO["heat"] —— 此前两处硬编码
 # 0.3 仅靠人肉保持一致，现改为构造性同步，杜绝漂移。

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """CARS 概率决策 Agent 与经济价值评分器测试。"""
 from __future__ import annotations
 
@@ -6,10 +5,10 @@ from earthbench.cars_agent import CarsHeatAgent, CarsMultiAgent, CarsProbability
 from earthbench.eval import ValueEvaluator
 from earthbench.models import (
     DecisionOutput,
+    DecisionTemplate,
     Observation,
     ScenarioCategory,
     ScenarioContext,
-    DecisionTemplate,
 )
 
 

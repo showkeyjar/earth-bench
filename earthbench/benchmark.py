@@ -1,22 +1,33 @@
-"""EarthBench Alert 基准测试套件 — 四大高频风险类别。
+"""EarthBench Alert 基准测试套件 — 八大高频风险类别。
 
 全新重写：从单一 fire 扩展为 fire/flood/drought/heat 四类 Alert 场景，
-每个场景都有可验证的 Ground Truth 推导规则（基于国标/行业标准阈值）。
+Phase A1 再扩展 landslide（滑坡/泥石流）、A2 扩展 typhoon（台风/大风）、
+B1 扩展 cold（寒潮/冰冻）、B2 扩展 snow（暴雪/道路结冰），
+见 docs/expansion-plan.md。每个场景都有可验证的 Ground Truth
+推导规则（基于国标/行业标准阈值）。
 """
 
 from __future__ import annotations
 
+import inspect
 from dataclasses import dataclass, field
 from typing import Any
 
+from .eval import BatchEvaluator
 from .models import (
-    ScenarioContext,
     DecisionTemplate,
+    ExposureProfile,
     Observation,
     ScenarioCategory,
+    ScenarioContext,
 )
-from .scenarios import ScenarioStore, get_alert_benchmark_suite, DifficultyLevel
-from .eval import BatchEvaluator
+from .scenarios import (
+    DifficultyLevel,
+    ScenarioStore,
+    get_alert_benchmark_suite,
+    infer_action_ground_truth,
+    infer_exposure_class,
+)
 
 
 @dataclass
@@ -25,11 +36,13 @@ class AlertTestCase:
 
     case_id: str
     difficulty: str
-    category: str  # "fire" | "flood" | "drought" | "heat"
+    category: str  # "fire" | "flood" | ...
     region: str
     ground_truth: bool = True
     horizon_hours: int = 72
     observations: list[dict[str, Any]] = field(default_factory=list)
+    exposure: ExposureProfile | None = None  # Phase B：暴露画像（可选）
+    template: str = "alert"  # 决策模板（Phase C：dispatch/upgrade/close/recover）
 
     def to_context(self, store: ScenarioStore | None = None) -> ScenarioContext:
         """转换为 ScenarioContext。"""
@@ -45,8 +58,9 @@ class AlertTestCase:
             region=self.region,
             horizon_hours=self.horizon_hours,
             observations=obs_list,
-            decision_template=DecisionTemplate.ALERT,
+            decision_template=DecisionTemplate(self.template),
             category=cat,
+            exposure=self.exposure,
         )
 
 
@@ -65,6 +79,7 @@ class AlertBenchEvaluator:
         )
         self.test_cases: list[AlertTestCase] = []
         self.results: list[dict[str, Any]] = []
+        self.action_results: list[dict[str, Any]] = []
         self._gt_divergences: list[dict[str, Any]] = []
         self._build_test_cases()
 
@@ -80,9 +95,14 @@ class AlertBenchEvaluator:
             gt_fn = item.get("_gt_fn")
             obs = item.get("observations", [])
             if gt_fn is not None:
-                kwargs = {}
-                if item.get("category") == "heat":
+                # 通用真值调用：按函数签名传入可选参数（heat_duration_days /
+                # exposure），避免对不接受该参数的旧 gt_fn 抛 TypeError。
+                kwargs: dict[str, Any] = {}
+                params = inspect.signature(gt_fn).parameters
+                if "heat_duration_days" in params:
                     kwargs["heat_duration_days"] = item.get("heat_duration_days", 3)
+                if item.get("exposure") is not None and "exposure" in params:
+                    kwargs["exposure"] = ExposureProfile(**item["exposure"])
                 decision, _score, _explanation = gt_fn(obs, **kwargs)
                 ground_truth = decision
                 # 硬编码值仅作一致性校验：若与独立标准不一致，记录差异
@@ -105,6 +125,12 @@ class AlertBenchEvaluator:
                 region=item["region"],
                 ground_truth=ground_truth,
                 observations=obs,
+                exposure=(
+                    ExposureProfile(**item["exposure"])
+                    if item.get("exposure") is not None
+                    else None
+                ),
+                template=item.get("template", "alert"),
             )
             self.test_cases.append(tc)
 
@@ -112,6 +138,60 @@ class AlertBenchEvaluator:
     def gt_divergences(self) -> list[dict[str, Any]]:
         """独立标准推导与文档硬编码不一致的场景（应为空，否则需更新文档真值）。"""
         return self._gt_divergences
+
+    def evaluate_action_agent(self, agent) -> list[dict[str, Any]]:
+        """评测动作等级 Agent（Phase B 暴露层）。
+
+        Args:
+            agent: 必须有 `decide_action(context) -> str` 方法
+                   （str ∈ {"monitor", "alert", "dispatch"}）
+
+        动作真值 = infer_action_ground_truth(物理真值函数, 观测, 暴露画像)；
+        适用于暴露套件（get_exposure_suite()），对无暴露画像的基础套件
+        也可运行（E0 档动作）。
+        """
+        results: list[dict[str, Any]] = []
+        for tc in self.test_cases:
+            ctx = tc.to_context()
+            try:
+                action_gt, detail = infer_action_ground_truth(
+                    self._gt_fn_of(tc), tc.observations, tc.exposure
+                )
+                action_pred = agent.decide_action(ctx)
+                results.append(
+                    {
+                        "case_id": tc.case_id,
+                        "category": tc.category,
+                        "region": tc.region,
+                        "difficulty": tc.difficulty,
+                        "exposure_class": detail.get("exposure_class", "E0"),
+                        "action_gt": action_gt,
+                        "action_predicted": action_pred,
+                        "action_accuracy": 1 if action_gt == action_pred else 0,
+                    }
+                )
+            except Exception as e:  # pragma: no cover - 防御式
+                results.append(
+                    {"case_id": tc.case_id, "error": str(e)}
+                )
+        self.action_results = results
+        return results
+
+    def _gt_fn_of(self, tc: AlertTestCase) -> Any:
+        """取回测试用例对应的物理真值函数（构建时暂存于 case 上）。"""
+        fn = getattr(tc, "_gt_fn", None)
+        if fn is not None:
+            return fn
+        for item in self.raw_suite:
+            if item.get("case_id") == tc.case_id:
+                fn = item.get("_gt_fn")
+                if fn is None:
+                    raise ValueError(
+                        f"case {tc.case_id} has no _gt_fn for action evaluation"
+                    )
+                tc._gt_fn = fn  # type: ignore[attr-defined]
+                return fn
+        raise ValueError(f"case {tc.case_id} not found in raw_suite")
 
     def evaluate_agent(self, agent) -> list[dict[str, Any]]:
         """
@@ -138,6 +218,9 @@ class AlertBenchEvaluator:
                 result["region"] = tc.region
                 result["category"] = tc.category
                 result["ground_truth"] = tc.ground_truth
+                if tc.exposure is not None:
+                    exp_class, _ = infer_exposure_class(tc.exposure)
+                    result["exposure_class"] = exp_class
 
         self.results = raw_results
         return raw_results
@@ -149,6 +232,10 @@ class AlertBenchEvaluator:
             "flood": {"correct": 0.0, "total": 0.0},
             "drought": {"correct": 0.0, "total": 0.0},
             "heat": {"correct": 0.0, "total": 0.0},
+            "landslide": {"correct": 0.0, "total": 0.0},
+            "typhoon": {"correct": 0.0, "total": 0.0},
+            "cold": {"correct": 0.0, "total": 0.0},
+            "snow": {"correct": 0.0, "total": 0.0},
         }
 
         for r in self.results:
@@ -212,7 +299,10 @@ class AlertBenchEvaluator:
         return {
             "benchmark": "AlertBench",
             "version": "0.3.0",
-            "categories": ["fire", "flood", "drought", "heat"],
+            "categories": [
+                "fire", "flood", "drought", "heat",
+                "landslide", "typhoon", "cold", "snow",
+            ],
             "total_cases": len(self.test_cases),
             "overall_accuracy": round(overall_acc, 4),
             "by_category": cat_bd,
