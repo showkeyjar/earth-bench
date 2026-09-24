@@ -138,6 +138,18 @@ jobs:
         run: |
           python -m earthbench.cars_serve_impact || echo "::warning::CARS impact update skipped"
 
+      - name: CARS artifacts check
+        # CARS 步骤的 || echo 兜底会把失败吞成绿色；这里显式列出产物并给出提示，
+        # 让「静默降级」在步骤列表里可见。push 触发的运行可能落在 GEFS f048
+        # 上架前（00z 起报后 ~5-6h 才可下载），此时缺产物属预期；定时
+        # （00:00/12:00 UTC）运行缺产物才是异常。
+        if: always()
+        run: |
+          echo "CARS artifacts in published_reports:"
+          ls -l published_reports/cars_*.json published_reports/cars_history/ 2>/dev/null \
+            || echo "::warning::本次运行未产生任何 CARS 产物（若为 push 触发且早于起报+6h，属 GEFS 未上架；定时运行出现则需排查）"
+
+
       - name: Generate daily report
         env:
           QWEATHER_API_KEY: ${{ secrets.QWEATHER_API_KEY }}
