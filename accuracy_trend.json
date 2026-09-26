@@ -1,0 +1,124 @@
+{
+  "generated_at": "2026-09-26T23:37:11.751023+08:00",
+  "keep_days": 14,
+  "total_verified": 111,
+  "tp": 4,
+  "fp": 10,
+  "fn": 1,
+  "tn": 96,
+  "accuracy": 0.9009,
+  "precision": 0.2857,
+  "recall": 0.8,
+  "f1": 0.421,
+  "by_category": {
+    "fire": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 20,
+      "total": 35,
+      "verified": 20,
+      "accuracy": 1.0,
+      "precision": null,
+      "recall": null
+    },
+    "flood": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 28,
+      "total": 35,
+      "verified": 28,
+      "accuracy": 1.0,
+      "precision": null,
+      "recall": null
+    },
+    "drought": {
+      "tp": 4,
+      "fp": 10,
+      "fn": 1,
+      "tn": 20,
+      "total": 35,
+      "verified": 35,
+      "accuracy": 0.6857,
+      "precision": 0.2857,
+      "recall": 0.8
+    },
+    "heat": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 28,
+      "total": 35,
+      "verified": 28,
+      "accuracy": 1.0,
+      "precision": null,
+      "recall": null
+    }
+  },
+  "daily_trend": [
+    {
+      "date": "2026-09-18",
+      "verified": 18,
+      "tp": 1,
+      "fp": 2,
+      "fn": 0,
+      "tn": 15,
+      "accuracy": 0.8889
+    },
+    {
+      "date": "2026-09-19",
+      "verified": 18,
+      "tp": 1,
+      "fp": 2,
+      "fn": 0,
+      "tn": 15,
+      "accuracy": 0.8889
+    },
+    {
+      "date": "2026-09-20",
+      "verified": 18,
+      "tp": 1,
+      "fp": 1,
+      "fn": 0,
+      "tn": 16,
+      "accuracy": 0.9444
+    },
+    {
+      "date": "2026-09-21",
+      "verified": 18,
+      "tp": 0,
+      "fp": 2,
+      "fn": 0,
+      "tn": 16,
+      "accuracy": 0.8889
+    },
+    {
+      "date": "2026-09-22",
+      "verified": 13,
+      "tp": 0,
+      "fp": 2,
+      "fn": 0,
+      "tn": 11,
+      "accuracy": 0.8462
+    },
+    {
+      "date": "2026-09-23",
+      "verified": 13,
+      "tp": 1,
+      "fp": 1,
+      "fn": 0,
+      "tn": 11,
+      "accuracy": 0.9231
+    },
+    {
+      "date": "2026-09-24",
+      "verified": 13,
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "tn": 12,
+      "accuracy": 0.9231
+    }
+  ]
+}

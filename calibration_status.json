@@ -1,0 +1,79 @@
+{
+  "status": "no_change",
+  "files_used": 7,
+  "lookback_days": 14,
+  "current_thresholds": {
+    "fire": 0.65,
+    "flood": 0.65,
+    "drought": 0.65,
+    "heat": 0.4784
+  },
+  "new_thresholds": {
+    "fire": 0.65,
+    "flood": 0.65,
+    "drought": 0.65,
+    "heat": 0.4784
+  },
+  "adjustments": [
+    {
+      "category": "fire",
+      "old_value": 0.65,
+      "new_value": 0.65,
+      "adjustment": 0.0,
+      "action": "skip",
+      "reason": "no_errors (perfect)",
+      "stats": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 20
+      }
+    },
+    {
+      "category": "flood",
+      "old_value": 0.65,
+      "new_value": 0.65,
+      "adjustment": 0.0,
+      "action": "skip",
+      "reason": "no_errors (perfect)",
+      "stats": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 28
+      }
+    },
+    {
+      "timestamp": "2026-09-26T23:37:11.754707+08:00",
+      "category": "drought",
+      "old_value": 0.65,
+      "new_value": 0.65,
+      "adjustment": 0.0,
+      "action": "adjust",
+      "reason": "fp=10, fn=1, tn=20, tp=4 | error_diff=9 -> up",
+      "stats": {
+        "tp": 4,
+        "fp": 10,
+        "fn": 1,
+        "tn": 20
+      },
+      "verification_files_used": 7,
+      "lookback_days": 14
+    },
+    {
+      "category": "heat",
+      "old_value": 0.4784,
+      "new_value": 0.4784,
+      "adjustment": 0.0,
+      "action": "skip",
+      "reason": "no_errors (perfect)",
+      "stats": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 28
+      }
+    }
+  ],
+  "calibrated_at": "2026-09-26T23:37:11.754752+08:00"
+}
