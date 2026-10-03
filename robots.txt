@@ -1,0 +1,7 @@
+# EarthBench - Robot Exclusion Policy
+# https://earth-ai.fun/robots.txt
+
+User-agent: *
+Allow: /
+
+Sitemap: https://earth-ai.fun/sitemap.xml
