@@ -1,0 +1,284 @@
+{
+  "date": "2026-10-05",
+  "generated_at": "2026-10-06T00:26:02.450745+00:00",
+  "source": "GDACS",
+  "events_fetched": 134,
+  "stats": {
+    "total": 15,
+    "missed_event_conflicts": 0,
+    "corroborated": 0,
+    "unknown": 15
+  },
+  "entries": [
+    {
+      "category": "flood",
+      "region_id": "Wuhan-Yangtze",
+      "region_name": "武汉·长江",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {},
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "flood事件无 GDACS 匹配"
+      }
+    },
+    {
+      "category": "flood",
+      "region_id": "Lhasa-Tibet",
+      "region_name": "拉萨·西藏",
+      "predicted": false,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {},
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "flood事件无 GDACS 匹配"
+      }
+    },
+    {
+      "category": "flood",
+      "region_id": "Guangzhou-PearlR",
+      "region_name": "广州·珠江",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {},
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "flood事件无 GDACS 匹配"
+      }
+    },
+    {
+      "category": "flood",
+      "region_id": "Guilin-Guangxi",
+      "region_name": "桂林·广西",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {},
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "flood事件无 GDACS 匹配"
+      }
+    },
+    {
+      "category": "flood",
+      "region_id": "Nanjing-Yangtze",
+      "region_name": "南京·长江",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {},
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "flood事件无 GDACS 匹配"
+      }
+    },
+    {
+      "category": "drought",
+      "region_id": "Kunming-Yunnan",
+      "region_name": "昆明·云南",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {},
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "drought事件无 GDACS 匹配"
+      }
+    },
+    {
+      "category": "drought",
+      "region_id": "Hangzhou-Zhejiang",
+      "region_name": "杭州·浙江",
+      "predicted": false,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {},
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "drought事件无 GDACS 匹配"
+      }
+    },
+    {
+      "category": "drought",
+      "region_id": "Harbin-Heilongjiang",
+      "region_name": "哈尔滨·黑龙江",
+      "predicted": false,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {},
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "drought事件无 GDACS 匹配"
+      }
+    },
+    {
+      "category": "drought",
+      "region_id": "Urumqi-Xinjiang",
+      "region_name": "乌鲁木齐·新疆",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {},
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "drought事件无 GDACS 匹配"
+      }
+    },
+    {
+      "category": "drought",
+      "region_id": "Taiyuan-Shanxi",
+      "region_name": "太原·山西",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {},
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "drought事件无 GDACS 匹配"
+      }
+    },
+    {
+      "category": "heat",
+      "region_id": "Chongqing-HotPotato",
+      "region_name": "重庆",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {},
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "该灾种无 GDACS 事件类型对应"
+      }
+    },
+    {
+      "category": "heat",
+      "region_id": "Kunming-SpringCity",
+      "region_name": "昆明·春城",
+      "predicted": false,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {},
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "该灾种无 GDACS 事件类型对应"
+      }
+    },
+    {
+      "category": "heat",
+      "region_id": "Urumqi-Xinjiang",
+      "region_name": "乌鲁木齐·新疆",
+      "predicted": false,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {},
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "该灾种无 GDACS 事件类型对应"
+      }
+    },
+    {
+      "category": "heat",
+      "region_id": "Nanjing-OvenCity",
+      "region_name": "南京",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {},
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "该灾种无 GDACS 事件类型对应"
+      }
+    },
+    {
+      "category": "heat",
+      "region_id": "Wuhan-Yangtze",
+      "region_name": "武汉·长江",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "QWEATHER_API_KEY not set",
+      "verification_status": "insufficient_data",
+      "verification_details": {},
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "该灾种无 GDACS 事件类型对应"
+      }
+    }
+  ]
+}

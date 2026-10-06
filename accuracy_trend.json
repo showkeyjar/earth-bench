@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-05T10:39:20.675446+08:00",
+  "generated_at": "2026-10-06T08:25:58.918170+08:00",
   "keep_days": 14,
   "total_verified": 0,
   "tp": 0,
@@ -10,6 +10,50 @@
   "precision": null,
   "recall": null,
   "f1": null,
-  "by_category": {},
-  "daily_trend": []
+  "by_category": {
+    "flood": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0,
+      "total": 5,
+      "verified": 0,
+      "accuracy": null,
+      "precision": null,
+      "recall": null
+    },
+    "drought": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0,
+      "total": 5,
+      "verified": 0,
+      "accuracy": null,
+      "precision": null,
+      "recall": null
+    },
+    "heat": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0,
+      "total": 5,
+      "verified": 0,
+      "accuracy": null,
+      "precision": null,
+      "recall": null
+    }
+  },
+  "daily_trend": [
+    {
+      "date": "2026-10-05",
+      "verified": 0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0,
+      "accuracy": null
+    }
+  ]
 }
