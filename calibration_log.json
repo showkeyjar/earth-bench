@@ -1,0 +1,19 @@
+[
+  {
+    "timestamp": "2026-10-07T11:28:59.577838+08:00",
+    "category": "fire",
+    "old_value": 0.4,
+    "new_value": 0.43,
+    "adjustment": 0.03,
+    "action": "adjust",
+    "reason": "fp=4, fn=0, tn=1, tp=0 | error_diff=4 -> up",
+    "stats": {
+      "tp": 0,
+      "fp": 4,
+      "fn": 0,
+      "tn": 1
+    },
+    "verification_files_used": 2,
+    "lookback_days": 14
+  }
+]
