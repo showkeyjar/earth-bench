@@ -1,0 +1,512 @@
+[
+  {
+    "timestamp": "2026-09-24T11:52:41.516613+08:00",
+    "category": "drought",
+    "old_value": 0.55,
+    "new_value": 0.58,
+    "adjustment": 0.03,
+    "action": "adjust",
+    "reason": "fp=9, fn=0, tn=13, tp=3 | error_diff=9 -> up",
+    "stats": {
+      "tp": 3,
+      "fp": 9,
+      "fn": 0,
+      "tn": 13
+    },
+    "verification_files_used": 5,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-09-24T12:00:08.473219+08:00",
+    "category": "drought",
+    "old_value": 0.58,
+    "new_value": 0.61,
+    "adjustment": 0.03,
+    "action": "adjust",
+    "reason": "fp=9, fn=0, tn=13, tp=3 | error_diff=9 -> up",
+    "stats": {
+      "tp": 3,
+      "fp": 9,
+      "fn": 0,
+      "tn": 13
+    },
+    "verification_files_used": 5,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-09-24T12:08:21.127986+08:00",
+    "category": "drought",
+    "old_value": 0.61,
+    "new_value": 0.64,
+    "adjustment": 0.03,
+    "action": "adjust",
+    "reason": "fp=9, fn=0, tn=13, tp=3 | error_diff=9 -> up",
+    "stats": {
+      "tp": 3,
+      "fp": 9,
+      "fn": 0,
+      "tn": 13
+    },
+    "verification_files_used": 5,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-09-25T00:22:07.136247+08:00",
+    "category": "drought",
+    "old_value": 0.64,
+    "new_value": 0.65,
+    "adjustment": 0.01,
+    "action": "adjust",
+    "reason": "fp=10, fn=0, tn=16, tp=4 | error_diff=10 -> up",
+    "stats": {
+      "tp": 4,
+      "fp": 10,
+      "fn": 0,
+      "tn": 16
+    },
+    "verification_files_used": 6,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-09-27T11:33:39.019965+08:00",
+    "category": "heat",
+    "old_value": 0.4784,
+    "new_value": 0.4484,
+    "adjustment": -0.03,
+    "action": "adjust",
+    "reason": "fp=0, fn=1, tn=31, tp=0 | error_diff=-1 -> down",
+    "stats": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "tn": 31
+    },
+    "verification_files_used": 8,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-09-28T00:16:43.024718+08:00",
+    "category": "heat",
+    "old_value": 0.4484,
+    "new_value": 0.4184,
+    "adjustment": -0.03,
+    "action": "adjust",
+    "reason": "fp=0, fn=1, tn=35, tp=0 | error_diff=-1 -> down",
+    "stats": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "tn": 35
+    },
+    "verification_files_used": 9,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-09-28T11:31:29.776563+08:00",
+    "category": "heat",
+    "old_value": 0.4184,
+    "new_value": 0.3884,
+    "adjustment": -0.03,
+    "action": "adjust",
+    "reason": "fp=0, fn=1, tn=35, tp=0 | error_diff=-1 -> down",
+    "stats": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "tn": 35
+    },
+    "verification_files_used": 9,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-09-29T03:09:26.369042+08:00",
+    "category": "heat",
+    "old_value": 0.3884,
+    "new_value": 0.3584,
+    "adjustment": -0.03,
+    "action": "adjust",
+    "reason": "fp=0, fn=1, tn=39, tp=0 | error_diff=-1 -> down",
+    "stats": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "tn": 39
+    },
+    "verification_files_used": 10,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-09-29T12:07:22.591423+08:00",
+    "category": "heat",
+    "old_value": 0.3584,
+    "new_value": 0.3284,
+    "adjustment": -0.03,
+    "action": "adjust",
+    "reason": "fp=0, fn=1, tn=39, tp=0 | error_diff=-1 -> down",
+    "stats": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "tn": 39
+    },
+    "verification_files_used": 10,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-09-30T01:31:47.063651+08:00",
+    "category": "heat",
+    "old_value": 0.3284,
+    "new_value": 0.2984,
+    "adjustment": -0.03,
+    "action": "adjust",
+    "reason": "fp=0, fn=1, tn=43, tp=0 | error_diff=-1 -> down",
+    "stats": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "tn": 43
+    },
+    "verification_files_used": 11,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-09-30T11:53:31.408956+08:00",
+    "category": "heat",
+    "old_value": 0.2984,
+    "new_value": 0.2684,
+    "adjustment": -0.03,
+    "action": "adjust",
+    "reason": "fp=0, fn=1, tn=43, tp=0 | error_diff=-1 -> down",
+    "stats": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "tn": 43
+    },
+    "verification_files_used": 11,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-01T01:29:37.899946+08:00",
+    "category": "heat",
+    "old_value": 0.2684,
+    "new_value": 0.25,
+    "adjustment": -0.0184,
+    "action": "adjust",
+    "reason": "fp=0, fn=1, tn=47, tp=0 | error_diff=-1 -> down",
+    "stats": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "tn": 47
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-02T01:54:58.014061+08:00",
+    "category": "drought",
+    "old_value": 0.65,
+    "new_value": 0.6471,
+    "adjustment": -0.0029,
+    "action": "adjust",
+    "reason": "fp=8, fn=9, tn=40, tp=3 | error_diff=-1 -> down",
+    "stats": {
+      "tp": 3,
+      "fp": 8,
+      "fn": 9,
+      "tn": 40
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-02T11:57:58.653388+08:00",
+    "category": "drought",
+    "old_value": 0.6471,
+    "new_value": 0.6442,
+    "adjustment": -0.0029,
+    "action": "adjust",
+    "reason": "fp=8, fn=9, tn=40, tp=3 | error_diff=-1 -> down",
+    "stats": {
+      "tp": 3,
+      "fp": 8,
+      "fn": 9,
+      "tn": 40
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-03T01:19:54.907286+08:00",
+    "category": "drought",
+    "old_value": 0.6442,
+    "new_value": 0.6317,
+    "adjustment": -0.0125,
+    "action": "adjust",
+    "reason": "fp=6, fn=10, tn=42, tp=2 | error_diff=-4 -> down",
+    "stats": {
+      "tp": 2,
+      "fp": 6,
+      "fn": 10,
+      "tn": 42
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-03T11:43:04.293920+08:00",
+    "category": "drought",
+    "old_value": 0.6317,
+    "new_value": 0.6192,
+    "adjustment": -0.0125,
+    "action": "adjust",
+    "reason": "fp=6, fn=10, tn=42, tp=2 | error_diff=-4 -> down",
+    "stats": {
+      "tp": 2,
+      "fp": 6,
+      "fn": 10,
+      "tn": 42
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-03T23:37:21.369776+08:00",
+    "category": "drought",
+    "old_value": 0.6192,
+    "new_value": 0.6067,
+    "adjustment": -0.0125,
+    "action": "adjust",
+    "reason": "fp=6, fn=10, tn=42, tp=2 | error_diff=-4 -> down",
+    "stats": {
+      "tp": 2,
+      "fp": 6,
+      "fn": 10,
+      "tn": 42
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-04T12:12:45.609218+08:00",
+    "category": "drought",
+    "old_value": 0.6067,
+    "new_value": 0.5879,
+    "adjustment": -0.0188,
+    "action": "adjust",
+    "reason": "fp=5, fn=11, tn=43, tp=1 | error_diff=-6 -> down",
+    "stats": {
+      "tp": 1,
+      "fp": 5,
+      "fn": 11,
+      "tn": 43
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-05T00:21:05.810645+08:00",
+    "category": "drought",
+    "old_value": 0.5879,
+    "new_value": 0.5579,
+    "adjustment": -0.03,
+    "action": "adjust",
+    "reason": "fp=3, fn=13, tn=43, tp=1 | error_diff=-10 -> down",
+    "stats": {
+      "tp": 1,
+      "fp": 3,
+      "fn": 13,
+      "tn": 43
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-05T11:56:57.296478+08:00",
+    "category": "drought",
+    "old_value": 0.5579,
+    "new_value": 0.5279,
+    "adjustment": -0.03,
+    "action": "adjust",
+    "reason": "fp=3, fn=13, tn=43, tp=1 | error_diff=-10 -> down",
+    "stats": {
+      "tp": 1,
+      "fp": 3,
+      "fn": 13,
+      "tn": 43
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-06T12:46:07.639332+08:00",
+    "category": "drought",
+    "old_value": 0.5279,
+    "new_value": 0.4979,
+    "adjustment": -0.03,
+    "action": "adjust",
+    "reason": "fp=1, fn=14, tn=44, tp=1 | error_diff=-13 -> down",
+    "stats": {
+      "tp": 1,
+      "fp": 1,
+      "fn": 14,
+      "tn": 44
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-07T01:49:15.024448+08:00",
+    "category": "drought",
+    "old_value": 0.4979,
+    "new_value": 0.4679,
+    "adjustment": -0.03,
+    "action": "adjust",
+    "reason": "fp=0, fn=16, tn=44, tp=0 | error_diff=-16 -> down",
+    "stats": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 16,
+      "tn": 44
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-07T12:11:55.187867+08:00",
+    "category": "drought",
+    "old_value": 0.4679,
+    "new_value": 0.4379,
+    "adjustment": -0.03,
+    "action": "adjust",
+    "reason": "fp=0, fn=16, tn=44, tp=0 | error_diff=-16 -> down",
+    "stats": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 16,
+      "tn": 44
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-08T02:20:53.688936+08:00",
+    "category": "drought",
+    "old_value": 0.4379,
+    "new_value": 0.4079,
+    "adjustment": -0.03,
+    "action": "adjust",
+    "reason": "fp=0, fn=16, tn=44, tp=0 | error_diff=-16 -> down",
+    "stats": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 16,
+      "tn": 44
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-08T12:24:19.839376+08:00",
+    "category": "drought",
+    "old_value": 0.4079,
+    "new_value": 0.3779,
+    "adjustment": -0.03,
+    "action": "adjust",
+    "reason": "fp=0, fn=16, tn=44, tp=0 | error_diff=-16 -> down",
+    "stats": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 16,
+      "tn": 44
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-09T02:20:37.008222+08:00",
+    "category": "drought",
+    "old_value": 0.3779,
+    "new_value": 0.3479,
+    "adjustment": -0.03,
+    "action": "adjust",
+    "reason": "fp=2, fn=16, tn=42, tp=0 | error_diff=-14 -> down",
+    "stats": {
+      "tp": 0,
+      "fp": 2,
+      "fn": 16,
+      "tn": 42
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-09T12:28:35.643822+08:00",
+    "category": "drought",
+    "old_value": 0.3479,
+    "new_value": 0.3179,
+    "adjustment": -0.03,
+    "action": "adjust",
+    "reason": "fp=2, fn=16, tn=42, tp=0 | error_diff=-14 -> down",
+    "stats": {
+      "tp": 0,
+      "fp": 2,
+      "fn": 16,
+      "tn": 42
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-10T01:53:53.311653+08:00",
+    "category": "drought",
+    "old_value": 0.3179,
+    "new_value": 0.2917,
+    "adjustment": -0.0262,
+    "action": "adjust",
+    "reason": "fp=5, fn=16, tn=39, tp=0 | error_diff=-11 -> down",
+    "stats": {
+      "tp": 0,
+      "fp": 5,
+      "fn": 16,
+      "tn": 39
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-10T12:14:22.293529+08:00",
+    "category": "drought",
+    "old_value": 0.2917,
+    "new_value": 0.2655,
+    "adjustment": -0.0262,
+    "action": "adjust",
+    "reason": "fp=5, fn=16, tn=39, tp=0 | error_diff=-11 -> down",
+    "stats": {
+      "tp": 0,
+      "fp": 5,
+      "fn": 16,
+      "tn": 39
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-11T00:51:02.235184+08:00",
+    "category": "drought",
+    "old_value": 0.2655,
+    "new_value": 0.25,
+    "adjustment": -0.0155,
+    "action": "adjust",
+    "reason": "fp=6, fn=15, tn=37, tp=2 | error_diff=-9 -> down",
+    "stats": {
+      "tp": 2,
+      "fp": 6,
+      "fn": 15,
+      "tn": 37
+    },
+    "verification_files_used": 12,
+    "lookback_days": 14
+  }
+]
