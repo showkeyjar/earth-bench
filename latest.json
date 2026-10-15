@@ -1,5 +1,5 @@
 {
-  "published_at": "2026-10-12T20:26:24.419558+08:00",
+  "published_at": "2026-10-15T20:59:05.466507+08:00",
   "engine": "AI Decision System",
   "total_scenarios": 20,
   "alert_count": 13,
@@ -14,8 +14,8 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:23:49+08:00",
-      "data_sources": "ECMWF, Station, MODIS",
+      "observation_time": "2026-10-15T20:56:35+08:00",
+      "data_sources": "MODIS, ECMWF, Station",
       "llm_decision": true,
       "confidence": 0.846,
       "heuristic_decision": true,
@@ -26,7 +26,7 @@
         "temperature": 0.6
       },
       "rationale": "FireAlert: FWI=53.5, 湿度=10.0%, 风速=18.0m/s, 降雨=0.0mm, 风险分=0.846",
-      "timestamp": "2026-10-12T12:23:49.428465+00:00",
+      "timestamp": "2026-10-15T12:56:35.379982+00:00",
       "coordinates": {
         "lat": 39.99,
         "lng": 116.16
@@ -257,7 +257,7 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:23:57+08:00",
+      "observation_time": "2026-10-15T20:56:43+08:00",
       "data_sources": "ECMWF, Station",
       "llm_decision": false,
       "confidence": 0.3,
@@ -267,7 +267,7 @@
         "humidity": 0.35
       },
       "rationale": "FireAlert: FWI=16.5, 湿度=65.0%, 风速=0.0m/s, 降雨=8.0mm, 风险分=0.300",
-      "timestamp": "2026-10-12T12:23:57.576544+00:00",
+      "timestamp": "2026-10-15T12:56:43.471310+00:00",
       "coordinates": {
         "lat": 30.25,
         "lng": 120.15
@@ -453,7 +453,7 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:24:05+08:00",
+      "observation_time": "2026-10-15T20:56:51+08:00",
       "data_sources": "ECMWF, Station",
       "llm_decision": false,
       "confidence": 0.414,
@@ -464,7 +464,7 @@
         "rainfall_suppression": -0.5
       },
       "rationale": "FireAlert: FWI=49.0, 湿度=15.0%, 风速=0.0m/s, 降雨=25.0mm, 风险分=0.414",
-      "timestamp": "2026-10-12T12:24:05.708683+00:00",
+      "timestamp": "2026-10-15T12:56:51.639573+00:00",
       "coordinates": {
         "lat": 42.02,
         "lng": 128.08
@@ -660,8 +660,8 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:24:13+08:00",
-      "data_sources": "ECMWF, Station, MODIS",
+      "observation_time": "2026-10-15T20:56:59+08:00",
+      "data_sources": "MODIS, ECMWF, Station",
       "llm_decision": true,
       "confidence": 0.511,
       "heuristic_decision": true,
@@ -671,7 +671,7 @@
         "temperature": 0.467
       },
       "rationale": "FireAlert: FWI=33.5, 湿度=55.0%, 风速=0.0m/s, 降雨=0.0mm, 风险分=0.511",
-      "timestamp": "2026-10-12T12:24:13.866200+00:00",
+      "timestamp": "2026-10-15T12:56:59.785054+00:00",
       "coordinates": {
         "lat": 22.54,
         "lng": 114.06
@@ -861,7 +861,7 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:24:22+08:00",
+      "observation_time": "2026-10-15T20:57:07+08:00",
       "data_sources": "ECMWF, Station",
       "llm_decision": true,
       "confidence": 0.667,
@@ -871,7 +871,7 @@
         "humidity": 0.775
       },
       "rationale": "FireAlert: FWI=36.8, 湿度=22.5%, 风速=0.0m/s, 降雨=0.0mm, 风险分=0.667",
-      "timestamp": "2026-10-12T12:24:22.017817+00:00",
+      "timestamp": "2026-10-15T12:57:07.922319+00:00",
       "coordinates": {
         "lat": 51.17,
         "lng": 124.39
@@ -1067,8 +1067,8 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:24:30+08:00",
-      "data_sources": "CMA, Hydro, Sensor",
+      "observation_time": "2026-10-15T20:57:16+08:00",
+      "data_sources": "Hydro, Sensor, CMA",
       "llm_decision": true,
       "confidence": 0.963,
       "heuristic_decision": true,
@@ -1079,7 +1079,7 @@
         "water_level": 1.0
       },
       "rationale": "FloodAlert: 24h=120.0mm, 6h=65.0mm, 土壤=0.90, 水位=12.5m, 风险分=0.963",
-      "timestamp": "2026-10-12T12:24:30.155084+00:00",
+      "timestamp": "2026-10-15T12:57:16.059389+00:00",
       "coordinates": {
         "lat": 30.59,
         "lng": 114.31
@@ -1301,8 +1301,8 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:24:38+08:00",
-      "data_sources": "CMA, Hydro, Sensor",
+      "observation_time": "2026-10-15T20:57:24+08:00",
+      "data_sources": "Hydro, Sensor, CMA",
       "llm_decision": false,
       "confidence": 0.067,
       "heuristic_decision": false,
@@ -1312,7 +1312,7 @@
         "water_level": 0.2
       },
       "rationale": "FloodAlert: 24h=0.0mm, 6h=0.0mm, 土壤=0.20, 水位=2.0m, 风险分=0.067",
-      "timestamp": "2026-10-12T12:24:38.256463+00:00",
+      "timestamp": "2026-10-15T12:57:24.237438+00:00",
       "coordinates": {
         "lat": 29.65,
         "lng": 91.11
@@ -1483,8 +1483,8 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:24:46+08:00",
-      "data_sources": "CMA, Hydro, Sensor",
+      "observation_time": "2026-10-15T20:57:32+08:00",
+      "data_sources": "Hydro, Sensor, CMA",
       "llm_decision": true,
       "confidence": 0.61,
       "heuristic_decision": true,
@@ -1494,7 +1494,7 @@
         "water_level": 0.85
       },
       "rationale": "FloodAlert: 24h=40.0mm, 6h=0.0mm, 土壤=0.88, 水位=8.5m, 风险分=0.610",
-      "timestamp": "2026-10-12T12:24:46.435765+00:00",
+      "timestamp": "2026-10-15T12:57:32.408770+00:00",
       "coordinates": {
         "lat": 23.13,
         "lng": 113.27
@@ -1680,8 +1680,8 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:24:54+08:00",
-      "data_sources": "CMA, Hydro, Sensor",
+      "observation_time": "2026-10-15T20:57:40+08:00",
+      "data_sources": "Hydro, Sensor, CMA",
       "llm_decision": true,
       "confidence": 0.473,
       "heuristic_decision": true,
@@ -1691,7 +1691,7 @@
         "water_level": 0.3
       },
       "rationale": "FloodAlert: 24h=80.0mm, 6h=0.0mm, 土壤=0.55, 水位=3.0m, 风险分=0.473",
-      "timestamp": "2026-10-12T12:24:54.568740+00:00",
+      "timestamp": "2026-10-15T12:57:40.502254+00:00",
       "coordinates": {
         "lat": 25.27,
         "lng": 110.29
@@ -1872,7 +1872,7 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:25:02+08:00",
+      "observation_time": "2026-10-15T20:57:44+08:00",
       "data_sources": "Hydro",
       "llm_decision": true,
       "confidence": 1.0,
@@ -1882,7 +1882,7 @@
         "water_trend": 0.75
       },
       "rationale": "FloodAlert: 24h=0.0mm, 6h=0.0mm, 土壤=0.00, 水位=10.2m, 风险分=1.000",
-      "timestamp": "2026-10-12T12:25:02.708657+00:00",
+      "timestamp": "2026-10-15T12:57:44.161627+00:00",
       "coordinates": {
         "lat": 32.06,
         "lng": 118.8
@@ -2022,8 +2022,8 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:25:10+08:00",
-      "data_sources": "Station, CMA, MODIS",
+      "observation_time": "2026-10-15T20:57:52+08:00",
+      "data_sources": "MODIS, Station, CMA",
       "llm_decision": true,
       "confidence": 0.737,
       "heuristic_decision": true,
@@ -2035,7 +2035,7 @@
         "NDVI": 1.167
       },
       "rationale": "DroughtAlert: SPI=-2.30, Palmer=-0.80, 湿度=15.0%, 月降雨=5.0mm, NDVI=0.15, 风险分=0.737",
-      "timestamp": "2026-10-12T12:25:10.855187+00:00",
+      "timestamp": "2026-10-15T12:57:52.306548+00:00",
       "coordinates": {
         "lat": 25.04,
         "lng": 102.71
@@ -2290,8 +2290,8 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:25:18+08:00",
-      "data_sources": "Station, CMA, MODIS",
+      "observation_time": "2026-10-15T20:58:00+08:00",
+      "data_sources": "MODIS, Station, CMA",
       "llm_decision": false,
       "confidence": 0.0,
       "heuristic_decision": false,
@@ -2303,7 +2303,7 @@
         "NDVI": 0
       },
       "rationale": "DroughtAlert: SPI=-0.20, Palmer=-0.10, 湿度=60.0%, 月降雨=150.0mm, NDVI=0.65, 风险分=0.000",
-      "timestamp": "2026-10-12T12:25:18.992112+00:00",
+      "timestamp": "2026-10-15T12:58:00.441417+00:00",
       "coordinates": {
         "lat": 30.27,
         "lng": 120.16
@@ -2533,8 +2533,8 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:25:27+08:00",
-      "data_sources": "CMA, MODIS",
+      "observation_time": "2026-10-15T20:58:08+08:00",
+      "data_sources": "MODIS, CMA",
       "llm_decision": false,
       "confidence": 0.063,
       "heuristic_decision": false,
@@ -2545,7 +2545,7 @@
         "NDVI": 0
       },
       "rationale": "DroughtAlert: SPI=-0.80, Palmer=-0.30, 湿度=0.0%, 月降雨=80.0mm, NDVI=0.50, 风险分=0.063",
-      "timestamp": "2026-10-12T12:25:27.128465+00:00",
+      "timestamp": "2026-10-15T12:58:08.572687+00:00",
       "coordinates": {
         "lat": 45.8,
         "lng": 126.53
@@ -2744,8 +2744,8 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:25:35+08:00",
-      "data_sources": "Station, CMA, MODIS",
+      "observation_time": "2026-10-15T20:58:16+08:00",
+      "data_sources": "MODIS, Station, CMA",
       "llm_decision": true,
       "confidence": 0.533,
       "heuristic_decision": true,
@@ -2757,7 +2757,7 @@
         "NDVI": 1.333
       },
       "rationale": "DroughtAlert: SPI=-0.30, Palmer=-1.20, 湿度=20.0%, 月降雨=5.0mm, NDVI=0.10, 风险分=0.533",
-      "timestamp": "2026-10-12T12:25:35.207133+00:00",
+      "timestamp": "2026-10-15T12:58:16.665709+00:00",
       "coordinates": {
         "lat": 43.83,
         "lng": 87.62
@@ -3012,8 +3012,8 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:25:43+08:00",
-      "data_sources": "CMA, MODIS",
+      "observation_time": "2026-10-15T20:58:24+08:00",
+      "data_sources": "MODIS, CMA",
       "llm_decision": true,
       "confidence": 0.451,
       "heuristic_decision": true,
@@ -3024,7 +3024,7 @@
         "NDVI": 1.0
       },
       "rationale": "DroughtAlert: SPI=-1.00, Palmer=-0.60, 湿度=0.0%, 月降雨=10.0mm, NDVI=0.20, 风险分=0.451",
-      "timestamp": "2026-10-12T12:25:43.423403+00:00",
+      "timestamp": "2026-10-15T12:58:24.811713+00:00",
       "coordinates": {
         "lat": 37.87,
         "lng": 112.55
@@ -3267,7 +3267,7 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:25:51+08:00",
+      "observation_time": "2026-10-15T20:58:32+08:00",
       "data_sources": "Station, CMA",
       "llm_decision": true,
       "confidence": 0.733,
@@ -3279,7 +3279,7 @@
         "humidity": 0.5
       },
       "rationale": "HeatWaveAlert: 最高温=39.0°C, 湿球=29.0°C, 湿度=75.0%, 持续≈3天, 风险分=0.733",
-      "timestamp": "2026-10-12T12:25:51.637053+00:00",
+      "timestamp": "2026-10-15T12:58:32.947789+00:00",
       "coordinates": {
         "lat": 29.43,
         "lng": 106.91
@@ -3499,7 +3499,7 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:25:59+08:00",
+      "observation_time": "2026-10-15T20:58:41+08:00",
       "data_sources": "Station, CMA",
       "llm_decision": false,
       "confidence": 0.067,
@@ -3510,7 +3510,7 @@
         "humidity": 0
       },
       "rationale": "HeatWaveAlert: 最高温=26.0°C, 湿球=N/A°C, 湿度=40.0%, 持续≈1天, 风险分=0.067",
-      "timestamp": "2026-10-12T12:25:59.852620+00:00",
+      "timestamp": "2026-10-15T12:58:41.085841+00:00",
       "coordinates": {
         "lat": 25.04,
         "lng": 102.71
@@ -3672,7 +3672,7 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:26:08+08:00",
+      "observation_time": "2026-10-15T20:58:49+08:00",
       "data_sources": "Station, CMA",
       "llm_decision": false,
       "confidence": 0.283,
@@ -3684,7 +3684,7 @@
         "humidity": 0
       },
       "rationale": "HeatWaveAlert: 最高温=36.0°C, 湿球=22.0°C, 湿度=15.0%, 持续≈1天, 风险分=0.283",
-      "timestamp": "2026-10-12T12:26:08.054360+00:00",
+      "timestamp": "2026-10-15T12:58:49.228310+00:00",
       "coordinates": {
         "lat": 43.83,
         "lng": 87.62
@@ -3868,7 +3868,7 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:26:16+08:00",
+      "observation_time": "2026-10-15T20:58:57+08:00",
       "data_sources": "Station, CMA",
       "llm_decision": true,
       "confidence": 0.446,
@@ -3880,7 +3880,7 @@
         "humidity": 0.44
       },
       "rationale": "HeatWaveAlert: 最高温=34.5°C, 湿球=27.5°C, 湿度=72.0%, 持续≈1天, 风险分=0.446",
-      "timestamp": "2026-10-12T12:26:16.238058+00:00",
+      "timestamp": "2026-10-15T12:58:57.346744+00:00",
       "coordinates": {
         "lat": 32.06,
         "lng": 118.8
@@ -4088,7 +4088,7 @@
       "gt_score": null,
       "gt_explanation": null,
       "data_source": "fallback_alertbench",
-      "observation_time": "2026-10-12T20:26:24+08:00",
+      "observation_time": "2026-10-15T20:59:05+08:00",
       "data_sources": "Station, CMA",
       "llm_decision": true,
       "confidence": 0.499,
@@ -4099,7 +4099,7 @@
         "wet_bulb_temp": 0.479
       },
       "rationale": "HeatWaveAlert: 最高温=35.0°C, 湿球=26.8°C, 湿度=0.0%, 持续≈2天, 风险分=0.499",
-      "timestamp": "2026-10-12T12:26:24.419285+00:00",
+      "timestamp": "2026-10-15T12:59:05.466205+00:00",
       "coordinates": {
         "lat": 30.59,
         "lng": 114.31
