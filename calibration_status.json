@@ -1,35 +1,35 @@
 {
   "status": "calibrated",
-  "files_used": 3,
+  "files_used": 4,
   "lookback_days": 14,
   "current_thresholds": {
-    "fire": 0.49,
+    "fire": 0.52,
     "flood": 0.45,
     "drought": 0.4,
     "heat": 0.4
   },
   "new_thresholds": {
-    "fire": 0.52,
+    "fire": 0.55,
     "flood": 0.45,
     "drought": 0.4,
     "heat": 0.4
   },
   "adjustments": [
     {
-      "timestamp": "2026-10-15T20:59:10.666311+08:00",
+      "timestamp": "2026-10-17T20:42:05.958829+08:00",
       "category": "fire",
-      "old_value": 0.49,
-      "new_value": 0.52,
+      "old_value": 0.52,
+      "new_value": 0.55,
       "adjustment": 0.03,
       "action": "adjust",
-      "reason": "fp=8, fn=0, tn=2, tp=0 | error_diff=8 -> up",
+      "reason": "fp=11, fn=0, tn=4, tp=0 | error_diff=11 -> up",
       "stats": {
         "tp": 0,
-        "fp": 8,
+        "fp": 11,
         "fn": 0,
-        "tn": 2
+        "tn": 4
       },
-      "verification_files_used": 3,
+      "verification_files_used": 4,
       "lookback_days": 14
     },
     {
@@ -75,5 +75,5 @@
       }
     }
   ],
-  "calibrated_at": "2026-10-15T20:59:10.670010+08:00"
+  "calibrated_at": "2026-10-17T20:42:05.967922+08:00"
 }

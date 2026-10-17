@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-10-15T20:59:05.508221+08:00",
+  "generated_at": "2026-10-17T20:42:00.758340+08:00",
   "keep_days": 14,
-  "total_verified": 10,
+  "total_verified": 15,
   "tp": 0,
-  "fp": 8,
+  "fp": 11,
   "fn": 0,
-  "tn": 2,
-  "accuracy": 0.2,
+  "tn": 4,
+  "accuracy": 0.2667,
   "precision": 0.0,
   "recall": null,
   "f1": null,
@@ -46,12 +46,12 @@
     },
     "fire": {
       "tp": 0,
-      "fp": 8,
+      "fp": 11,
       "fn": 0,
-      "tn": 2,
-      "total": 10,
-      "verified": 10,
-      "accuracy": 0.2,
+      "tn": 4,
+      "total": 15,
+      "verified": 15,
+      "accuracy": 0.2667,
       "precision": 0.0,
       "recall": null
     }
@@ -83,6 +83,15 @@
       "fn": 0,
       "tn": 0,
       "accuracy": null
+    },
+    {
+      "date": "2026-10-15",
+      "verified": 5,
+      "tp": 0,
+      "fp": 3,
+      "fn": 0,
+      "tn": 2,
+      "accuracy": 0.4
     }
   ]
 }
