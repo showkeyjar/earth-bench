@@ -83,5 +83,22 @@
     },
     "verification_files_used": 4,
     "lookback_days": 14
+  },
+  {
+    "timestamp": "2026-10-18T09:59:29.168834+08:00",
+    "category": "fire",
+    "old_value": 0.55,
+    "new_value": 0.58,
+    "adjustment": 0.03,
+    "action": "adjust",
+    "reason": "fp=11, fn=0, tn=4, tp=0 | error_diff=11 -> up",
+    "stats": {
+      "tp": 0,
+      "fp": 11,
+      "fn": 0,
+      "tn": 4
+    },
+    "verification_files_used": 5,
+    "lookback_days": 14
   }
 ]

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-17T20:42:00.758340+08:00",
+  "generated_at": "2026-10-18T09:59:23.914881+08:00",
   "keep_days": 14,
   "total_verified": 15,
   "tp": 0,
@@ -16,7 +16,7 @@
       "fp": 0,
       "fn": 0,
       "tn": 0,
-      "total": 15,
+      "total": 20,
       "verified": 0,
       "accuracy": null,
       "precision": null,
@@ -27,7 +27,7 @@
       "fp": 0,
       "fn": 0,
       "tn": 0,
-      "total": 15,
+      "total": 20,
       "verified": 0,
       "accuracy": null,
       "precision": null,
@@ -38,7 +38,7 @@
       "fp": 0,
       "fn": 0,
       "tn": 0,
-      "total": 15,
+      "total": 20,
       "verified": 0,
       "accuracy": null,
       "precision": null,
@@ -92,6 +92,15 @@
       "fn": 0,
       "tn": 2,
       "accuracy": 0.4
+    },
+    {
+      "date": "2026-10-17",
+      "verified": 0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0,
+      "accuracy": null
     }
   ]
 }
