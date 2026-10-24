@@ -1,0 +1,169 @@
+{
+  "generated_at": "2026-10-24T23:17:28.078907+08:00",
+  "keep_days": 14,
+  "total_verified": 156,
+  "tp": 10,
+  "fp": 14,
+  "fn": 4,
+  "tn": 128,
+  "accuracy": 0.8846,
+  "precision": 0.4167,
+  "recall": 0.7143,
+  "f1": 0.5263,
+  "by_category": {
+    "fire": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0,
+      "total": 60,
+      "verified": 0,
+      "accuracy": null,
+      "precision": null,
+      "recall": null
+    },
+    "flood": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 48,
+      "total": 60,
+      "verified": 48,
+      "accuracy": 1.0,
+      "precision": null,
+      "recall": null
+    },
+    "drought": {
+      "tp": 10,
+      "fp": 14,
+      "fn": 4,
+      "tn": 32,
+      "total": 60,
+      "verified": 60,
+      "accuracy": 0.7,
+      "precision": 0.4167,
+      "recall": 0.7143
+    },
+    "heat": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 48,
+      "total": 60,
+      "verified": 48,
+      "accuracy": 1.0,
+      "precision": null,
+      "recall": null
+    }
+  },
+  "daily_trend": [
+    {
+      "date": "2026-10-11",
+      "verified": 13,
+      "tp": 2,
+      "fp": 1,
+      "fn": 0,
+      "tn": 10,
+      "accuracy": 0.9231
+    },
+    {
+      "date": "2026-10-12",
+      "verified": 13,
+      "tp": 1,
+      "fp": 1,
+      "fn": 1,
+      "tn": 10,
+      "accuracy": 0.8462
+    },
+    {
+      "date": "2026-10-13",
+      "verified": 13,
+      "tp": 1,
+      "fp": 1,
+      "fn": 1,
+      "tn": 10,
+      "accuracy": 0.8462
+    },
+    {
+      "date": "2026-10-14",
+      "verified": 13,
+      "tp": 1,
+      "fp": 0,
+      "fn": 1,
+      "tn": 11,
+      "accuracy": 0.9231
+    },
+    {
+      "date": "2026-10-15",
+      "verified": 13,
+      "tp": 0,
+      "fp": 1,
+      "fn": 0,
+      "tn": 12,
+      "accuracy": 0.9231
+    },
+    {
+      "date": "2026-10-16",
+      "verified": 13,
+      "tp": 0,
+      "fp": 2,
+      "fn": 0,
+      "tn": 11,
+      "accuracy": 0.8462
+    },
+    {
+      "date": "2026-10-17",
+      "verified": 13,
+      "tp": 1,
+      "fp": 2,
+      "fn": 0,
+      "tn": 10,
+      "accuracy": 0.8462
+    },
+    {
+      "date": "2026-10-18",
+      "verified": 13,
+      "tp": 1,
+      "fp": 1,
+      "fn": 0,
+      "tn": 11,
+      "accuracy": 0.9231
+    },
+    {
+      "date": "2026-10-19",
+      "verified": 13,
+      "tp": 1,
+      "fp": 2,
+      "fn": 0,
+      "tn": 10,
+      "accuracy": 0.8462
+    },
+    {
+      "date": "2026-10-20",
+      "verified": 13,
+      "tp": 2,
+      "fp": 1,
+      "fn": 0,
+      "tn": 10,
+      "accuracy": 0.9231
+    },
+    {
+      "date": "2026-10-21",
+      "verified": 13,
+      "tp": 0,
+      "fp": 2,
+      "fn": 0,
+      "tn": 11,
+      "accuracy": 0.8462
+    },
+    {
+      "date": "2026-10-22",
+      "verified": 13,
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "tn": 12,
+      "accuracy": 0.9231
+    }
+  ]
+}
