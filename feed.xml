@@ -4,103 +4,103 @@
   <subtitle>Environmental Risk Decision Intelligence</subtitle>
   <link href="https://earthbench.io/feed.xml" rel="self"/>
   <link href="https://earthbench.io"/>
-  <updated>2026-10-24T10:39:52+08:00</updated>
+  <updated>2026-10-25T10:01:53+08:00</updated>
   <id>tag:earthbench.io,2026:</id>
   <generator>EarthBench Pipeline v0.3.0</generator>
 
   <entry>
     <title>EarthBench Alert: Forest Fire in Xiangshan-Beijing</title>
-    <link href="/reports/20261024/fire-l1-extreme-risk" rel="alternate"/>
-    <id>tag:earthbench.io,2026-10-24T02:37:16.926031+00:00</id>
-    <published>2026-10-24T02:37:16.926031+00:00</published>
+    <link href="/reports/20261025/fire-l1-extreme-risk" rel="alternate"/>
+    <id>tag:earthbench.io,2026-10-25T01:59:19.262115+00:00</id>
+    <published>2026-10-25T01:59:19.262115+00:00</published>
     <summary>FireAlert: FWI=53.5, 湿度=10.0%, 风速=18.0m/s, 降雨=0.0mm, 风险分=0.846</summary>
   </entry>
 
   <entry>
     <title>EarthBench Alert: Forest Fire in GreaterKhingan</title>
-    <link href="/reports/20261024/fire-l4-trend-rising" rel="alternate"/>
-    <id>tag:earthbench.io,2026-10-24T02:37:49.667883+00:00</id>
-    <published>2026-10-24T02:37:49.667883+00:00</published>
+    <link href="/reports/20261025/fire-l4-trend-rising" rel="alternate"/>
+    <id>tag:earthbench.io,2026-10-25T01:59:51.797251+00:00</id>
+    <published>2026-10-25T01:59:51.797251+00:00</published>
     <summary>FireAlert: FWI=36.8, 湿度=22.5%, 风速=0.0m/s, 降雨=0.0mm, 风险分=0.667</summary>
   </entry>
 
   <entry>
     <title>EarthBench Alert: Flood in Wuhan-Yangtze</title>
-    <link href="/reports/20261024/flood-l1-extreme-rainfall" rel="alternate"/>
-    <id>tag:earthbench.io,2026-10-24T02:37:57.820013+00:00</id>
-    <published>2026-10-24T02:37:57.820013+00:00</published>
+    <link href="/reports/20261025/flood-l1-extreme-rainfall" rel="alternate"/>
+    <id>tag:earthbench.io,2026-10-25T01:59:59.899725+00:00</id>
+    <published>2026-10-25T01:59:59.899725+00:00</published>
     <summary>FloodAlert: 24h=120.0mm, 6h=65.0mm, 土壤=0.90, 水位=12.5m, 风险分=0.963</summary>
   </entry>
 
   <entry>
     <title>EarthBench Alert: Flood in Guangzhou-PearlR</title>
-    <link href="/reports/20261024/flood-l2-soil-saturated" rel="alternate"/>
-    <id>tag:earthbench.io,2026-10-24T02:38:14.138574+00:00</id>
-    <published>2026-10-24T02:38:14.138574+00:00</published>
+    <link href="/reports/20261025/flood-l2-soil-saturated" rel="alternate"/>
+    <id>tag:earthbench.io,2026-10-25T02:00:16.188547+00:00</id>
+    <published>2026-10-25T02:00:16.188547+00:00</published>
     <summary>FloodAlert: 24h=40.0mm, 6h=0.0mm, 土壤=0.88, 水位=8.5m, 风险分=0.610</summary>
   </entry>
 
   <entry>
     <title>EarthBench Alert: Flood in Guilin-Guangxi</title>
-    <link href="/reports/20261024/flood-l3-good-drainage" rel="alternate"/>
-    <id>tag:earthbench.io,2026-10-24T02:38:22.335949+00:00</id>
-    <published>2026-10-24T02:38:22.335949+00:00</published>
+    <link href="/reports/20261025/flood-l3-good-drainage" rel="alternate"/>
+    <id>tag:earthbench.io,2026-10-25T02:00:24.341664+00:00</id>
+    <published>2026-10-25T02:00:24.341664+00:00</published>
     <summary>FloodAlert: 24h=80.0mm, 6h=0.0mm, 土壤=0.55, 水位=3.0m, 风险分=0.473</summary>
   </entry>
 
   <entry>
     <title>EarthBench Alert: Flood in Nanjing-Yangtze</title>
-    <link href="/reports/20261024/flood-l4-water-trend-rise" rel="alternate"/>
-    <id>tag:earthbench.io,2026-10-24T02:38:30.495467+00:00</id>
-    <published>2026-10-24T02:38:30.495467+00:00</published>
+    <link href="/reports/20261025/flood-l4-water-trend-rise" rel="alternate"/>
+    <id>tag:earthbench.io,2026-10-25T02:00:32.477246+00:00</id>
+    <published>2026-10-25T02:00:32.477246+00:00</published>
     <summary>FloodAlert: 24h=0.0mm, 6h=0.0mm, 土壤=0.00, 水位=10.2m, 风险分=1.000</summary>
   </entry>
 
   <entry>
     <title>EarthBench Alert: Drought in Kunming-Yunnan</title>
-    <link href="/reports/20261024/drought-l1-severe-spi" rel="alternate"/>
-    <id>tag:earthbench.io,2026-10-24T02:38:38.677855+00:00</id>
-    <published>2026-10-24T02:38:38.677855+00:00</published>
+    <link href="/reports/20261025/drought-l1-severe-spi" rel="alternate"/>
+    <id>tag:earthbench.io,2026-10-25T02:00:40.654814+00:00</id>
+    <published>2026-10-25T02:00:40.654814+00:00</published>
     <summary>DroughtAlert: SPI=-2.30, Palmer=-0.80, 湿度=15.0%, 月降雨=5.0mm, NDVI=0.15, 风险分=0.737</summary>
   </entry>
 
   <entry>
     <title>EarthBench Alert: Drought in Urumqi-Xinjiang</title>
-    <link href="/reports/20261024/drought-l3-palmerspi-conflict" rel="alternate"/>
-    <id>tag:earthbench.io,2026-10-24T02:39:03.127897+00:00</id>
-    <published>2026-10-24T02:39:03.127897+00:00</published>
+    <link href="/reports/20261025/drought-l3-palmerspi-conflict" rel="alternate"/>
+    <id>tag:earthbench.io,2026-10-25T02:01:05.088671+00:00</id>
+    <published>2026-10-25T02:01:05.088671+00:00</published>
     <summary>DroughtAlert: SPI=-0.30, Palmer=-1.20, 湿度=20.0%, 月降雨=5.0mm, NDVI=0.10, 风险分=0.533</summary>
   </entry>
 
   <entry>
     <title>EarthBench Alert: Drought in Taiyuan-Shanxi</title>
-    <link href="/reports/20261024/drought-l4-spir-declining" rel="alternate"/>
-    <id>tag:earthbench.io,2026-10-24T02:39:11.292221+00:00</id>
-    <published>2026-10-24T02:39:11.292221+00:00</published>
+    <link href="/reports/20261025/drought-l4-spir-declining" rel="alternate"/>
+    <id>tag:earthbench.io,2026-10-25T02:01:13.242943+00:00</id>
+    <published>2026-10-25T02:01:13.242943+00:00</published>
     <summary>DroughtAlert: SPI=-1.00, Palmer=-0.60, 湿度=0.0%, 月降雨=10.0mm, NDVI=0.20, 风险分=0.451</summary>
   </entry>
 
   <entry>
     <title>EarthBench Alert: Heat Wave in Chongqing-HotPotato</title>
-    <link href="/reports/20261024/heat-l1-extreme-wetbulb" rel="alternate"/>
-    <id>tag:earthbench.io,2026-10-24T02:39:19.474057+00:00</id>
-    <published>2026-10-24T02:39:19.474057+00:00</published>
+    <link href="/reports/20261025/heat-l1-extreme-wetbulb" rel="alternate"/>
+    <id>tag:earthbench.io,2026-10-25T02:01:21.384819+00:00</id>
+    <published>2026-10-25T02:01:21.384819+00:00</published>
     <summary>HeatWaveAlert: 最高温=39.0°C, 湿球=29.0°C, 湿度=75.0%, 持续≈3天, 风险分=0.733</summary>
   </entry>
 
   <entry>
     <title>EarthBench Alert: Heat Wave in Nanjing-OvenCity</title>
-    <link href="/reports/20261024/heat-l3-borderline" rel="alternate"/>
-    <id>tag:earthbench.io,2026-10-24T02:39:43.961732+00:00</id>
-    <published>2026-10-24T02:39:43.961732+00:00</published>
+    <link href="/reports/20261025/heat-l3-borderline" rel="alternate"/>
+    <id>tag:earthbench.io,2026-10-25T02:01:45.832143+00:00</id>
+    <published>2026-10-25T02:01:45.832143+00:00</published>
     <summary>HeatWaveAlert: 最高温=34.5°C, 湿球=27.5°C, 湿度=72.0%, 持续≈1天, 风险分=0.446</summary>
   </entry>
 
   <entry>
     <title>EarthBench Alert: Heat Wave in Wuhan-Yangtze</title>
-    <link href="/reports/20261024/heat-l4-progressive-heat" rel="alternate"/>
-    <id>tag:earthbench.io,2026-10-24T02:39:52.131509+00:00</id>
-    <published>2026-10-24T02:39:52.131509+00:00</published>
+    <link href="/reports/20261025/heat-l4-progressive-heat" rel="alternate"/>
+    <id>tag:earthbench.io,2026-10-25T02:01:53.990185+00:00</id>
+    <published>2026-10-25T02:01:53.990185+00:00</published>
     <summary>HeatWaveAlert: 最高温=35.0°C, 湿球=26.8°C, 湿度=0.0%, 持续≈2天, 风险分=0.499</summary>
   </entry>
 </feed>
