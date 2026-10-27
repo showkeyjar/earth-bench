@@ -1,13 +1,13 @@
 {
   "date": "2026-10-25",
-  "generated_at": "2026-10-26T13:42:33.473642+00:00",
+  "generated_at": "2026-10-27T12:49:06.384431+00:00",
   "source": "GDACS",
-  "events_fetched": 333,
+  "events_fetched": 328,
   "stats": {
-    "total": 15,
+    "total": 20,
     "missed_event_conflicts": 0,
     "corroborated": 0,
-    "unknown": 15
+    "unknown": 20
   },
   "entries": [
     {
@@ -278,6 +278,106 @@
         "matched_events": [],
         "conflict": "unknown",
         "note": "该灾种无 GDACS 事件类型对应"
+      }
+    },
+    {
+      "category": "fire",
+      "region_id": "Xiangshan-Beijing",
+      "region_name": "北京·香山",
+      "predicted": true,
+      "hit": false,
+      "actual": false,
+      "verification_source": "NASA FIRMS",
+      "verification_evidence": "NASA FIRMS 卫星未检测到火点",
+      "verification_status": "verified",
+      "verification_details": {
+        "fire_count": 0
+      },
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "fire事件无 GDACS 匹配"
+      }
+    },
+    {
+      "category": "fire",
+      "region_id": "WestLake-Hangzhou",
+      "region_name": "杭州·西湖",
+      "predicted": false,
+      "hit": true,
+      "actual": false,
+      "verification_source": "NASA FIRMS",
+      "verification_evidence": "NASA FIRMS 卫星未检测到火点",
+      "verification_status": "verified",
+      "verification_details": {
+        "fire_count": 0
+      },
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "fire事件无 GDACS 匹配"
+      }
+    },
+    {
+      "category": "fire",
+      "region_id": "ChangbaiMountain",
+      "region_name": "长白山",
+      "predicted": false,
+      "hit": true,
+      "actual": false,
+      "verification_source": "NASA FIRMS",
+      "verification_evidence": "NASA FIRMS 卫星未检测到火点",
+      "verification_status": "verified",
+      "verification_details": {
+        "fire_count": 0
+      },
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "fire事件无 GDACS 匹配"
+      }
+    },
+    {
+      "category": "fire",
+      "region_id": "Shenzhen-Coast",
+      "region_name": "深圳·海岸",
+      "predicted": false,
+      "hit": true,
+      "actual": false,
+      "verification_source": "NASA FIRMS",
+      "verification_evidence": "NASA FIRMS 卫星未检测到火点",
+      "verification_status": "verified",
+      "verification_details": {
+        "fire_count": 0
+      },
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "fire事件无 GDACS 匹配"
+      }
+    },
+    {
+      "category": "fire",
+      "region_id": "GreaterKhingan",
+      "region_name": "大兴安岭",
+      "predicted": true,
+      "hit": false,
+      "actual": false,
+      "verification_source": "NASA FIRMS",
+      "verification_evidence": "NASA FIRMS 卫星未检测到火点",
+      "verification_status": "verified",
+      "verification_details": {
+        "fire_count": 0
+      },
+      "event_reconciliation": {
+        "source": "GDACS",
+        "matched_events": [],
+        "conflict": "unknown",
+        "note": "fire事件无 GDACS 匹配"
       }
     }
   ]
