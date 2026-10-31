@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-10-30T21:39:14.955603+08:00",
+  "generated_at": "2026-10-31T10:29:39.202002+08:00",
   "keep_days": 14,
-  "total_verified": 25,
+  "total_verified": 30,
   "tp": 0,
-  "fp": 10,
+  "fp": 12,
   "fn": 0,
-  "tn": 15,
+  "tn": 18,
   "accuracy": 0.6,
   "precision": 0.0,
   "recall": null,
@@ -46,26 +46,17 @@
     },
     "fire": {
       "tp": 0,
-      "fp": 10,
+      "fp": 12,
       "fn": 0,
-      "tn": 15,
-      "total": 25,
-      "verified": 25,
+      "tn": 18,
+      "total": 30,
+      "verified": 30,
       "accuracy": 0.6,
       "precision": 0.0,
       "recall": null
     }
   },
   "daily_trend": [
-    {
-      "date": "2026-10-17",
-      "verified": 0,
-      "tp": 0,
-      "fp": 0,
-      "fn": 0,
-      "tn": 0,
-      "accuracy": null
-    },
     {
       "date": "2026-10-24",
       "verified": 5,
@@ -113,6 +104,15 @@
     },
     {
       "date": "2026-10-29",
+      "verified": 5,
+      "tp": 0,
+      "fp": 2,
+      "fn": 0,
+      "tn": 3,
+      "accuracy": 0.6
+    },
+    {
+      "date": "2026-10-30",
       "verified": 0,
       "tp": 0,
       "fp": 0,
