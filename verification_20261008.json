@@ -1,0 +1,299 @@
+{
+  "date": "2026-10-08",
+  "generated_at": "2026-10-10T12:14:22.282869+08:00",
+  "total_predictions": 20,
+  "verified": 13,
+  "unverified": 7,
+  "tp": 0,
+  "fp": 3,
+  "fn": 1,
+  "tn": 9,
+  "accuracy": 0.6923,
+  "verifications": [
+    {
+      "category": "fire",
+      "region_id": "Xiangshan-Beijing",
+      "region_name": "北京·香山",
+      "predicted": false,
+      "hit": null,
+      "actual": null,
+      "verification_source": "NASA FIRMS",
+      "verification_evidence": "FIRMS_MAP_KEY 未配置，无法验证火险（不做无火推断）",
+      "verification_status": "insufficient_data",
+      "verification_details": {
+        "fire_count": null
+      }
+    },
+    {
+      "category": "fire",
+      "region_id": "WestLake-Hangzhou",
+      "region_name": "杭州·西湖",
+      "predicted": false,
+      "hit": null,
+      "actual": null,
+      "verification_source": "NASA FIRMS",
+      "verification_evidence": "FIRMS_MAP_KEY 未配置，无法验证火险（不做无火推断）",
+      "verification_status": "insufficient_data",
+      "verification_details": {
+        "fire_count": null
+      }
+    },
+    {
+      "category": "fire",
+      "region_id": "ChangbaiMountain",
+      "region_name": "长白山",
+      "predicted": true,
+      "hit": null,
+      "actual": null,
+      "verification_source": "NASA FIRMS",
+      "verification_evidence": "FIRMS_MAP_KEY 未配置，无法验证火险（不做无火推断）",
+      "verification_status": "insufficient_data",
+      "verification_details": {
+        "fire_count": null
+      }
+    },
+    {
+      "category": "fire",
+      "region_id": "Shenzhen-Coast",
+      "region_name": "深圳·海岸",
+      "predicted": false,
+      "hit": null,
+      "actual": null,
+      "verification_source": "NASA FIRMS",
+      "verification_evidence": "FIRMS_MAP_KEY 未配置，无法验证火险（不做无火推断）",
+      "verification_status": "insufficient_data",
+      "verification_details": {
+        "fire_count": null
+      }
+    },
+    {
+      "category": "fire",
+      "region_id": "GreaterKhingan",
+      "region_name": "大兴安岭",
+      "predicted": false,
+      "hit": null,
+      "actual": null,
+      "verification_source": "NASA FIRMS",
+      "verification_evidence": "FIRMS_MAP_KEY 未配置，无法验证火险（不做无火推断）",
+      "verification_status": "insufficient_data",
+      "verification_details": {
+        "fire_count": null
+      }
+    },
+    {
+      "category": "flood",
+      "region_id": "Wuhan-Yangtze",
+      "region_name": "武汉·长江",
+      "predicted": false,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "API request failed",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    },
+    {
+      "category": "flood",
+      "region_id": "Lhasa-Tibet",
+      "region_name": "拉萨·西藏",
+      "predicted": false,
+      "hit": true,
+      "actual": false,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "日降水量=0.0mm, 小时累计=0.0mm, 最大小时降水=0.0mm",
+      "verification_status": "verified",
+      "verification_details": {
+        "precip_mm": 0.0
+      }
+    },
+    {
+      "category": "flood",
+      "region_id": "Guangzhou-PearlR",
+      "region_name": "广州·珠江",
+      "predicted": false,
+      "hit": true,
+      "actual": false,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "日降水量=0.0mm, 小时累计=0.0mm, 最大小时降水=0.0mm",
+      "verification_status": "verified",
+      "verification_details": {
+        "precip_mm": 0.0
+      }
+    },
+    {
+      "category": "flood",
+      "region_id": "Guilin-Guangxi",
+      "region_name": "桂林·广西",
+      "predicted": false,
+      "hit": true,
+      "actual": false,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "日降水量=0.0mm, 小时累计=0.0mm, 最大小时降水=0.0mm",
+      "verification_status": "verified",
+      "verification_details": {
+        "precip_mm": 0.0
+      }
+    },
+    {
+      "category": "flood",
+      "region_id": "Nanjing-Yangtze",
+      "region_name": "南京·长江",
+      "predicted": false,
+      "hit": true,
+      "actual": false,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "日降水量=0.0mm, 小时累计=0.0mm, 最大小时降水=0.0mm",
+      "verification_status": "verified",
+      "verification_details": {
+        "precip_mm": 0.0
+      }
+    },
+    {
+      "category": "drought",
+      "region_id": "Kunming-Yunnan",
+      "region_name": "昆明·云南",
+      "predicted": false,
+      "hit": true,
+      "actual": false,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "日降水量=0.7mm, 湿度=71%",
+      "verification_status": "verified",
+      "verification_details": {
+        "precip_mm": 0.7,
+        "humidity": 71.0
+      }
+    },
+    {
+      "category": "drought",
+      "region_id": "Hangzhou-Zhejiang",
+      "region_name": "杭州·浙江",
+      "predicted": true,
+      "hit": false,
+      "actual": false,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "日降水量=0.0mm, 湿度=57%",
+      "verification_status": "verified",
+      "verification_details": {
+        "precip_mm": 0.0,
+        "humidity": 57.0
+      }
+    },
+    {
+      "category": "drought",
+      "region_id": "Harbin-Heilongjiang",
+      "region_name": "哈尔滨·黑龙江",
+      "predicted": true,
+      "hit": false,
+      "actual": false,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "日降水量=0.0mm, 湿度=56%",
+      "verification_status": "verified",
+      "verification_details": {
+        "precip_mm": 0.0,
+        "humidity": 56.0
+      }
+    },
+    {
+      "category": "drought",
+      "region_id": "Urumqi-Xinjiang",
+      "region_name": "乌鲁木齐·新疆",
+      "predicted": false,
+      "hit": false,
+      "actual": true,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "日降水量=0.0mm, 湿度=49%",
+      "verification_status": "verified",
+      "verification_details": {
+        "precip_mm": 0.0,
+        "humidity": 49.0
+      }
+    },
+    {
+      "category": "drought",
+      "region_id": "Taiyuan-Shanxi",
+      "region_name": "太原·山西",
+      "predicted": true,
+      "hit": false,
+      "actual": false,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "日降水量=0.0mm, 湿度=51%",
+      "verification_status": "verified",
+      "verification_details": {
+        "precip_mm": 0.0,
+        "humidity": 51.0
+      }
+    },
+    {
+      "category": "heat",
+      "region_id": "Chongqing-HotPotato",
+      "region_name": "重庆",
+      "predicted": false,
+      "hit": true,
+      "actual": false,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "日最高温=27.0degC, 最低温=21.0degC, 湿度=67%, 湿球温度=22.4degC",
+      "verification_status": "verified",
+      "verification_details": {
+        "temp_max": 27.0,
+        "wet_bulb": 22.36
+      }
+    },
+    {
+      "category": "heat",
+      "region_id": "Kunming-SpringCity",
+      "region_name": "昆明·春城",
+      "predicted": false,
+      "hit": true,
+      "actual": false,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "日最高温=24.0degC, 最低温=11.0degC, 湿度=71%, 湿球温度=20.1degC",
+      "verification_status": "verified",
+      "verification_details": {
+        "temp_max": 24.0,
+        "wet_bulb": 20.14
+      }
+    },
+    {
+      "category": "heat",
+      "region_id": "Urumqi-Xinjiang",
+      "region_name": "乌鲁木齐·新疆",
+      "predicted": false,
+      "hit": true,
+      "actual": false,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "日最高温=16.0degC, 最低温=7.0degC, 湿度=49%, 湿球温度=10.1degC",
+      "verification_status": "verified",
+      "verification_details": {
+        "temp_max": 16.0,
+        "wet_bulb": 10.14
+      }
+    },
+    {
+      "category": "heat",
+      "region_id": "Nanjing-OvenCity",
+      "region_name": "南京",
+      "predicted": false,
+      "hit": true,
+      "actual": false,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "日最高温=25.0degC, 最低温=12.0degC, 湿度=61%, 湿球温度=19.6degC",
+      "verification_status": "verified",
+      "verification_details": {
+        "temp_max": 25.0,
+        "wet_bulb": 19.65
+      }
+    },
+    {
+      "category": "heat",
+      "region_id": "Wuhan-Yangtze",
+      "region_name": "武汉·长江",
+      "predicted": false,
+      "hit": null,
+      "actual": null,
+      "verification_source": "QWeather Historical",
+      "verification_evidence": "API request failed",
+      "verification_status": "insufficient_data",
+      "verification_details": {}
+    }
+  ]
+}
