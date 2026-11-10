@@ -1,6 +1,6 @@
 {
   "status": "no_change",
-  "files_used": 13,
+  "files_used": 12,
   "lookback_days": 14,
   "current_thresholds": {
     "fire": 0.65,
@@ -16,20 +16,20 @@
   },
   "adjustments": [
     {
-      "timestamp": "2026-11-08T09:57:40.672690+08:00",
+      "timestamp": "2026-11-10T08:09:58.599144+08:00",
       "category": "fire",
       "old_value": 0.65,
       "new_value": 0.65,
       "adjustment": 0.0,
       "action": "adjust",
-      "reason": "fp=25, fn=0, tn=35, tp=0 | error_diff=25 -> up",
+      "reason": "fp=23, fn=0, tn=32, tp=0 | error_diff=23 -> up",
       "stats": {
         "tp": 0,
-        "fp": 25,
+        "fp": 23,
         "fn": 0,
-        "tn": 35
+        "tn": 32
       },
-      "verification_files_used": 13,
+      "verification_files_used": 12,
       "lookback_days": 14
     },
     {
@@ -75,5 +75,5 @@
       }
     }
   ],
-  "calibrated_at": "2026-11-08T09:57:40.672748+08:00"
+  "calibrated_at": "2026-11-10T08:09:58.599221+08:00"
 }
