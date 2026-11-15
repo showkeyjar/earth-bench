@@ -16,18 +16,18 @@
   },
   "adjustments": [
     {
-      "timestamp": "2026-11-14T10:04:05.209533+08:00",
+      "timestamp": "2026-11-15T09:57:03.421601+08:00",
       "category": "fire",
       "old_value": 0.65,
       "new_value": 0.65,
       "adjustment": 0.0,
       "action": "adjust",
-      "reason": "fp=21, fn=0, tn=29, tp=0 | error_diff=21 -> up",
+      "reason": "fp=20, fn=0, tn=30, tp=0 | error_diff=20 -> up",
       "stats": {
         "tp": 0,
-        "fp": 21,
+        "fp": 20,
         "fn": 0,
-        "tn": 29
+        "tn": 30
       },
       "verification_files_used": 12,
       "lookback_days": 14
@@ -75,5 +75,5 @@
       }
     }
   ],
-  "calibrated_at": "2026-11-14T10:04:05.209645+08:00"
+  "calibrated_at": "2026-11-15T09:57:03.421642+08:00"
 }
