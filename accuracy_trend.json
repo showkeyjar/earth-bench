@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-11-18T08:23:07.361062+08:00",
+  "generated_at": "2026-11-19T08:14:13.677415+08:00",
   "keep_days": 14,
-  "total_verified": 45,
+  "total_verified": 40,
   "tp": 0,
-  "fp": 18,
+  "fp": 16,
   "fn": 0,
-  "tn": 27,
+  "tn": 24,
   "accuracy": 0.6,
   "precision": 0.0,
   "recall": null,
@@ -46,26 +46,17 @@
     },
     "fire": {
       "tp": 0,
-      "fp": 18,
+      "fp": 16,
       "fn": 0,
-      "tn": 27,
-      "total": 45,
-      "verified": 45,
+      "tn": 24,
+      "total": 40,
+      "verified": 40,
       "accuracy": 0.6,
       "precision": 0.0,
       "recall": null
     }
   },
   "daily_trend": [
-    {
-      "date": "2026-11-05",
-      "verified": 5,
-      "tp": 0,
-      "fp": 2,
-      "fn": 0,
-      "tn": 3,
-      "accuracy": 0.6
-    },
     {
       "date": "2026-11-06",
       "verified": 5,
@@ -155,6 +146,15 @@
       "fn": 0,
       "tn": 3,
       "accuracy": 0.6
+    },
+    {
+      "date": "2026-11-18",
+      "verified": 0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0,
+      "accuracy": null
     }
   ]
 }
