@@ -77,7 +77,7 @@ jobs:
       - name: Restore GEFS grib cache
         # f048/f000 等 GRIB 按 init 日期命名且不可变；append-only 缓存避免每日重下 ~50MB。
         # 缓存键按周滚动：一周内命中精确键不再重复上传全量缓存，restore-keys 前缀兜底跨周增量。
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: earthbench/data/gefs_cache
           key: gefs-cache-${{ steps.date.outputs.week }}
