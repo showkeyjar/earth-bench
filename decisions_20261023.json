@@ -1,0 +1,4282 @@
+{
+  "published_at": "2026-10-23T11:18:22.271217+08:00",
+  "engine": "AI Decision System",
+  "total_scenarios": 20,
+  "alert_count": 1,
+  "average_confidence": 0.2233,
+  "decisions": [
+    {
+      "case_id": "fire-l1-extreme-risk",
+      "category": "fire",
+      "difficulty": "L1",
+      "region": "Xiangshan-Beijing",
+      "ground_truth": true,
+      "gt_score": 0.95,
+      "gt_explanation": {
+        "fwi_level": "极高",
+        "fwi_latest": 48.5,
+        "humidity_latest": 61.0,
+        "wind_latest": 5.8,
+        "standard": "GB/T 36743-2018 FWI 分级表",
+        "detail": "FWI 48.5 > 33，极高火险，触发预警"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Calculated, QWeather/Realtime",
+      "llm_decision": false,
+      "confidence": 0.494,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "FWI": 0.808,
+        "humidity": 0.39,
+        "wind_speed": 0.29,
+        "temperature": 0
+      },
+      "rationale": "FireAlert: FWI=48.5, 湿度=61.0%, 风速=5.8m/s, 降雨=0.0mm, 风险分=0.494",
+      "timestamp": "2026-10-23T03:18:22.269874+00:00",
+      "coordinates": {
+        "lat": 39.99,
+        "lng": 116.16
+      },
+      "region_cn": "北京·香山",
+      "affected_radius_km": 20,
+      "polygon": [
+        {
+          "lat": 40.02,
+          "lng": 116.12
+        },
+        {
+          "lat": 40.01,
+          "lng": 116.18
+        },
+        {
+          "lat": 39.98,
+          "lng": 116.2
+        },
+        {
+          "lat": 39.96,
+          "lng": 116.16
+        },
+        {
+          "lat": 39.97,
+          "lng": 116.1
+        },
+        {
+          "lat": 40.0,
+          "lng": 116.09
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Realtime",
+          "variable": "temperature",
+          "value": 13.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "humidity",
+          "value": 61,
+          "unit": "%",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "wind_speed",
+          "value": 5.8,
+          "unit": "m/s",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Calculated",
+          "variable": "FWI",
+          "value": 48.5,
+          "unit": "",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.9
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "FWI",
+          "display_name": "火险指数(FWI)",
+          "value": 48.5,
+          "unit": "",
+          "source": "QWeather/Calculated",
+          "threshold": 40.0,
+          "direction": "high",
+          "status": "danger",
+          "status_text": "远超危险阈值",
+          "description": "最新火险指数(FWI)为48.5，超过40.0的危险阈值",
+          "explanation": "综合温度、湿度、风速、降雨的火灾天气指标，值越高火险越大",
+          "weight": 0.4,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 48.5,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "humidity",
+          "display_name": "空气湿度",
+          "value": 61,
+          "unit": "%",
+          "source": "QWeather/Realtime",
+          "threshold": 20.0,
+          "direction": "low",
+          "status": "safe",
+          "status_text": "湿度正常",
+          "description": "最新空气湿度为61%，处于正常范围",
+          "explanation": "湿度低于20%时，可燃物极易点燃，火势难以控制",
+          "weight": 0.2,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 61,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "temperature",
+          "display_name": "温度",
+          "value": 13.0,
+          "unit": "°C",
+          "source": "QWeather/Realtime",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新温度为13.0°C，处于安全范围",
+          "explanation": "高温加速可燃物水分蒸发，降低燃点",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 13.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "wind_speed",
+          "display_name": "风速",
+          "value": 5.8,
+          "unit": "m/s",
+          "source": "QWeather/Realtime",
+          "threshold": 12.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "风速正常",
+          "description": "最新风速为5.8m/s，处于安全范围",
+          "explanation": "风速超过12 m/s时，火势蔓延速度急剧增加",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 5.8,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析森林火险风险场景（难度等级：L1）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "最新火险指数(FWI)为48.5，超过40.0的危险阈值"
+        },
+        {
+          "step": 3,
+          "type": "evidence",
+          "text": "安全因素：空气湿度=61%；温度=13.0°C；风速=5.8m/s，降低了风险评分"
+        },
+        {
+          "step": 4,
+          "type": "analysis",
+          "text": "多变量加权综合评分：主要风险因素为火险指数(FWI)(权重40%)，综合风险评分=0.494"
+        },
+        {
+          "step": 5,
+          "type": "decision",
+          "text": "综合风险评分0.494低于预警阈值，AI判定为暂时安全（置信度49%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": true,
+        "hit": false,
+        "ground_truth_score": 0.95,
+        "ground_truth_explanation": {
+          "fwi_level": "极高",
+          "fwi_latest": 48.5,
+          "humidity_latest": 61.0,
+          "wind_latest": 5.8,
+          "standard": "GB/T 36743-2018 FWI 分级表",
+          "detail": "FWI 48.5 > 33，极高火险，触发预警"
+        }
+      },
+      "verification_reason": "AI 预测安全，但实际观测数据已超过危险阈值（漏报）。森林火险场景的实际指标：验证数据不足。综合风险评分 0.950，超过预警阈值，存在漏报。"
+    },
+    {
+      "case_id": "fire-l1-low-risk",
+      "category": "fire",
+      "difficulty": "L1",
+      "region": "WestLake-Hangzhou",
+      "ground_truth": false,
+      "gt_score": 0.5,
+      "gt_explanation": {
+        "fwi_level": "高",
+        "fwi_latest": 29.9,
+        "humidity_latest": 72.0,
+        "wind_latest": 6.9,
+        "standard": "GB/T 36743-2018 FWI 分级表",
+        "detail": "FWI 29.9 属高火险，但未叠加干燥（湿度<30%）或大风（>=12m/s），不预警"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Calculated, QWeather/Realtime",
+      "llm_decision": false,
+      "confidence": 0.341,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "FWI": 0.498,
+        "humidity": 0.28,
+        "wind_speed": 0.345,
+        "temperature": 0
+      },
+      "rationale": "FireAlert: FWI=29.9, 湿度=72.0%, 风速=6.9m/s, 降雨=0.0mm, 风险分=0.341",
+      "timestamp": "2026-10-23T03:18:22.269975+00:00",
+      "coordinates": {
+        "lat": 30.25,
+        "lng": 120.15
+      },
+      "region_cn": "杭州·西湖",
+      "affected_radius_km": 15,
+      "polygon": [
+        {
+          "lat": 30.28,
+          "lng": 120.12
+        },
+        {
+          "lat": 30.27,
+          "lng": 120.18
+        },
+        {
+          "lat": 30.24,
+          "lng": 120.19
+        },
+        {
+          "lat": 30.22,
+          "lng": 120.15
+        },
+        {
+          "lat": 30.23,
+          "lng": 120.1
+        },
+        {
+          "lat": 30.26,
+          "lng": 120.09
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Realtime",
+          "variable": "temperature",
+          "value": 19.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "humidity",
+          "value": 72,
+          "unit": "%",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "wind_speed",
+          "value": 6.9,
+          "unit": "m/s",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Calculated",
+          "variable": "FWI",
+          "value": 29.9,
+          "unit": "",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.9
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "FWI",
+          "display_name": "火险指数(FWI)",
+          "value": 29.9,
+          "unit": "",
+          "source": "QWeather/Calculated",
+          "threshold": 40.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "处于安全范围",
+          "description": "最新火险指数(FWI)为29.9，处于安全范围",
+          "explanation": "综合温度、湿度、风速、降雨的火灾天气指标，值越高火险越大",
+          "weight": 0.4,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 29.9,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "humidity",
+          "display_name": "空气湿度",
+          "value": 72,
+          "unit": "%",
+          "source": "QWeather/Realtime",
+          "threshold": 20.0,
+          "direction": "low",
+          "status": "safe",
+          "status_text": "湿度正常",
+          "description": "最新空气湿度为72%，处于正常范围",
+          "explanation": "湿度低于20%时，可燃物极易点燃，火势难以控制",
+          "weight": 0.2,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 72,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "temperature",
+          "display_name": "温度",
+          "value": 19.0,
+          "unit": "°C",
+          "source": "QWeather/Realtime",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新温度为19.0°C，处于安全范围",
+          "explanation": "高温加速可燃物水分蒸发，降低燃点",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 19.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "wind_speed",
+          "display_name": "风速",
+          "value": 6.9,
+          "unit": "m/s",
+          "source": "QWeather/Realtime",
+          "threshold": 12.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "风速正常",
+          "description": "最新风速为6.9m/s，处于安全范围",
+          "explanation": "风速超过12 m/s时，火势蔓延速度急剧增加",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 6.9,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析森林火险风险场景（难度等级：L1）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "安全因素：火险指数(FWI)=29.9；空气湿度=72%；温度=19.0°C，降低了风险评分"
+        },
+        {
+          "step": 3,
+          "type": "decision",
+          "text": "综合风险评分0.341低于预警阈值，AI判定为暂时安全（置信度34%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "ground_truth_score": 0.5,
+        "ground_truth_explanation": {
+          "fwi_level": "高",
+          "fwi_latest": 29.9,
+          "humidity_latest": 72.0,
+          "wind_latest": 6.9,
+          "standard": "GB/T 36743-2018 FWI 分级表",
+          "detail": "FWI 29.9 属高火险，但未叠加干燥（湿度<30%）或大风（>=12m/s），不预警"
+        }
+      },
+      "verification_reason": "AI 预测安全，验证数据确认无风险。森林火险场景的实际观测指标：验证数据不足。综合风险评分 0.500，低于预警阈值，排除正确。"
+    },
+    {
+      "case_id": "fire-l2-fwi-high-rain-suppress",
+      "category": "fire",
+      "difficulty": "L2",
+      "region": "ChangbaiMountain",
+      "ground_truth": true,
+      "gt_score": 0.95,
+      "gt_explanation": {
+        "fwi_level": "极高",
+        "fwi_latest": 39.8,
+        "humidity_latest": 40.0,
+        "wind_latest": 3.1,
+        "standard": "GB/T 36743-2018 FWI 分级表",
+        "detail": "FWI 39.8 > 33，极高火险，触发预警"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Calculated, QWeather/Realtime",
+      "llm_decision": false,
+      "confidence": 0.454,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "FWI": 0.663,
+        "humidity": 0.6,
+        "wind_speed": 0.155,
+        "temperature": 0
+      },
+      "rationale": "FireAlert: FWI=39.8, 湿度=40.0%, 风速=3.1m/s, 降雨=0.0mm, 风险分=0.454",
+      "timestamp": "2026-10-23T03:18:22.270040+00:00",
+      "coordinates": {
+        "lat": 42.02,
+        "lng": 128.08
+      },
+      "region_cn": "长白山",
+      "affected_radius_km": 50,
+      "polygon": [
+        {
+          "lat": 42.1,
+          "lng": 127.9
+        },
+        {
+          "lat": 42.08,
+          "lng": 128.3
+        },
+        {
+          "lat": 41.95,
+          "lng": 128.35
+        },
+        {
+          "lat": 41.9,
+          "lng": 128.0
+        },
+        {
+          "lat": 41.95,
+          "lng": 127.75
+        },
+        {
+          "lat": 42.05,
+          "lng": 127.8
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Realtime",
+          "variable": "temperature",
+          "value": 8.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "humidity",
+          "value": 40,
+          "unit": "%",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "wind_speed",
+          "value": 3.1,
+          "unit": "m/s",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Calculated",
+          "variable": "FWI",
+          "value": 39.8,
+          "unit": "",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.9
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "FWI",
+          "display_name": "火险指数(FWI)",
+          "value": 39.8,
+          "unit": "",
+          "source": "QWeather/Calculated",
+          "threshold": 40.0,
+          "direction": "high",
+          "status": "warn",
+          "status_text": "接近危险阈值",
+          "description": "最新火险指数(FWI)为39.8，接近40.0的警戒值",
+          "explanation": "综合温度、湿度、风速、降雨的火灾天气指标，值越高火险越大",
+          "weight": 0.4,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 39.8,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "humidity",
+          "display_name": "空气湿度",
+          "value": 40,
+          "unit": "%",
+          "source": "QWeather/Realtime",
+          "threshold": 20.0,
+          "direction": "low",
+          "status": "safe",
+          "status_text": "湿度正常",
+          "description": "最新空气湿度为40%，处于正常范围",
+          "explanation": "湿度低于20%时，可燃物极易点燃，火势难以控制",
+          "weight": 0.2,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 40,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "temperature",
+          "display_name": "温度",
+          "value": 8.0,
+          "unit": "°C",
+          "source": "QWeather/Realtime",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新温度为8.0°C，处于安全范围",
+          "explanation": "高温加速可燃物水分蒸发，降低燃点",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 8.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "wind_speed",
+          "display_name": "风速",
+          "value": 3.1,
+          "unit": "m/s",
+          "source": "QWeather/Realtime",
+          "threshold": 12.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "风速正常",
+          "description": "最新风速为3.1m/s，处于安全范围",
+          "explanation": "风速超过12 m/s时，火势蔓延速度急剧增加",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 3.1,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析森林火险风险场景（难度等级：L2）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "最新火险指数(FWI)为39.8，接近40.0的警戒值"
+        },
+        {
+          "step": 3,
+          "type": "evidence",
+          "text": "安全因素：空气湿度=40%；温度=8.0°C；风速=3.1m/s，降低了风险评分"
+        },
+        {
+          "step": 4,
+          "type": "decision",
+          "text": "综合风险评分0.454低于预警阈值，AI判定为暂时安全（置信度45%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": true,
+        "hit": false,
+        "ground_truth_score": 0.95,
+        "ground_truth_explanation": {
+          "fwi_level": "极高",
+          "fwi_latest": 39.8,
+          "humidity_latest": 40.0,
+          "wind_latest": 3.1,
+          "standard": "GB/T 36743-2018 FWI 分级表",
+          "detail": "FWI 39.8 > 33，极高火险，触发预警"
+        }
+      },
+      "verification_reason": "AI 预测安全，但实际观测数据已超过危险阈值（漏报）。森林火险场景的实际指标：验证数据不足。综合风险评分 0.950，超过预警阈值，存在漏报。"
+    },
+    {
+      "case_id": "fire-l3-coastal-humid",
+      "category": "fire",
+      "difficulty": "L3",
+      "region": "Shenzhen-Coast",
+      "ground_truth": true,
+      "gt_score": 0.95,
+      "gt_explanation": {
+        "fwi_level": "极高",
+        "fwi_latest": 43.3,
+        "humidity_latest": 56.0,
+        "wind_latest": 8.9,
+        "standard": "GB/T 36743-2018 FWI 分级表",
+        "detail": "FWI 43.3 > 33，极高火险，触发预警"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Calculated, QWeather/Realtime",
+      "llm_decision": false,
+      "confidence": 0.532,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "FWI": 0.722,
+        "humidity": 0.44,
+        "wind_speed": 0.445,
+        "temperature": 0.233
+      },
+      "rationale": "FireAlert: FWI=43.3, 湿度=56.0%, 风速=8.9m/s, 降雨=0.0mm, 风险分=0.532",
+      "timestamp": "2026-10-23T03:18:22.270100+00:00",
+      "coordinates": {
+        "lat": 22.54,
+        "lng": 114.06
+      },
+      "region_cn": "深圳·海岸",
+      "affected_radius_km": 20,
+      "polygon": [
+        {
+          "lat": 22.58,
+          "lng": 113.95
+        },
+        {
+          "lat": 22.56,
+          "lng": 114.15
+        },
+        {
+          "lat": 22.5,
+          "lng": 114.2
+        },
+        {
+          "lat": 22.48,
+          "lng": 114.1
+        },
+        {
+          "lat": 22.5,
+          "lng": 113.92
+        },
+        {
+          "lat": 22.55,
+          "lng": 113.9
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Realtime",
+          "variable": "temperature",
+          "value": 27.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "humidity",
+          "value": 56,
+          "unit": "%",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "wind_speed",
+          "value": 8.9,
+          "unit": "m/s",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Calculated",
+          "variable": "FWI",
+          "value": 43.3,
+          "unit": "",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.9
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "FWI",
+          "display_name": "火险指数(FWI)",
+          "value": 43.3,
+          "unit": "",
+          "source": "QWeather/Calculated",
+          "threshold": 40.0,
+          "direction": "high",
+          "status": "danger",
+          "status_text": "远超危险阈值",
+          "description": "最新火险指数(FWI)为43.3，超过40.0的危险阈值",
+          "explanation": "综合温度、湿度、风速、降雨的火灾天气指标，值越高火险越大",
+          "weight": 0.4,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 43.3,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "humidity",
+          "display_name": "空气湿度",
+          "value": 56,
+          "unit": "%",
+          "source": "QWeather/Realtime",
+          "threshold": 20.0,
+          "direction": "low",
+          "status": "safe",
+          "status_text": "湿度正常",
+          "description": "最新空气湿度为56%，处于正常范围",
+          "explanation": "湿度低于20%时，可燃物极易点燃，火势难以控制",
+          "weight": 0.2,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 56,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "temperature",
+          "display_name": "温度",
+          "value": 27.0,
+          "unit": "°C",
+          "source": "QWeather/Realtime",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新温度为27.0°C，处于安全范围",
+          "explanation": "高温加速可燃物水分蒸发，降低燃点",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 27.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "wind_speed",
+          "display_name": "风速",
+          "value": 8.9,
+          "unit": "m/s",
+          "source": "QWeather/Realtime",
+          "threshold": 12.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "风速正常",
+          "description": "最新风速为8.9m/s，处于安全范围",
+          "explanation": "风速超过12 m/s时，火势蔓延速度急剧增加",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 8.9,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析森林火险风险场景（难度等级：L3）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "最新火险指数(FWI)为43.3，超过40.0的危险阈值"
+        },
+        {
+          "step": 3,
+          "type": "evidence",
+          "text": "安全因素：空气湿度=56%；温度=27.0°C；风速=8.9m/s，降低了风险评分"
+        },
+        {
+          "step": 4,
+          "type": "analysis",
+          "text": "多变量加权综合评分：主要风险因素为火险指数(FWI)(权重40%)，综合风险评分=0.532"
+        },
+        {
+          "step": 5,
+          "type": "decision",
+          "text": "综合风险评分0.532低于预警阈值，AI判定为暂时安全（置信度53%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": true,
+        "hit": false,
+        "ground_truth_score": 0.95,
+        "ground_truth_explanation": {
+          "fwi_level": "极高",
+          "fwi_latest": 43.3,
+          "humidity_latest": 56.0,
+          "wind_latest": 8.9,
+          "standard": "GB/T 36743-2018 FWI 分级表",
+          "detail": "FWI 43.3 > 33，极高火险，触发预警"
+        }
+      },
+      "verification_reason": "AI 预测安全，但实际观测数据已超过危险阈值（漏报）。森林火险场景的实际指标：验证数据不足。综合风险评分 0.950，超过预警阈值，存在漏报。"
+    },
+    {
+      "case_id": "fire-l4-trend-rising",
+      "category": "fire",
+      "difficulty": "L4",
+      "region": "GreaterKhingan",
+      "ground_truth": true,
+      "gt_score": 0.95,
+      "gt_explanation": {
+        "fwi_level": "极高",
+        "fwi_latest": 80.0,
+        "humidity_latest": 32.0,
+        "wind_latest": 9.2,
+        "standard": "GB/T 36743-2018 FWI 分级表",
+        "detail": "FWI 80.0 > 33，极高火险，触发预警"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Calculated, QWeather/Realtime",
+      "llm_decision": true,
+      "confidence": 0.672,
+      "heuristic_decision": true,
+      "evidence_summary": {
+        "FWI": 1.0,
+        "humidity": 0.68,
+        "wind_speed": 0.46,
+        "temperature": 0
+      },
+      "rationale": "FireAlert: FWI=80.0, 湿度=32.0%, 风速=9.2m/s, 降雨=0.0mm, 风险分=0.672",
+      "timestamp": "2026-10-23T03:18:22.270159+00:00",
+      "coordinates": {
+        "lat": 51.17,
+        "lng": 124.39
+      },
+      "region_cn": "大兴安岭",
+      "affected_radius_km": 60,
+      "polygon": [
+        {
+          "lat": 51.4,
+          "lng": 124.1
+        },
+        {
+          "lat": 51.35,
+          "lng": 124.7
+        },
+        {
+          "lat": 51.0,
+          "lng": 124.8
+        },
+        {
+          "lat": 50.9,
+          "lng": 124.3
+        },
+        {
+          "lat": 50.95,
+          "lng": 123.9
+        },
+        {
+          "lat": 51.25,
+          "lng": 123.95
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Realtime",
+          "variable": "temperature",
+          "value": 8.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "humidity",
+          "value": 32,
+          "unit": "%",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "wind_speed",
+          "value": 9.2,
+          "unit": "m/s",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Calculated",
+          "variable": "FWI",
+          "value": 80.0,
+          "unit": "",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.9
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "FWI",
+          "display_name": "火险指数(FWI)",
+          "value": 80.0,
+          "unit": "",
+          "source": "QWeather/Calculated",
+          "threshold": 40.0,
+          "direction": "high",
+          "status": "danger",
+          "status_text": "远超危险阈值",
+          "description": "最新火险指数(FWI)为80.0，超过40.0的危险阈值",
+          "explanation": "综合温度、湿度、风速、降雨的火灾天气指标，值越高火险越大",
+          "weight": 0.4,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 80.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "humidity",
+          "display_name": "空气湿度",
+          "value": 32,
+          "unit": "%",
+          "source": "QWeather/Realtime",
+          "threshold": 20.0,
+          "direction": "low",
+          "status": "safe",
+          "status_text": "湿度正常",
+          "description": "最新空气湿度为32%，处于正常范围",
+          "explanation": "湿度低于20%时，可燃物极易点燃，火势难以控制",
+          "weight": 0.2,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 32,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "temperature",
+          "display_name": "温度",
+          "value": 8.0,
+          "unit": "°C",
+          "source": "QWeather/Realtime",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新温度为8.0°C，处于安全范围",
+          "explanation": "高温加速可燃物水分蒸发，降低燃点",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 8.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "wind_speed",
+          "display_name": "风速",
+          "value": 9.2,
+          "unit": "m/s",
+          "source": "QWeather/Realtime",
+          "threshold": 12.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "风速正常",
+          "description": "最新风速为9.2m/s，处于安全范围",
+          "explanation": "风速超过12 m/s时，火势蔓延速度急剧增加",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 9.2,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析森林火险风险场景（难度等级：L4）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "最新火险指数(FWI)为80.0，超过40.0的危险阈值"
+        },
+        {
+          "step": 3,
+          "type": "evidence",
+          "text": "安全因素：空气湿度=32%；温度=8.0°C；风速=9.2m/s，降低了风险评分"
+        },
+        {
+          "step": 4,
+          "type": "analysis",
+          "text": "多变量加权综合评分：主要风险因素为火险指数(FWI)(权重40%)，综合风险评分=0.672"
+        },
+        {
+          "step": 5,
+          "type": "decision",
+          "text": "综合风险评分0.672超过预警阈值，AI判定为有风险（置信度67%），建议启动应急预案"
+        }
+      ],
+      "verification": {
+        "predicted": true,
+        "actual": true,
+        "hit": true,
+        "ground_truth_score": 0.95,
+        "ground_truth_explanation": {
+          "fwi_level": "极高",
+          "fwi_latest": 80.0,
+          "humidity_latest": 32.0,
+          "wind_latest": 9.2,
+          "standard": "GB/T 36743-2018 FWI 分级表",
+          "detail": "FWI 80.0 > 33，极高火险，触发预警"
+        }
+      },
+      "verification_reason": "AI 预测有风险，验证数据确认风险成立。森林火险场景的实际观测指标：验证数据不足。综合风险评分 0.950，超过预警阈值，预警正确。"
+    },
+    {
+      "case_id": "flood-l1-extreme-rainfall",
+      "category": "flood",
+      "difficulty": "L1",
+      "region": "Wuhan-Yangtze",
+      "ground_truth": false,
+      "gt_score": 0.2,
+      "gt_explanation": {
+        "rainfall_24h_max": 0.0,
+        "rainfall_6h_max": 0.0,
+        "standard": "GB/T 28592-2012 + 防汛警戒判据",
+        "detail": "未命中任何暴雨/警戒阈值，不预警"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Hourly, QWeather/Realtime",
+      "llm_decision": false,
+      "confidence": 0.0,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "rainfall_24h": 0.0,
+        "rainfall_6h": 0.0
+      },
+      "rationale": "FloodAlert: 24h=0.0mm, 6h=0.0mm, 土壤=0.00, 水位=0.0m, 风险分=0.000",
+      "timestamp": "2026-10-23T03:18:22.270222+00:00",
+      "coordinates": {
+        "lat": 30.59,
+        "lng": 114.31
+      },
+      "region_cn": "武汉·长江",
+      "affected_radius_km": 25,
+      "polygon": [
+        {
+          "lat": 30.68,
+          "lng": 114.2
+        },
+        {
+          "lat": 30.65,
+          "lng": 114.4
+        },
+        {
+          "lat": 30.55,
+          "lng": 114.45
+        },
+        {
+          "lat": 30.5,
+          "lng": 114.3
+        },
+        {
+          "lat": 30.52,
+          "lng": 114.15
+        },
+        {
+          "lat": 30.62,
+          "lng": 114.12
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Realtime",
+          "variable": "rainfall_24h",
+          "value": 0.0,
+          "unit": "mm",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.92
+        },
+        {
+          "source": "QWeather/Hourly",
+          "variable": "rainfall_6h",
+          "value": 0.0,
+          "unit": "mm",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.9
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "temperature",
+          "value": 17.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "rainfall_24h",
+          "display_name": "24小时降水量",
+          "value": 0.0,
+          "unit": "mm",
+          "source": "QWeather/Realtime",
+          "threshold": 50.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "降水量正常",
+          "description": "最新24小时降水量为0.0mm，处于安全范围",
+          "explanation": "24小时降水量超过50mm达到暴雨级别，洪涝风险显著增加",
+          "weight": 0.35,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 0.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "rainfall_6h",
+          "display_name": "6小时降水量",
+          "value": 0.0,
+          "unit": "mm",
+          "source": "QWeather/Hourly",
+          "threshold": 30.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "降水正常",
+          "description": "最新6小时降水量为0.0mm，处于安全范围",
+          "explanation": "短时强降水超过30mm/6h，极易引发城市内涝和山洪",
+          "weight": 0.25,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 0.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "temperature",
+          "display_name": "温度",
+          "value": 17.0,
+          "unit": "°C",
+          "source": "QWeather/Realtime",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新温度为17.0°C，处于安全范围",
+          "explanation": "高温加速可燃物水分蒸发，降低燃点",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 17.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析洪涝灾害风险场景（难度等级：L1）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "安全因素：24小时降水量=0.0mm；6小时降水量=0.0mm；温度=17.0°C，降低了风险评分"
+        },
+        {
+          "step": 3,
+          "type": "decision",
+          "text": "综合风险评分0.000低于预警阈值，AI判定为暂时安全（置信度0%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "ground_truth_score": 0.2,
+        "ground_truth_explanation": {
+          "rainfall_24h_max": 0.0,
+          "rainfall_6h_max": 0.0,
+          "standard": "GB/T 28592-2012 + 防汛警戒判据",
+          "detail": "未命中任何暴雨/警戒阈值，不预警"
+        }
+      },
+      "verification_reason": "AI 预测安全，验证数据确认无风险。洪涝灾害场景的实际观测指标：验证数据不足。综合风险评分 0.200，低于预警阈值，排除正确。"
+    },
+    {
+      "case_id": "flood-l1-no-rain",
+      "category": "flood",
+      "difficulty": "L1",
+      "region": "Lhasa-Tibet",
+      "ground_truth": false,
+      "gt_score": 0.2,
+      "gt_explanation": {
+        "rainfall_24h_max": 0.0,
+        "rainfall_6h_max": 0.0,
+        "standard": "GB/T 28592-2012 + 防汛警戒判据",
+        "detail": "未命中任何暴雨/警戒阈值，不预警"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Hourly, QWeather/Realtime",
+      "llm_decision": false,
+      "confidence": 0.0,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "rainfall_24h": 0.0,
+        "rainfall_6h": 0.0
+      },
+      "rationale": "FloodAlert: 24h=0.0mm, 6h=0.0mm, 土壤=0.00, 水位=0.0m, 风险分=0.000",
+      "timestamp": "2026-10-23T03:18:22.270273+00:00",
+      "coordinates": {
+        "lat": 29.65,
+        "lng": 91.11
+      },
+      "region_cn": "拉萨·西藏",
+      "affected_radius_km": 15,
+      "polygon": [
+        {
+          "lat": 29.7,
+          "lng": 91.05
+        },
+        {
+          "lat": 29.68,
+          "lng": 91.18
+        },
+        {
+          "lat": 29.62,
+          "lng": 91.2
+        },
+        {
+          "lat": 29.58,
+          "lng": 91.1
+        },
+        {
+          "lat": 29.6,
+          "lng": 91.0
+        },
+        {
+          "lat": 29.68,
+          "lng": 91.0
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Realtime",
+          "variable": "rainfall_24h",
+          "value": 0.0,
+          "unit": "mm",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.92
+        },
+        {
+          "source": "QWeather/Hourly",
+          "variable": "rainfall_6h",
+          "value": 0.0,
+          "unit": "mm",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.9
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "temperature",
+          "value": 13.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "rainfall_24h",
+          "display_name": "24小时降水量",
+          "value": 0.0,
+          "unit": "mm",
+          "source": "QWeather/Realtime",
+          "threshold": 50.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "降水量正常",
+          "description": "最新24小时降水量为0.0mm，处于安全范围",
+          "explanation": "24小时降水量超过50mm达到暴雨级别，洪涝风险显著增加",
+          "weight": 0.35,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 0.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "rainfall_6h",
+          "display_name": "6小时降水量",
+          "value": 0.0,
+          "unit": "mm",
+          "source": "QWeather/Hourly",
+          "threshold": 30.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "降水正常",
+          "description": "最新6小时降水量为0.0mm，处于安全范围",
+          "explanation": "短时强降水超过30mm/6h，极易引发城市内涝和山洪",
+          "weight": 0.25,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 0.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "temperature",
+          "display_name": "温度",
+          "value": 13.0,
+          "unit": "°C",
+          "source": "QWeather/Realtime",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新温度为13.0°C，处于安全范围",
+          "explanation": "高温加速可燃物水分蒸发，降低燃点",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 13.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析洪涝灾害风险场景（难度等级：L1）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "安全因素：24小时降水量=0.0mm；6小时降水量=0.0mm；温度=13.0°C，降低了风险评分"
+        },
+        {
+          "step": 3,
+          "type": "decision",
+          "text": "综合风险评分0.000低于预警阈值，AI判定为暂时安全（置信度0%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "ground_truth_score": 0.2,
+        "ground_truth_explanation": {
+          "rainfall_24h_max": 0.0,
+          "rainfall_6h_max": 0.0,
+          "standard": "GB/T 28592-2012 + 防汛警戒判据",
+          "detail": "未命中任何暴雨/警戒阈值，不预警"
+        }
+      },
+      "verification_reason": "AI 预测安全，验证数据确认无风险。洪涝灾害场景的实际观测指标：验证数据不足。综合风险评分 0.200，低于预警阈值，排除正确。"
+    },
+    {
+      "case_id": "flood-l2-soil-saturated",
+      "category": "flood",
+      "difficulty": "L2",
+      "region": "Guangzhou-PearlR",
+      "ground_truth": false,
+      "gt_score": 0.2,
+      "gt_explanation": {
+        "rainfall_24h_max": 0.0,
+        "rainfall_6h_max": 0.0,
+        "standard": "GB/T 28592-2012 + 防汛警戒判据",
+        "detail": "未命中任何暴雨/警戒阈值，不预警"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Hourly, QWeather/Realtime",
+      "llm_decision": false,
+      "confidence": 0.0,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "rainfall_24h": 0.0,
+        "rainfall_6h": 0.0
+      },
+      "rationale": "FloodAlert: 24h=0.0mm, 6h=0.0mm, 土壤=0.00, 水位=0.0m, 风险分=0.000",
+      "timestamp": "2026-10-23T03:18:22.270321+00:00",
+      "coordinates": {
+        "lat": 23.13,
+        "lng": 113.27
+      },
+      "region_cn": "广州·珠江",
+      "affected_radius_km": 25,
+      "polygon": [
+        {
+          "lat": 23.18,
+          "lng": 113.2
+        },
+        {
+          "lat": 23.15,
+          "lng": 113.35
+        },
+        {
+          "lat": 23.08,
+          "lng": 113.35
+        },
+        {
+          "lat": 23.05,
+          "lng": 113.25
+        },
+        {
+          "lat": 23.1,
+          "lng": 113.15
+        },
+        {
+          "lat": 23.15,
+          "lng": 113.12
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Realtime",
+          "variable": "rainfall_24h",
+          "value": 0.0,
+          "unit": "mm",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.92
+        },
+        {
+          "source": "QWeather/Hourly",
+          "variable": "rainfall_6h",
+          "value": 0.0,
+          "unit": "mm",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.9
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "temperature",
+          "value": 27.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "rainfall_24h",
+          "display_name": "24小时降水量",
+          "value": 0.0,
+          "unit": "mm",
+          "source": "QWeather/Realtime",
+          "threshold": 50.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "降水量正常",
+          "description": "最新24小时降水量为0.0mm，处于安全范围",
+          "explanation": "24小时降水量超过50mm达到暴雨级别，洪涝风险显著增加",
+          "weight": 0.35,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 0.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "rainfall_6h",
+          "display_name": "6小时降水量",
+          "value": 0.0,
+          "unit": "mm",
+          "source": "QWeather/Hourly",
+          "threshold": 30.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "降水正常",
+          "description": "最新6小时降水量为0.0mm，处于安全范围",
+          "explanation": "短时强降水超过30mm/6h，极易引发城市内涝和山洪",
+          "weight": 0.25,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 0.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "temperature",
+          "display_name": "温度",
+          "value": 27.0,
+          "unit": "°C",
+          "source": "QWeather/Realtime",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新温度为27.0°C，处于安全范围",
+          "explanation": "高温加速可燃物水分蒸发，降低燃点",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 27.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析洪涝灾害风险场景（难度等级：L2）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "安全因素：24小时降水量=0.0mm；6小时降水量=0.0mm；温度=27.0°C，降低了风险评分"
+        },
+        {
+          "step": 3,
+          "type": "decision",
+          "text": "综合风险评分0.000低于预警阈值，AI判定为暂时安全（置信度0%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "ground_truth_score": 0.2,
+        "ground_truth_explanation": {
+          "rainfall_24h_max": 0.0,
+          "rainfall_6h_max": 0.0,
+          "standard": "GB/T 28592-2012 + 防汛警戒判据",
+          "detail": "未命中任何暴雨/警戒阈值，不预警"
+        }
+      },
+      "verification_reason": "AI 预测安全，验证数据确认无风险。洪涝灾害场景的实际观测指标：验证数据不足。综合风险评分 0.200，低于预警阈值，排除正确。"
+    },
+    {
+      "case_id": "flood-l3-good-drainage",
+      "category": "flood",
+      "difficulty": "L3",
+      "region": "Guilin-Guangxi",
+      "ground_truth": false,
+      "gt_score": 0.2,
+      "gt_explanation": {
+        "rainfall_24h_max": 1.6,
+        "rainfall_6h_max": 0.8,
+        "standard": "GB/T 28592-2012 + 防汛警戒判据",
+        "detail": "未命中任何暴雨/警戒阈值，不预警"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Hourly, QWeather/Realtime",
+      "llm_decision": false,
+      "confidence": 0.016,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "rainfall_24h": 0.016,
+        "rainfall_6h": 0.016
+      },
+      "rationale": "FloodAlert: 24h=1.6mm, 6h=0.8mm, 土壤=0.00, 水位=0.0m, 风险分=0.016",
+      "timestamp": "2026-10-23T03:18:22.270368+00:00",
+      "coordinates": {
+        "lat": 25.27,
+        "lng": 110.29
+      },
+      "region_cn": "桂林·广西",
+      "affected_radius_km": 20,
+      "polygon": [
+        {
+          "lat": 25.32,
+          "lng": 110.2
+        },
+        {
+          "lat": 25.3,
+          "lng": 110.38
+        },
+        {
+          "lat": 25.22,
+          "lng": 110.4
+        },
+        {
+          "lat": 25.18,
+          "lng": 110.28
+        },
+        {
+          "lat": 25.22,
+          "lng": 110.18
+        },
+        {
+          "lat": 25.3,
+          "lng": 110.15
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Realtime",
+          "variable": "rainfall_24h",
+          "value": 1.6,
+          "unit": "mm",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.92
+        },
+        {
+          "source": "QWeather/Hourly",
+          "variable": "rainfall_6h",
+          "value": 0.8,
+          "unit": "mm",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.9
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "temperature",
+          "value": 14.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "rainfall_24h",
+          "display_name": "24小时降水量",
+          "value": 1.6,
+          "unit": "mm",
+          "source": "QWeather/Realtime",
+          "threshold": 50.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "降水量正常",
+          "description": "最新24小时降水量为1.6mm，处于安全范围",
+          "explanation": "24小时降水量超过50mm达到暴雨级别，洪涝风险显著增加",
+          "weight": 0.35,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 1.6,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "rainfall_6h",
+          "display_name": "6小时降水量",
+          "value": 0.8,
+          "unit": "mm",
+          "source": "QWeather/Hourly",
+          "threshold": 30.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "降水正常",
+          "description": "最新6小时降水量为0.8mm，处于安全范围",
+          "explanation": "短时强降水超过30mm/6h，极易引发城市内涝和山洪",
+          "weight": 0.25,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 0.8,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "temperature",
+          "display_name": "温度",
+          "value": 14.0,
+          "unit": "°C",
+          "source": "QWeather/Realtime",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新温度为14.0°C，处于安全范围",
+          "explanation": "高温加速可燃物水分蒸发，降低燃点",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 14.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析洪涝灾害风险场景（难度等级：L3）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "安全因素：24小时降水量=1.6mm；6小时降水量=0.8mm；温度=14.0°C，降低了风险评分"
+        },
+        {
+          "step": 3,
+          "type": "decision",
+          "text": "综合风险评分0.016低于预警阈值，AI判定为暂时安全（置信度2%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "ground_truth_score": 0.2,
+        "ground_truth_explanation": {
+          "rainfall_24h_max": 1.6,
+          "rainfall_6h_max": 0.8,
+          "standard": "GB/T 28592-2012 + 防汛警戒判据",
+          "detail": "未命中任何暴雨/警戒阈值，不预警"
+        }
+      },
+      "verification_reason": "AI 预测安全，验证数据确认无风险。洪涝灾害场景的实际观测指标：验证数据不足。综合风险评分 0.200，低于预警阈值，排除正确。"
+    },
+    {
+      "case_id": "flood-l4-water-trend-rise",
+      "category": "flood",
+      "difficulty": "L4",
+      "region": "Nanjing-Yangtze",
+      "ground_truth": false,
+      "gt_score": 0.2,
+      "gt_explanation": {
+        "rainfall_24h_max": 0.0,
+        "rainfall_6h_max": 0.0,
+        "standard": "GB/T 28592-2012 + 防汛警戒判据",
+        "detail": "未命中任何暴雨/警戒阈值，不预警"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Hourly, QWeather/Realtime",
+      "llm_decision": false,
+      "confidence": 0.0,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "rainfall_24h": 0.0,
+        "rainfall_6h": 0.0
+      },
+      "rationale": "FloodAlert: 24h=0.0mm, 6h=0.0mm, 土壤=0.00, 水位=0.0m, 风险分=0.000",
+      "timestamp": "2026-10-23T03:18:22.270414+00:00",
+      "coordinates": {
+        "lat": 32.06,
+        "lng": 118.8
+      },
+      "region_cn": "南京·长江",
+      "affected_radius_km": 20,
+      "polygon": [
+        {
+          "lat": 32.1,
+          "lng": 118.7
+        },
+        {
+          "lat": 32.08,
+          "lng": 118.9
+        },
+        {
+          "lat": 32.02,
+          "lng": 118.92
+        },
+        {
+          "lat": 32.0,
+          "lng": 118.75
+        },
+        {
+          "lat": 32.03,
+          "lng": 118.65
+        },
+        {
+          "lat": 32.08,
+          "lng": 118.65
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Realtime",
+          "variable": "rainfall_24h",
+          "value": 0.0,
+          "unit": "mm",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.92
+        },
+        {
+          "source": "QWeather/Hourly",
+          "variable": "rainfall_6h",
+          "value": 0.0,
+          "unit": "mm",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.9
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "temperature",
+          "value": 20.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "rainfall_24h",
+          "display_name": "24小时降水量",
+          "value": 0.0,
+          "unit": "mm",
+          "source": "QWeather/Realtime",
+          "threshold": 50.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "降水量正常",
+          "description": "最新24小时降水量为0.0mm，处于安全范围",
+          "explanation": "24小时降水量超过50mm达到暴雨级别，洪涝风险显著增加",
+          "weight": 0.35,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 0.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "rainfall_6h",
+          "display_name": "6小时降水量",
+          "value": 0.0,
+          "unit": "mm",
+          "source": "QWeather/Hourly",
+          "threshold": 30.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "降水正常",
+          "description": "最新6小时降水量为0.0mm，处于安全范围",
+          "explanation": "短时强降水超过30mm/6h，极易引发城市内涝和山洪",
+          "weight": 0.25,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 0.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "temperature",
+          "display_name": "温度",
+          "value": 20.0,
+          "unit": "°C",
+          "source": "QWeather/Realtime",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新温度为20.0°C，处于安全范围",
+          "explanation": "高温加速可燃物水分蒸发，降低燃点",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 20.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析洪涝灾害风险场景（难度等级：L4）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "安全因素：24小时降水量=0.0mm；6小时降水量=0.0mm；温度=20.0°C，降低了风险评分"
+        },
+        {
+          "step": 3,
+          "type": "decision",
+          "text": "综合风险评分0.000低于预警阈值，AI判定为暂时安全（置信度0%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "ground_truth_score": 0.2,
+        "ground_truth_explanation": {
+          "rainfall_24h_max": 0.0,
+          "rainfall_6h_max": 0.0,
+          "standard": "GB/T 28592-2012 + 防汛警戒判据",
+          "detail": "未命中任何暴雨/警戒阈值，不预警"
+        }
+      },
+      "verification_reason": "AI 预测安全，验证数据确认无风险。洪涝灾害场景的实际观测指标：验证数据不足。综合风险评分 0.200，低于预警阈值，排除正确。"
+    },
+    {
+      "case_id": "drought-l1-severe-spi",
+      "category": "drought",
+      "difficulty": "L1",
+      "region": "Kunming-Yunnan",
+      "ground_truth": false,
+      "gt_score": 0.25,
+      "gt_explanation": {
+        "humidity_latest": 57.0,
+        "rainfall_monthly_latest": 21.0,
+        "impact_gate": false,
+        "impact_reasons": [],
+        "standard": "GB/T 20481-2017 SPI/Palmer 分级",
+        "detail": "未达到中旱及以上等级，不预警（指数通道未成立）"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Realtime, QWeather/Daily7d",
+      "llm_decision": false,
+      "confidence": 0.15,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "humidity": 0,
+        "rainfall_monthly": 0.3
+      },
+      "rationale": "DroughtAlert: SPI=0.00, Palmer=0.00, 湿度=57.0%, 月降雨=21.0mm, NDVI=0.00, 风险分=0.150",
+      "timestamp": "2026-10-23T03:18:22.270478+00:00",
+      "coordinates": {
+        "lat": 25.04,
+        "lng": 102.71
+      },
+      "region_cn": "昆明·云南",
+      "affected_radius_km": 25,
+      "polygon": [
+        {
+          "lat": 25.08,
+          "lng": 102.65
+        },
+        {
+          "lat": 25.06,
+          "lng": 102.78
+        },
+        {
+          "lat": 25.0,
+          "lng": 102.8
+        },
+        {
+          "lat": 24.98,
+          "lng": 102.7
+        },
+        {
+          "lat": 25.0,
+          "lng": 102.6
+        },
+        {
+          "lat": 25.06,
+          "lng": 102.6
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Realtime",
+          "variable": "humidity",
+          "value": 57,
+          "unit": "%",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Daily7d",
+          "variable": "rainfall_monthly",
+          "value": 21.0,
+          "unit": "mm",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.8
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "temperature",
+          "value": 21.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "humidity",
+          "display_name": "空气湿度",
+          "value": 57,
+          "unit": "%",
+          "source": "QWeather/Realtime",
+          "threshold": 20.0,
+          "direction": "low",
+          "status": "safe",
+          "status_text": "湿度正常",
+          "description": "最新空气湿度为57%，处于正常范围",
+          "explanation": "湿度低于20%时，可燃物极易点燃，火势难以控制",
+          "weight": 0.2,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 57,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "rainfall_monthly",
+          "display_name": "月降雨量",
+          "value": 21.0,
+          "unit": "mm",
+          "source": "QWeather/Daily7d",
+          "threshold": 30.0,
+          "direction": "low",
+          "status": "danger",
+          "status_text": "严重降水亏缺",
+          "description": "最新月降雨量为21.0mm，低于30.0mm的危险临界值",
+          "explanation": "月降雨量低于30mm表示严重降水亏缺，干旱风险显著增加",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 21.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "temperature",
+          "display_name": "温度",
+          "value": 21.0,
+          "unit": "°C",
+          "source": "QWeather/Realtime",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新温度为21.0°C，处于安全范围",
+          "explanation": "高温加速可燃物水分蒸发，降低燃点",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 21.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析干旱风险场景（难度等级：L1）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "最新月降雨量为21.0mm，低于30.0mm的危险临界值"
+        },
+        {
+          "step": 3,
+          "type": "evidence",
+          "text": "安全因素：空气湿度=57%；温度=21.0°C，降低了风险评分"
+        },
+        {
+          "step": 4,
+          "type": "analysis",
+          "text": "多变量加权综合评分：主要风险因素为月降雨量(权重15%)，综合风险评分=0.150"
+        },
+        {
+          "step": 5,
+          "type": "decision",
+          "text": "综合风险评分0.150低于预警阈值，AI判定为暂时安全（置信度15%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "ground_truth_score": 0.25,
+        "ground_truth_explanation": {
+          "humidity_latest": 57.0,
+          "rainfall_monthly_latest": 21.0,
+          "impact_gate": false,
+          "impact_reasons": [],
+          "standard": "GB/T 20481-2017 SPI/Palmer 分级",
+          "detail": "未达到中旱及以上等级，不预警（指数通道未成立）"
+        }
+      },
+      "verification_reason": "AI 预测安全，验证数据确认无风险。干旱场景的实际观测指标：验证数据不足。综合风险评分 0.250，低于预警阈值，排除正确。"
+    },
+    {
+      "case_id": "drought-l1-normal",
+      "category": "drought",
+      "difficulty": "L1",
+      "region": "Hangzhou-Zhejiang",
+      "ground_truth": false,
+      "gt_score": 0.25,
+      "gt_explanation": {
+        "humidity_latest": 72.0,
+        "rainfall_monthly_latest": 164.6,
+        "impact_gate": false,
+        "impact_reasons": [],
+        "standard": "GB/T 20481-2017 SPI/Palmer 分级",
+        "detail": "未达到中旱及以上等级，不预警（指数通道未成立）"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Realtime, QWeather/Daily7d",
+      "llm_decision": false,
+      "confidence": 0.0,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "humidity": 0,
+        "rainfall_monthly": 0
+      },
+      "rationale": "DroughtAlert: SPI=0.00, Palmer=0.00, 湿度=72.0%, 月降雨=164.6mm, NDVI=0.00, 风险分=0.000",
+      "timestamp": "2026-10-23T03:18:22.270530+00:00",
+      "coordinates": {
+        "lat": 30.27,
+        "lng": 120.16
+      },
+      "region_cn": "杭州·浙江",
+      "affected_radius_km": 15,
+      "polygon": [
+        {
+          "lat": 30.3,
+          "lng": 120.1
+        },
+        {
+          "lat": 30.28,
+          "lng": 120.22
+        },
+        {
+          "lat": 30.22,
+          "lng": 120.25
+        },
+        {
+          "lat": 30.2,
+          "lng": 120.15
+        },
+        {
+          "lat": 30.24,
+          "lng": 120.08
+        },
+        {
+          "lat": 30.28,
+          "lng": 120.08
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Realtime",
+          "variable": "humidity",
+          "value": 72,
+          "unit": "%",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Daily7d",
+          "variable": "rainfall_monthly",
+          "value": 164.6,
+          "unit": "mm",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.8
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "temperature",
+          "value": 19.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "humidity",
+          "display_name": "空气湿度",
+          "value": 72,
+          "unit": "%",
+          "source": "QWeather/Realtime",
+          "threshold": 20.0,
+          "direction": "low",
+          "status": "safe",
+          "status_text": "湿度正常",
+          "description": "最新空气湿度为72%，处于正常范围",
+          "explanation": "湿度低于20%时，可燃物极易点燃，火势难以控制",
+          "weight": 0.2,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 72,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "rainfall_monthly",
+          "display_name": "月降雨量",
+          "value": 164.6,
+          "unit": "mm",
+          "source": "QWeather/Daily7d",
+          "threshold": 30.0,
+          "direction": "low",
+          "status": "safe",
+          "status_text": "降水正常",
+          "description": "最新月降雨量为164.6mm，处于正常范围",
+          "explanation": "月降雨量低于30mm表示严重降水亏缺，干旱风险显著增加",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 164.6,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "temperature",
+          "display_name": "温度",
+          "value": 19.0,
+          "unit": "°C",
+          "source": "QWeather/Realtime",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新温度为19.0°C，处于安全范围",
+          "explanation": "高温加速可燃物水分蒸发，降低燃点",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 19.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析干旱风险场景（难度等级：L1）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "安全因素：空气湿度=72%；月降雨量=164.6mm；温度=19.0°C，降低了风险评分"
+        },
+        {
+          "step": 3,
+          "type": "decision",
+          "text": "综合风险评分0.000低于预警阈值，AI判定为暂时安全（置信度0%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "ground_truth_score": 0.25,
+        "ground_truth_explanation": {
+          "humidity_latest": 72.0,
+          "rainfall_monthly_latest": 164.6,
+          "impact_gate": false,
+          "impact_reasons": [],
+          "standard": "GB/T 20481-2017 SPI/Palmer 分级",
+          "detail": "未达到中旱及以上等级，不预警（指数通道未成立）"
+        }
+      },
+      "verification_reason": "AI 预测安全，验证数据确认无风险。干旱场景的实际观测指标：验证数据不足。综合风险评分 0.250，低于预警阈值，排除正确。"
+    },
+    {
+      "case_id": "drought-l2-borderline-spi",
+      "category": "drought",
+      "difficulty": "L2",
+      "region": "Harbin-Heilongjiang",
+      "ground_truth": false,
+      "gt_score": 0.25,
+      "gt_explanation": {
+        "humidity_latest": 49.0,
+        "rainfall_monthly_latest": 0.0,
+        "impact_gate": false,
+        "impact_reasons": [],
+        "standard": "GB/T 20481-2017 SPI/Palmer 分级",
+        "detail": "未达到中旱及以上等级，不预警（指数通道未成立）"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Realtime, QWeather/Daily7d",
+      "llm_decision": false,
+      "confidence": 0.5,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "humidity": 0,
+        "rainfall_monthly": 1.0
+      },
+      "rationale": "DroughtAlert: SPI=0.00, Palmer=0.00, 湿度=49.0%, 月降雨=0.0mm, NDVI=0.00, 风险分=0.500",
+      "timestamp": "2026-10-23T03:18:22.270628+00:00",
+      "coordinates": {
+        "lat": 45.8,
+        "lng": 126.53
+      },
+      "region_cn": "哈尔滨·黑龙江",
+      "affected_radius_km": 25,
+      "polygon": [
+        {
+          "lat": 45.85,
+          "lng": 126.45
+        },
+        {
+          "lat": 45.82,
+          "lng": 126.65
+        },
+        {
+          "lat": 45.72,
+          "lng": 126.67
+        },
+        {
+          "lat": 45.68,
+          "lng": 126.5
+        },
+        {
+          "lat": 45.72,
+          "lng": 126.35
+        },
+        {
+          "lat": 45.82,
+          "lng": 126.35
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Realtime",
+          "variable": "humidity",
+          "value": 49,
+          "unit": "%",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Daily7d",
+          "variable": "rainfall_monthly",
+          "value": 0.0,
+          "unit": "mm",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.8
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "temperature",
+          "value": 13.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "humidity",
+          "display_name": "空气湿度",
+          "value": 49,
+          "unit": "%",
+          "source": "QWeather/Realtime",
+          "threshold": 20.0,
+          "direction": "low",
+          "status": "safe",
+          "status_text": "湿度正常",
+          "description": "最新空气湿度为49%，处于正常范围",
+          "explanation": "湿度低于20%时，可燃物极易点燃，火势难以控制",
+          "weight": 0.2,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 49,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "rainfall_monthly",
+          "display_name": "月降雨量",
+          "value": 0.0,
+          "unit": "mm",
+          "source": "QWeather/Daily7d",
+          "threshold": 30.0,
+          "direction": "low",
+          "status": "danger",
+          "status_text": "严重降水亏缺",
+          "description": "最新月降雨量为0.0mm，低于30.0mm的危险临界值",
+          "explanation": "月降雨量低于30mm表示严重降水亏缺，干旱风险显著增加",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 0.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "temperature",
+          "display_name": "温度",
+          "value": 13.0,
+          "unit": "°C",
+          "source": "QWeather/Realtime",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新温度为13.0°C，处于安全范围",
+          "explanation": "高温加速可燃物水分蒸发，降低燃点",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 13.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析干旱风险场景（难度等级：L2）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "最新月降雨量为0.0mm，低于30.0mm的危险临界值"
+        },
+        {
+          "step": 3,
+          "type": "evidence",
+          "text": "安全因素：空气湿度=49%；温度=13.0°C，降低了风险评分"
+        },
+        {
+          "step": 4,
+          "type": "analysis",
+          "text": "多变量加权综合评分：主要风险因素为月降雨量(权重15%)，综合风险评分=0.500"
+        },
+        {
+          "step": 5,
+          "type": "decision",
+          "text": "综合风险评分0.500低于预警阈值，AI判定为暂时安全（置信度50%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "ground_truth_score": 0.25,
+        "ground_truth_explanation": {
+          "humidity_latest": 49.0,
+          "rainfall_monthly_latest": 0.0,
+          "impact_gate": false,
+          "impact_reasons": [],
+          "standard": "GB/T 20481-2017 SPI/Palmer 分级",
+          "detail": "未达到中旱及以上等级，不预警（指数通道未成立）"
+        }
+      },
+      "verification_reason": "AI 预测安全，验证数据确认无风险。干旱场景的实际观测指标：验证数据不足。综合风险评分 0.250，低于预警阈值，排除正确。"
+    },
+    {
+      "case_id": "drought-l3-palmerspi-conflict",
+      "category": "drought",
+      "difficulty": "L3",
+      "region": "Urumqi-Xinjiang",
+      "ground_truth": false,
+      "gt_score": 0.25,
+      "gt_explanation": {
+        "humidity_latest": 89.0,
+        "rainfall_monthly_latest": 1.7,
+        "impact_gate": false,
+        "impact_reasons": [],
+        "standard": "GB/T 20481-2017 SPI/Palmer 分级",
+        "detail": "未达到中旱及以上等级，不预警（指数通道未成立）"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Realtime, QWeather/Daily7d",
+      "llm_decision": false,
+      "confidence": 0.472,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "humidity": 0,
+        "rainfall_monthly": 0.943
+      },
+      "rationale": "DroughtAlert: SPI=0.00, Palmer=0.00, 湿度=89.0%, 月降雨=1.7mm, NDVI=0.00, 风险分=0.472",
+      "timestamp": "2026-10-23T03:18:22.270684+00:00",
+      "coordinates": {
+        "lat": 43.83,
+        "lng": 87.62
+      },
+      "region_cn": "乌鲁木齐·新疆",
+      "affected_radius_km": 30,
+      "polygon": [
+        {
+          "lat": 43.88,
+          "lng": 87.5
+        },
+        {
+          "lat": 43.85,
+          "lng": 87.75
+        },
+        {
+          "lat": 43.78,
+          "lng": 87.78
+        },
+        {
+          "lat": 43.75,
+          "lng": 87.6
+        },
+        {
+          "lat": 43.78,
+          "lng": 87.42
+        },
+        {
+          "lat": 43.85,
+          "lng": 87.42
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Realtime",
+          "variable": "humidity",
+          "value": 89,
+          "unit": "%",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Daily7d",
+          "variable": "rainfall_monthly",
+          "value": 1.7,
+          "unit": "mm",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.8
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "temperature",
+          "value": 2.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "humidity",
+          "display_name": "空气湿度",
+          "value": 89,
+          "unit": "%",
+          "source": "QWeather/Realtime",
+          "threshold": 20.0,
+          "direction": "low",
+          "status": "safe",
+          "status_text": "湿度正常",
+          "description": "最新空气湿度为89%，处于正常范围",
+          "explanation": "湿度低于20%时，可燃物极易点燃，火势难以控制",
+          "weight": 0.2,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 89,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "rainfall_monthly",
+          "display_name": "月降雨量",
+          "value": 1.7,
+          "unit": "mm",
+          "source": "QWeather/Daily7d",
+          "threshold": 30.0,
+          "direction": "low",
+          "status": "danger",
+          "status_text": "严重降水亏缺",
+          "description": "最新月降雨量为1.7mm，低于30.0mm的危险临界值",
+          "explanation": "月降雨量低于30mm表示严重降水亏缺，干旱风险显著增加",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 1.7,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "temperature",
+          "display_name": "温度",
+          "value": 2.0,
+          "unit": "°C",
+          "source": "QWeather/Realtime",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新温度为2.0°C，处于安全范围",
+          "explanation": "高温加速可燃物水分蒸发，降低燃点",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 2.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析干旱风险场景（难度等级：L3）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "最新月降雨量为1.7mm，低于30.0mm的危险临界值"
+        },
+        {
+          "step": 3,
+          "type": "evidence",
+          "text": "安全因素：空气湿度=89%；温度=2.0°C，降低了风险评分"
+        },
+        {
+          "step": 4,
+          "type": "analysis",
+          "text": "多变量加权综合评分：主要风险因素为月降雨量(权重15%)，综合风险评分=0.472"
+        },
+        {
+          "step": 5,
+          "type": "decision",
+          "text": "综合风险评分0.472低于预警阈值，AI判定为暂时安全（置信度47%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "ground_truth_score": 0.25,
+        "ground_truth_explanation": {
+          "humidity_latest": 89.0,
+          "rainfall_monthly_latest": 1.7,
+          "impact_gate": false,
+          "impact_reasons": [],
+          "standard": "GB/T 20481-2017 SPI/Palmer 分级",
+          "detail": "未达到中旱及以上等级，不预警（指数通道未成立）"
+        }
+      },
+      "verification_reason": "AI 预测安全，验证数据确认无风险。干旱场景的实际观测指标：验证数据不足。综合风险评分 0.250，低于预警阈值，排除正确。"
+    },
+    {
+      "case_id": "drought-l4-spir-declining",
+      "category": "drought",
+      "difficulty": "L4",
+      "region": "Taiyuan-Shanxi",
+      "ground_truth": false,
+      "gt_score": 0.25,
+      "gt_explanation": {
+        "humidity_latest": 51.0,
+        "rainfall_monthly_latest": 2.1,
+        "impact_gate": false,
+        "impact_reasons": [],
+        "standard": "GB/T 20481-2017 SPI/Palmer 分级",
+        "detail": "未达到中旱及以上等级，不预警（指数通道未成立）"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Realtime, QWeather/Daily7d",
+      "llm_decision": false,
+      "confidence": 0.465,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "humidity": 0,
+        "rainfall_monthly": 0.93
+      },
+      "rationale": "DroughtAlert: SPI=0.00, Palmer=0.00, 湿度=51.0%, 月降雨=2.1mm, NDVI=0.00, 风险分=0.465",
+      "timestamp": "2026-10-23T03:18:22.270733+00:00",
+      "coordinates": {
+        "lat": 37.87,
+        "lng": 112.55
+      },
+      "region_cn": "太原·山西",
+      "affected_radius_km": 18,
+      "polygon": [
+        {
+          "lat": 37.92,
+          "lng": 112.45
+        },
+        {
+          "lat": 37.9,
+          "lng": 112.65
+        },
+        {
+          "lat": 37.82,
+          "lng": 112.67
+        },
+        {
+          "lat": 37.78,
+          "lng": 112.5
+        },
+        {
+          "lat": 37.82,
+          "lng": 112.38
+        },
+        {
+          "lat": 37.9,
+          "lng": 112.38
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Realtime",
+          "variable": "humidity",
+          "value": 51,
+          "unit": "%",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Daily7d",
+          "variable": "rainfall_monthly",
+          "value": 2.1,
+          "unit": "mm",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.8
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "temperature",
+          "value": 13.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "humidity",
+          "display_name": "空气湿度",
+          "value": 51,
+          "unit": "%",
+          "source": "QWeather/Realtime",
+          "threshold": 20.0,
+          "direction": "low",
+          "status": "safe",
+          "status_text": "湿度正常",
+          "description": "最新空气湿度为51%，处于正常范围",
+          "explanation": "湿度低于20%时，可燃物极易点燃，火势难以控制",
+          "weight": 0.2,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 51,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "rainfall_monthly",
+          "display_name": "月降雨量",
+          "value": 2.1,
+          "unit": "mm",
+          "source": "QWeather/Daily7d",
+          "threshold": 30.0,
+          "direction": "low",
+          "status": "danger",
+          "status_text": "严重降水亏缺",
+          "description": "最新月降雨量为2.1mm，低于30.0mm的危险临界值",
+          "explanation": "月降雨量低于30mm表示严重降水亏缺，干旱风险显著增加",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 2.1,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "temperature",
+          "display_name": "温度",
+          "value": 13.0,
+          "unit": "°C",
+          "source": "QWeather/Realtime",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新温度为13.0°C，处于安全范围",
+          "explanation": "高温加速可燃物水分蒸发，降低燃点",
+          "weight": 0.15,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 13.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析干旱风险场景（难度等级：L4）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "最新月降雨量为2.1mm，低于30.0mm的危险临界值"
+        },
+        {
+          "step": 3,
+          "type": "evidence",
+          "text": "安全因素：空气湿度=51%；温度=13.0°C，降低了风险评分"
+        },
+        {
+          "step": 4,
+          "type": "analysis",
+          "text": "多变量加权综合评分：主要风险因素为月降雨量(权重15%)，综合风险评分=0.465"
+        },
+        {
+          "step": 5,
+          "type": "decision",
+          "text": "综合风险评分0.465低于预警阈值，AI判定为暂时安全（置信度46%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "ground_truth_score": 0.25,
+        "ground_truth_explanation": {
+          "humidity_latest": 51.0,
+          "rainfall_monthly_latest": 2.1,
+          "impact_gate": false,
+          "impact_reasons": [],
+          "standard": "GB/T 20481-2017 SPI/Palmer 分级",
+          "detail": "未达到中旱及以上等级，不预警（指数通道未成立）"
+        }
+      },
+      "verification_reason": "AI 预测安全，验证数据确认无风险。干旱场景的实际观测指标：验证数据不足。综合风险评分 0.250，低于预警阈值，排除正确。"
+    },
+    {
+      "case_id": "heat-l1-extreme-wetbulb",
+      "category": "heat",
+      "difficulty": "L1",
+      "region": "Chongqing-HotPotato",
+      "ground_truth": false,
+      "gt_score": 0.25,
+      "gt_explanation": {
+        "temperature_max": 22.3,
+        "wet_bulb_temp_max": 16.2,
+        "humidity_latest": 77.0,
+        "heat_duration_days": 0,
+        "standard": "中央气象台高温预警信号 + WBGT",
+        "detail": "未达到任何预警等级，不预警"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Calculated, QWeather/Realtime, QWeather/Daily3d",
+      "llm_decision": false,
+      "confidence": 0.081,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "temperature_max": 0,
+        "heat_duration_days": 0,
+        "wet_bulb_temp": 0,
+        "humidity": 0.54
+      },
+      "rationale": "HeatWaveAlert: 最高温=22.3°C, 湿球=16.2°C, 湿度=77.0%, 持续≈0天, 风险分=0.081",
+      "timestamp": "2026-10-23T03:18:22.270801+00:00",
+      "coordinates": {
+        "lat": 29.43,
+        "lng": 106.91
+      },
+      "region_cn": "重庆",
+      "affected_radius_km": 20,
+      "polygon": [
+        {
+          "lat": 29.5,
+          "lng": 106.8
+        },
+        {
+          "lat": 29.48,
+          "lng": 107.0
+        },
+        {
+          "lat": 29.38,
+          "lng": 107.02
+        },
+        {
+          "lat": 29.35,
+          "lng": 106.85
+        },
+        {
+          "lat": 29.38,
+          "lng": 106.72
+        },
+        {
+          "lat": 29.45,
+          "lng": 106.72
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Daily3d",
+          "variable": "temperature_max",
+          "value": 22.3,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.92
+        },
+        {
+          "source": "QWeather/Calculated",
+          "variable": "wet_bulb_temp",
+          "value": 16.2,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.85
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "humidity",
+          "value": 77,
+          "unit": "%",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Daily3d",
+          "variable": "heat_duration_days",
+          "value": 0,
+          "unit": "days",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.85
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "temperature_max",
+          "display_name": "最高温度",
+          "value": 22.3,
+          "unit": "°C",
+          "source": "QWeather/Daily3d",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新最高温度为22.3°C，处于安全范围",
+          "explanation": "最高温度超过35°C达到高温预警标准",
+          "weight": 0.35,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 22.3,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "wet_bulb_temp",
+          "display_name": "湿球温度",
+          "value": 16.2,
+          "unit": "°C",
+          "source": "QWeather/Calculated",
+          "threshold": 27.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "体感正常",
+          "description": "最新湿球温度为16.2°C，处于安全范围",
+          "explanation": "湿球温度超过27°C时人体散热困难，超过31°C极度危险",
+          "weight": 0.25,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 16.2,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "heat_duration_days",
+          "display_name": "持续高温天数",
+          "value": 0,
+          "unit": "days",
+          "source": "QWeather/Daily3d",
+          "threshold": 3.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "无持续高温",
+          "description": "最新持续高温天数为0days，处于安全范围",
+          "explanation": "连续高温超过3天，累积热应力显著增加健康风险",
+          "weight": 0.25,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "humidity",
+          "display_name": "空气湿度",
+          "value": 77,
+          "unit": "%",
+          "source": "QWeather/Realtime",
+          "threshold": 20.0,
+          "direction": "low",
+          "status": "safe",
+          "status_text": "湿度正常",
+          "description": "最新空气湿度为77%，处于正常范围",
+          "explanation": "湿度低于20%时，可燃物极易点燃，火势难以控制",
+          "weight": 0.2,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 77,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析高温热浪风险场景（难度等级：L1）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "安全因素：最高温度=22.3°C；湿球温度=16.2°C；持续高温天数=0days，降低了风险评分"
+        },
+        {
+          "step": 3,
+          "type": "decision",
+          "text": "综合风险评分0.081低于预警阈值，AI判定为暂时安全（置信度8%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "ground_truth_score": 0.25,
+        "ground_truth_explanation": {
+          "temperature_max": 22.3,
+          "wet_bulb_temp_max": 16.2,
+          "humidity_latest": 77.0,
+          "heat_duration_days": 0,
+          "standard": "中央气象台高温预警信号 + WBGT",
+          "detail": "未达到任何预警等级，不预警"
+        }
+      },
+      "verification_reason": "AI 预测安全，验证数据确认无风险。高温热浪场景的实际观测指标：持续高温天数=0(低于阈值3.0)。综合风险评分 0.250，低于预警阈值，排除正确。"
+    },
+    {
+      "case_id": "heat-l1-cool-comfortable",
+      "category": "heat",
+      "difficulty": "L1",
+      "region": "Kunming-SpringCity",
+      "ground_truth": false,
+      "gt_score": 0.25,
+      "gt_explanation": {
+        "temperature_max": 26.3,
+        "wet_bulb_temp_max": 15.5,
+        "humidity_latest": 57.0,
+        "heat_duration_days": 0,
+        "standard": "中央气象台高温预警信号 + WBGT",
+        "detail": "未达到任何预警等级，不预警"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Calculated, QWeather/Realtime, QWeather/Daily3d",
+      "llm_decision": false,
+      "confidence": 0.021,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "temperature_max": 0,
+        "heat_duration_days": 0,
+        "wet_bulb_temp": 0,
+        "humidity": 0.14
+      },
+      "rationale": "HeatWaveAlert: 最高温=26.3°C, 湿球=15.5°C, 湿度=57.0%, 持续≈0天, 风险分=0.021",
+      "timestamp": "2026-10-23T03:18:22.270856+00:00",
+      "coordinates": {
+        "lat": 25.04,
+        "lng": 102.71
+      },
+      "region_cn": "昆明·春城",
+      "affected_radius_km": 20,
+      "polygon": [
+        {
+          "lat": 25.08,
+          "lng": 102.68
+        },
+        {
+          "lat": 25.06,
+          "lng": 102.76
+        },
+        {
+          "lat": 25.02,
+          "lng": 102.78
+        },
+        {
+          "lat": 25.0,
+          "lng": 102.7
+        },
+        {
+          "lat": 25.02,
+          "lng": 102.62
+        },
+        {
+          "lat": 25.06,
+          "lng": 102.62
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Daily3d",
+          "variable": "temperature_max",
+          "value": 26.3,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.92
+        },
+        {
+          "source": "QWeather/Calculated",
+          "variable": "wet_bulb_temp",
+          "value": 15.5,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.85
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "humidity",
+          "value": 57,
+          "unit": "%",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Daily3d",
+          "variable": "heat_duration_days",
+          "value": 0,
+          "unit": "days",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.85
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "temperature_max",
+          "display_name": "最高温度",
+          "value": 26.3,
+          "unit": "°C",
+          "source": "QWeather/Daily3d",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新最高温度为26.3°C，处于安全范围",
+          "explanation": "最高温度超过35°C达到高温预警标准",
+          "weight": 0.35,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 26.3,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "wet_bulb_temp",
+          "display_name": "湿球温度",
+          "value": 15.5,
+          "unit": "°C",
+          "source": "QWeather/Calculated",
+          "threshold": 27.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "体感正常",
+          "description": "最新湿球温度为15.5°C，处于安全范围",
+          "explanation": "湿球温度超过27°C时人体散热困难，超过31°C极度危险",
+          "weight": 0.25,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 15.5,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "heat_duration_days",
+          "display_name": "持续高温天数",
+          "value": 0,
+          "unit": "days",
+          "source": "QWeather/Daily3d",
+          "threshold": 3.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "无持续高温",
+          "description": "最新持续高温天数为0days，处于安全范围",
+          "explanation": "连续高温超过3天，累积热应力显著增加健康风险",
+          "weight": 0.25,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "humidity",
+          "display_name": "空气湿度",
+          "value": 57,
+          "unit": "%",
+          "source": "QWeather/Realtime",
+          "threshold": 20.0,
+          "direction": "low",
+          "status": "safe",
+          "status_text": "湿度正常",
+          "description": "最新空气湿度为57%，处于正常范围",
+          "explanation": "湿度低于20%时，可燃物极易点燃，火势难以控制",
+          "weight": 0.2,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 57,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析高温热浪风险场景（难度等级：L1）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "安全因素：最高温度=26.3°C；湿球温度=15.5°C；持续高温天数=0days，降低了风险评分"
+        },
+        {
+          "step": 3,
+          "type": "decision",
+          "text": "综合风险评分0.021低于预警阈值，AI判定为暂时安全（置信度2%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "ground_truth_score": 0.25,
+        "ground_truth_explanation": {
+          "temperature_max": 26.3,
+          "wet_bulb_temp_max": 15.5,
+          "humidity_latest": 57.0,
+          "heat_duration_days": 0,
+          "standard": "中央气象台高温预警信号 + WBGT",
+          "detail": "未达到任何预警等级，不预警"
+        }
+      },
+      "verification_reason": "AI 预测安全，验证数据确认无风险。高温热浪场景的实际观测指标：持续高温天数=0(低于阈值3.0)。综合风险评分 0.250，低于预警阈值，排除正确。"
+    },
+    {
+      "case_id": "heat-l2-hot-but-dry",
+      "category": "heat",
+      "difficulty": "L2",
+      "region": "Urumqi-Xinjiang",
+      "ground_truth": false,
+      "gt_score": 0.25,
+      "gt_explanation": {
+        "temperature_max": 1.7,
+        "wet_bulb_temp_max": 1.0,
+        "humidity_latest": 89.0,
+        "heat_duration_days": 0,
+        "standard": "中央气象台高温预警信号 + WBGT",
+        "detail": "未达到任何预警等级，不预警"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Calculated, QWeather/Realtime, QWeather/Daily3d",
+      "llm_decision": false,
+      "confidence": 0.117,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "temperature_max": 0,
+        "heat_duration_days": 0,
+        "wet_bulb_temp": 0,
+        "humidity": 0.78
+      },
+      "rationale": "HeatWaveAlert: 最高温=1.7°C, 湿球=1.0°C, 湿度=89.0%, 持续≈0天, 风险分=0.117",
+      "timestamp": "2026-10-23T03:18:22.270910+00:00",
+      "coordinates": {
+        "lat": 43.83,
+        "lng": 87.62
+      },
+      "region_cn": "乌鲁木齐·新疆",
+      "affected_radius_km": 30,
+      "polygon": [
+        {
+          "lat": 43.88,
+          "lng": 87.5
+        },
+        {
+          "lat": 43.85,
+          "lng": 87.75
+        },
+        {
+          "lat": 43.78,
+          "lng": 87.78
+        },
+        {
+          "lat": 43.75,
+          "lng": 87.6
+        },
+        {
+          "lat": 43.78,
+          "lng": 87.42
+        },
+        {
+          "lat": 43.85,
+          "lng": 87.42
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Daily3d",
+          "variable": "temperature_max",
+          "value": 1.7,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.92
+        },
+        {
+          "source": "QWeather/Calculated",
+          "variable": "wet_bulb_temp",
+          "value": 1.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.85
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "humidity",
+          "value": 89,
+          "unit": "%",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Daily3d",
+          "variable": "heat_duration_days",
+          "value": 0,
+          "unit": "days",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.85
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "temperature_max",
+          "display_name": "最高温度",
+          "value": 1.7,
+          "unit": "°C",
+          "source": "QWeather/Daily3d",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新最高温度为1.7°C，处于安全范围",
+          "explanation": "最高温度超过35°C达到高温预警标准",
+          "weight": 0.35,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 1.7,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "wet_bulb_temp",
+          "display_name": "湿球温度",
+          "value": 1.0,
+          "unit": "°C",
+          "source": "QWeather/Calculated",
+          "threshold": 27.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "体感正常",
+          "description": "最新湿球温度为1.0°C，处于安全范围",
+          "explanation": "湿球温度超过27°C时人体散热困难，超过31°C极度危险",
+          "weight": 0.25,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 1.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "heat_duration_days",
+          "display_name": "持续高温天数",
+          "value": 0,
+          "unit": "days",
+          "source": "QWeather/Daily3d",
+          "threshold": 3.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "无持续高温",
+          "description": "最新持续高温天数为0days，处于安全范围",
+          "explanation": "连续高温超过3天，累积热应力显著增加健康风险",
+          "weight": 0.25,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "humidity",
+          "display_name": "空气湿度",
+          "value": 89,
+          "unit": "%",
+          "source": "QWeather/Realtime",
+          "threshold": 20.0,
+          "direction": "low",
+          "status": "safe",
+          "status_text": "湿度正常",
+          "description": "最新空气湿度为89%，处于正常范围",
+          "explanation": "湿度低于20%时，可燃物极易点燃，火势难以控制",
+          "weight": 0.2,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 89,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析高温热浪风险场景（难度等级：L2）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "安全因素：最高温度=1.7°C；湿球温度=1.0°C；持续高温天数=0days，降低了风险评分"
+        },
+        {
+          "step": 3,
+          "type": "decision",
+          "text": "综合风险评分0.117低于预警阈值，AI判定为暂时安全（置信度12%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "ground_truth_score": 0.25,
+        "ground_truth_explanation": {
+          "temperature_max": 1.7,
+          "wet_bulb_temp_max": 1.0,
+          "humidity_latest": 89.0,
+          "heat_duration_days": 0,
+          "standard": "中央气象台高温预警信号 + WBGT",
+          "detail": "未达到任何预警等级，不预警"
+        }
+      },
+      "verification_reason": "AI 预测安全，验证数据确认无风险。高温热浪场景的实际观测指标：持续高温天数=0(低于阈值3.0)。综合风险评分 0.250，低于预警阈值，排除正确。"
+    },
+    {
+      "case_id": "heat-l3-borderline",
+      "category": "heat",
+      "difficulty": "L3",
+      "region": "Nanjing-OvenCity",
+      "ground_truth": false,
+      "gt_score": 0.25,
+      "gt_explanation": {
+        "temperature_max": 22.0,
+        "wet_bulb_temp_max": 15.4,
+        "humidity_latest": 63.0,
+        "heat_duration_days": 0,
+        "standard": "中央气象台高温预警信号 + WBGT",
+        "detail": "未达到任何预警等级，不预警"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Calculated, QWeather/Realtime, QWeather/Daily3d",
+      "llm_decision": false,
+      "confidence": 0.039,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "temperature_max": 0,
+        "heat_duration_days": 0,
+        "wet_bulb_temp": 0,
+        "humidity": 0.26
+      },
+      "rationale": "HeatWaveAlert: 最高温=22.0°C, 湿球=15.4°C, 湿度=63.0%, 持续≈0天, 风险分=0.039",
+      "timestamp": "2026-10-23T03:18:22.270961+00:00",
+      "coordinates": {
+        "lat": 32.06,
+        "lng": 118.8
+      },
+      "region_cn": "南京",
+      "affected_radius_km": 18,
+      "polygon": [
+        {
+          "lat": 32.08,
+          "lng": 118.72
+        },
+        {
+          "lat": 32.06,
+          "lng": 118.88
+        },
+        {
+          "lat": 32.0,
+          "lng": 118.9
+        },
+        {
+          "lat": 31.98,
+          "lng": 118.78
+        },
+        {
+          "lat": 32.02,
+          "lng": 118.68
+        },
+        {
+          "lat": 32.06,
+          "lng": 118.68
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Daily3d",
+          "variable": "temperature_max",
+          "value": 22.0,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.92
+        },
+        {
+          "source": "QWeather/Calculated",
+          "variable": "wet_bulb_temp",
+          "value": 15.4,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.85
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "humidity",
+          "value": 63,
+          "unit": "%",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Daily3d",
+          "variable": "heat_duration_days",
+          "value": 0,
+          "unit": "days",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.85
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "temperature_max",
+          "display_name": "最高温度",
+          "value": 22.0,
+          "unit": "°C",
+          "source": "QWeather/Daily3d",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新最高温度为22.0°C，处于安全范围",
+          "explanation": "最高温度超过35°C达到高温预警标准",
+          "weight": 0.35,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 22.0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "wet_bulb_temp",
+          "display_name": "湿球温度",
+          "value": 15.4,
+          "unit": "°C",
+          "source": "QWeather/Calculated",
+          "threshold": 27.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "体感正常",
+          "description": "最新湿球温度为15.4°C，处于安全范围",
+          "explanation": "湿球温度超过27°C时人体散热困难，超过31°C极度危险",
+          "weight": 0.25,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 15.4,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "heat_duration_days",
+          "display_name": "持续高温天数",
+          "value": 0,
+          "unit": "days",
+          "source": "QWeather/Daily3d",
+          "threshold": 3.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "无持续高温",
+          "description": "最新持续高温天数为0days，处于安全范围",
+          "explanation": "连续高温超过3天，累积热应力显著增加健康风险",
+          "weight": 0.25,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "humidity",
+          "display_name": "空气湿度",
+          "value": 63,
+          "unit": "%",
+          "source": "QWeather/Realtime",
+          "threshold": 20.0,
+          "direction": "low",
+          "status": "safe",
+          "status_text": "湿度正常",
+          "description": "最新空气湿度为63%，处于正常范围",
+          "explanation": "湿度低于20%时，可燃物极易点燃，火势难以控制",
+          "weight": 0.2,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 63,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析高温热浪风险场景（难度等级：L3）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "安全因素：最高温度=22.0°C；湿球温度=15.4°C；持续高温天数=0days，降低了风险评分"
+        },
+        {
+          "step": 3,
+          "type": "decision",
+          "text": "综合风险评分0.039低于预警阈值，AI判定为暂时安全（置信度4%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "ground_truth_score": 0.25,
+        "ground_truth_explanation": {
+          "temperature_max": 22.0,
+          "wet_bulb_temp_max": 15.4,
+          "humidity_latest": 63.0,
+          "heat_duration_days": 0,
+          "standard": "中央气象台高温预警信号 + WBGT",
+          "detail": "未达到任何预警等级，不预警"
+        }
+      },
+      "verification_reason": "AI 预测安全，验证数据确认无风险。高温热浪场景的实际观测指标：持续高温天数=0(低于阈值3.0)。综合风险评分 0.250，低于预警阈值，排除正确。"
+    },
+    {
+      "case_id": "heat-l4-progressive-heat",
+      "category": "heat",
+      "difficulty": "L4",
+      "region": "Wuhan-Yangtze",
+      "ground_truth": false,
+      "gt_score": 0.25,
+      "gt_explanation": {
+        "temperature_max": 22.7,
+        "wet_bulb_temp_max": 15.5,
+        "humidity_latest": 87.0,
+        "heat_duration_days": 0,
+        "standard": "中央气象台高温预警信号 + WBGT",
+        "detail": "未达到任何预警等级，不预警"
+      },
+      "data_source": "QWeather/realtime",
+      "observation_time": "2026-10-23T11:18:22+08:00",
+      "data_sources": "QWeather/Calculated, QWeather/Realtime, QWeather/Daily3d",
+      "llm_decision": false,
+      "confidence": 0.111,
+      "heuristic_decision": false,
+      "evidence_summary": {
+        "temperature_max": 0,
+        "heat_duration_days": 0,
+        "wet_bulb_temp": 0,
+        "humidity": 0.74
+      },
+      "rationale": "HeatWaveAlert: 最高温=22.7°C, 湿球=15.5°C, 湿度=87.0%, 持续≈0天, 风险分=0.111",
+      "timestamp": "2026-10-23T03:18:22.271011+00:00",
+      "coordinates": {
+        "lat": 30.59,
+        "lng": 114.31
+      },
+      "region_cn": "武汉·长江",
+      "affected_radius_km": 25,
+      "polygon": [
+        {
+          "lat": 30.68,
+          "lng": 114.2
+        },
+        {
+          "lat": 30.65,
+          "lng": 114.4
+        },
+        {
+          "lat": 30.55,
+          "lng": 114.45
+        },
+        {
+          "lat": 30.5,
+          "lng": 114.3
+        },
+        {
+          "lat": 30.52,
+          "lng": 114.15
+        },
+        {
+          "lat": 30.62,
+          "lng": 114.12
+        }
+      ],
+      "raw_observations": [
+        {
+          "source": "QWeather/Daily3d",
+          "variable": "temperature_max",
+          "value": 22.7,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.92
+        },
+        {
+          "source": "QWeather/Calculated",
+          "variable": "wet_bulb_temp",
+          "value": 15.5,
+          "unit": "°C",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.85
+        },
+        {
+          "source": "QWeather/Realtime",
+          "variable": "humidity",
+          "value": 87,
+          "unit": "%",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.95
+        },
+        {
+          "source": "QWeather/Daily3d",
+          "variable": "heat_duration_days",
+          "value": 0,
+          "unit": "days",
+          "timestamp": "2026-10-23T11:05+08:00",
+          "confidence": 0.85
+        }
+      ],
+      "detailed_evidence": [
+        {
+          "variable": "temperature_max",
+          "display_name": "最高温度",
+          "value": 22.7,
+          "unit": "°C",
+          "source": "QWeather/Daily3d",
+          "threshold": 35.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "温度正常",
+          "description": "最新最高温度为22.7°C，处于安全范围",
+          "explanation": "最高温度超过35°C达到高温预警标准",
+          "weight": 0.35,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 22.7,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "wet_bulb_temp",
+          "display_name": "湿球温度",
+          "value": 15.5,
+          "unit": "°C",
+          "source": "QWeather/Calculated",
+          "threshold": 27.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "体感正常",
+          "description": "最新湿球温度为15.5°C，处于安全范围",
+          "explanation": "湿球温度超过27°C时人体散热困难，超过31°C极度危险",
+          "weight": 0.25,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 15.5,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "heat_duration_days",
+          "display_name": "持续高温天数",
+          "value": 0,
+          "unit": "days",
+          "source": "QWeather/Daily3d",
+          "threshold": 3.0,
+          "direction": "high",
+          "status": "safe",
+          "status_text": "无持续高温",
+          "description": "最新持续高温天数为0days，处于安全范围",
+          "explanation": "连续高温超过3天，累积热应力显著增加健康风险",
+          "weight": 0.25,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 0,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        },
+        {
+          "variable": "humidity",
+          "display_name": "空气湿度",
+          "value": 87,
+          "unit": "%",
+          "source": "QWeather/Realtime",
+          "threshold": 20.0,
+          "direction": "low",
+          "status": "safe",
+          "status_text": "湿度正常",
+          "description": "最新空气湿度为87%，处于正常范围",
+          "explanation": "湿度低于20%时，可燃物极易点燃，火势难以控制",
+          "weight": 0.2,
+          "timestamp": "2026-10-23T11:05+08:00",
+          "trend": null,
+          "history": [
+            {
+              "value": 87,
+              "timestamp": "2026-10-23T11:05+08:00"
+            }
+          ]
+        }
+      ],
+      "reasoning_chain": [
+        {
+          "step": 1,
+          "type": "intro",
+          "text": "正在分析高温热浪风险场景（难度等级：L4）"
+        },
+        {
+          "step": 2,
+          "type": "evidence",
+          "text": "安全因素：最高温度=22.7°C；湿球温度=15.5°C；持续高温天数=0days，降低了风险评分"
+        },
+        {
+          "step": 3,
+          "type": "decision",
+          "text": "综合风险评分0.111低于预警阈值，AI判定为暂时安全（置信度11%），无需特殊措施"
+        }
+      ],
+      "verification": {
+        "predicted": false,
+        "actual": false,
+        "hit": true,
+        "ground_truth_score": 0.25,
+        "ground_truth_explanation": {
+          "temperature_max": 22.7,
+          "wet_bulb_temp_max": 15.5,
+          "humidity_latest": 87.0,
+          "heat_duration_days": 0,
+          "standard": "中央气象台高温预警信号 + WBGT",
+          "detail": "未达到任何预警等级，不预警"
+        }
+      },
+      "verification_reason": "AI 预测安全，验证数据确认无风险。高温热浪场景的实际观测指标：持续高温天数=0(低于阈值3.0)。综合风险评分 0.250，低于预警阈值，排除正确。"
+    }
+  ],
+  "cars_forecast": {
+    "model": "DeepNgrModel t2m serving (2000-2015 artifact, evt tail)",
+    "generated_for": "2026-10-24",
+    "p_trigger": 0.3,
+    "caveats": [
+      "成员为日均 t2m 扰动；日峰谷由 c00 偏移派生（未扰动，披露）",
+      "湿度取 c00 单场（未扰动）；湿球为 Stull 近似（典型误差 <1°C）",
+      "深度 NGR 冻结于 2000-2015 训练（2016 早停 + GPD 尾部）；业务 GEFS 与再预报 v12 存在版本漂移"
+    ],
+    "records": [
+      {
+        "region": "Chongqing-HotPotato",
+        "name_zh": "重庆",
+        "lat": 29.56,
+        "lon": 106.55,
+        "valid_date": "2026-10-24",
+        "p_harm_wb": 0.0,
+        "p_harm_heat": 0.0,
+        "p_harm_heat_intense": 0.0,
+        "p_harm_cold": 0.0,
+        "t2m_member_mean_k": 292.72
+      },
+      {
+        "region": "Kunming-SpringCity",
+        "name_zh": "昆明",
+        "lat": 25.05,
+        "lon": 102.72,
+        "valid_date": "2026-10-24",
+        "p_harm_wb": 0.001,
+        "p_harm_heat": 0.0,
+        "p_harm_heat_intense": 0.0,
+        "p_harm_cold": 0.0,
+        "t2m_member_mean_k": 291.43
+      },
+      {
+        "region": "Nanjing-OvenCity",
+        "name_zh": "南京",
+        "lat": 32.06,
+        "lon": 118.78,
+        "valid_date": "2026-10-24",
+        "p_harm_wb": 0.0,
+        "p_harm_heat": 0.0,
+        "p_harm_heat_intense": 0.0,
+        "p_harm_cold": 0.0,
+        "t2m_member_mean_k": 291.6
+      },
+      {
+        "region": "Wuhan-Yangtze",
+        "name_zh": "武汉",
+        "lat": 30.52,
+        "lon": 114.31,
+        "valid_date": "2026-10-24",
+        "p_harm_wb": 0.0,
+        "p_harm_heat": 0.0,
+        "p_harm_heat_intense": 0.0,
+        "p_harm_cold": 0.0,
+        "t2m_member_mean_k": 289.78
+      },
+      {
+        "region": "Beijing-Xiangshan",
+        "name_zh": "北京",
+        "lat": 39.92,
+        "lon": 116.2,
+        "valid_date": "2026-10-24",
+        "p_harm_wb": 0.0,
+        "p_harm_heat": 0.0,
+        "p_harm_heat_intense": 0.0,
+        "p_harm_cold": 0.001,
+        "t2m_member_mean_k": 281.79
+      },
+      {
+        "region": "Guangzhou-PearlRiver",
+        "name_zh": "广州",
+        "lat": 23.13,
+        "lon": 113.26,
+        "valid_date": "2026-10-24",
+        "p_harm_wb": 0.0,
+        "p_harm_heat": 0.0,
+        "p_harm_heat_intense": 0.0,
+        "p_harm_cold": 0.0,
+        "t2m_member_mean_k": 295.43
+      },
+      {
+        "region": "Shanghai-Bund",
+        "name_zh": "上海",
+        "lat": 31.23,
+        "lon": 121.47,
+        "valid_date": "2026-10-24",
+        "p_harm_wb": 0.001,
+        "p_harm_heat": 0.0,
+        "p_harm_heat_intense": 0.0,
+        "p_harm_cold": 0.0,
+        "t2m_member_mean_k": 293.43
+      },
+      {
+        "region": "Chengdu-Panda",
+        "name_zh": "成都",
+        "lat": 30.57,
+        "lon": 104.07,
+        "valid_date": "2026-10-24",
+        "p_harm_wb": 0.0,
+        "p_harm_heat": 0.0,
+        "p_harm_heat_intense": 0.0,
+        "p_harm_cold": 0.0,
+        "t2m_member_mean_k": 291.9
+      },
+      {
+        "region": "Hangzhou-WestLake",
+        "name_zh": "杭州",
+        "lat": 30.27,
+        "lon": 120.16,
+        "valid_date": "2026-10-24",
+        "p_harm_wb": 0.002,
+        "p_harm_heat": 0.0,
+        "p_harm_heat_intense": 0.0,
+        "p_harm_cold": 0.0,
+        "t2m_member_mean_k": 293.27
+      },
+      {
+        "region": "Changsha-Xiangjiang",
+        "name_zh": "长沙",
+        "lat": 28.23,
+        "lon": 112.94,
+        "valid_date": "2026-10-24",
+        "p_harm_wb": 0.0,
+        "p_harm_heat": 0.0,
+        "p_harm_heat_intense": 0.0,
+        "p_harm_cold": 0.0,
+        "t2m_member_mean_k": 291.59
+      },
+      {
+        "region": "Xian-Terracotta",
+        "name_zh": "西安",
+        "lat": 34.34,
+        "lon": 108.94,
+        "valid_date": "2026-10-24",
+        "p_harm_wb": 0.0,
+        "p_harm_heat": 0.0,
+        "p_harm_heat_intense": 0.0,
+        "p_harm_cold": 0.0,
+        "t2m_member_mean_k": 284.82
+      },
+      {
+        "region": "Jinan-SpringCity",
+        "name_zh": "济南",
+        "lat": 36.65,
+        "lon": 117.12,
+        "valid_date": "2026-10-24",
+        "p_harm_wb": 0.0,
+        "p_harm_heat": 0.0,
+        "p_harm_heat_intense": 0.0,
+        "p_harm_cold": 0.0,
+        "t2m_member_mean_k": 287.53
+      }
+    ],
+    "verification": {
+      "n": 312,
+      "mean_brier": 0.0,
+      "hit": 0,
+      "miss": 0,
+      "false_alarm": 0,
+      "csi": null,
+      "p_trigger": 0.3,
+      "since": "2026-09-26",
+      "last": "2026-10-22",
+      "obs_sources": [
+        "gefs_f000_t2m"
+      ],
+      "reliability_bins": [
+        {
+          "bin": "0.0-0.1",
+          "n": 312,
+          "mean_p": 0.0,
+          "event_rate": 0.0
+        }
+      ]
+    }
+  }
+}
