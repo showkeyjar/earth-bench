@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-27T22:07:45.601828+08:00",
+  "generated_at": "2026-11-28T10:24:51.781804+08:00",
   "keep_days": 14,
   "total_verified": 50,
   "tp": 0,
@@ -57,15 +57,6 @@
     }
   },
   "daily_trend": [
-    {
-      "date": "2026-11-14",
-      "verified": 5,
-      "tp": 0,
-      "fp": 2,
-      "fn": 0,
-      "tn": 3,
-      "accuracy": 0.6
-    },
     {
       "date": "2026-11-15",
       "verified": 0,
@@ -158,6 +149,15 @@
     },
     {
       "date": "2026-11-26",
+      "verified": 5,
+      "tp": 0,
+      "fp": 2,
+      "fn": 0,
+      "tn": 3,
+      "accuracy": 0.6
+    },
+    {
+      "date": "2026-11-27",
       "verified": 0,
       "tp": 0,
       "fp": 0,
