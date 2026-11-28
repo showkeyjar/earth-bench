@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>EarthBench Alerts</title>
+  <subtitle>Environmental Risk Decision Intelligence</subtitle>
+  <link href="https://earthbench.io/feed.xml" rel="self"/>
+  <link href="https://earthbench.io"/>
+  <updated>2026-11-28T14:12:20+08:00</updated>
+  <id>tag:earthbench.io,2026:</id>
+  <generator>EarthBench Pipeline v0.3.0</generator>
+
+  <entry>
+    <title>EarthBench Alert: Forest Fire in Xiangshan-Beijing</title>
+    <link href="/reports/20261128/fire-l1-extreme-risk" rel="alternate"/>
+    <id>tag:earthbench.io,2026-11-28T06:12:20.366205+00:00</id>
+    <published>2026-11-28T06:12:20.366205+00:00</published>
+    <summary>FireAlert: FWI=77.6, 湿度=20.0%, 风速=7.5m/s, 降雨=0.0mm, 风险分=0.685</summary>
+  </entry>
+
+  <entry>
+    <title>EarthBench Alert: Forest Fire in WestLake-Hangzhou</title>
+    <link href="/reports/20261128/fire-l1-low-risk" rel="alternate"/>
+    <id>tag:earthbench.io,2026-11-28T06:12:20.366252+00:00</id>
+    <published>2026-11-28T06:12:20.366252+00:00</published>
+    <summary>FireAlert: FWI=56.2, 湿度=22.0%, 风速=9.7m/s, 降雨=0.0mm, 风险分=0.670</summary>
+  </entry>
+</feed>
